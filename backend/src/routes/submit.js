@@ -1,10 +1,8 @@
-
 const express = require('express');
 const router = express.Router();
 const User = require('../models/User'); // Ensure correct path
 const Joi = require('joi');
 const { calculateFinancialScores } = require('../utils/financialCalculations');
-
 
 // Define Joi schema for validation
 const userSchema = Joi.object({
@@ -39,7 +37,7 @@ router.get('/submit', (req, res) => {
 
 // POST /api/submit
 router.post('/submit', async (req, res) => {
-    console.log('Received POST /api/submit request'); // Debugging log
+    console.log('Received POST /api/submit request:', req.body); // Debugging log
     try {
         // Validate the request body
         const { error, value } = userSchema.validate(req.body);
@@ -60,6 +58,15 @@ router.post('/submit', async (req, res) => {
         res.json({ success: true, scores: financialScores });
     } catch (error) {
         console.error('Error in /submit route:', error);
+        
+        // Check if the error is a duplicate key error
+        if (error.code === 11000) {
+            return res.status(400).json({ 
+                success: false, 
+                message: 'A user with this email already exists. Please use a different email address.' 
+            });
+        }
+        
         res.status(500).json({ success: false, message: 'Server Error' });
     }
 });
