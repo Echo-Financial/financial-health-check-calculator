@@ -1,4 +1,4 @@
-// src/controllers/submitController.js
+submitController.backup.js
 
 const FinancialData = require('../models/FinancialData'); // Import the FinancialData model
 const {
@@ -12,7 +12,8 @@ const {
     calculateOverallFinancialHealthScore,
     calculateEchoImprovementPotential
 } = require('../utils/financialCalculations'); // Import calculation utilities
-const { generateFinancialReport } = require('../services/pdfService'); // Import the PDF service
+const PDFDocument = require('pdfkit'); // Import pdfkit
+const stream = require('stream'); // Node.js stream module
 
 /**
  * Controller to handle financial data submission.
@@ -106,25 +107,63 @@ const submitFinancialData = async (req, res, next) => {
 
         await financialData.save();
 
-        // Generate PDF Report using the PDF Service
-        const pdfData = await generateFinancialReport(userId, {
-            netWorth,
-            dti,
-            savingsRate,
-            emergencyFundCoverage,
-            retirementReadiness,
-            financialIndependenceRatio,
-            budgetAllocation,
-            overallFinancialHealthScore,
-            echoImprovementPotential
+        // Generate PDF Report
+        const doc = new PDFDocument();
+        let buffers = [];
+        doc.on('data', buffers.push.bind(buffers));
+        doc.on('end', () => {
+            const pdfData = Buffer.concat(buffers);
+            res
+                .writeHead(200, {
+                    'Content-Length': Buffer.byteLength(pdfData),
+                    'Content-Type': 'application/pdf',
+                    'Content-Disposition': 'attachment;filename=Financial_Report.pdf',
+                })
+                .end(pdfData);
         });
 
-        // Set response headers for PDF download
-        res.set({
-            'Content-Length': Buffer.byteLength(pdfData),
-            'Content-Type': 'application/pdf',
-            'Content-Disposition': 'attachment;filename=Financial_Report.pdf',
-        }).status(200).send(pdfData);
+        // PDF Content
+        doc.fontSize(20).text('Financial Health Report', { align: 'center' });
+        doc.moveDown();
+
+        doc.fontSize(14).text(`User ID: ${userId}`);
+        doc.text(`Date: ${new Date().toLocaleDateString()}`);
+        doc.moveDown();
+
+        doc.fontSize(16).text('Core Metrics', { underline: true });
+        doc.moveDown(0.5);
+        doc.fontSize(12).text(`Net Worth: $${netWorth.toLocaleString()}`);
+        doc.text(`Debt-to-Income Ratio (DTI): ${dti}%`);
+        doc.text(`Savings Rate: ${savingsRate}%`);
+        doc.text(`Emergency Fund Coverage: ${emergencyFundCoverage} months`);
+        doc.text(`Retirement Readiness: ${retirementReadiness}%`);
+        doc.text(`Financial Independence Ratio: ${financialIndependenceRatio}%`);
+        doc.moveDown();
+
+        doc.fontSize(16).text('Advanced Metrics', { underline: true });
+        doc.moveDown(0.5);
+        doc.fontSize(12).text(`Budget Allocation Differences:`);
+        doc.text(`- Essentials: ${budgetAllocation.essentialsDiff}%`);
+        doc.text(`- Discretionary: ${budgetAllocation.discretionaryDiff}%`);
+        doc.text(`- Savings: ${budgetAllocation.savingsDiff}%`);
+        doc.moveDown();
+
+        doc.fontSize(16).text('Scores', { underline: true });
+        doc.moveDown(0.5);
+        doc.fontSize(12).text(`Overall Financial Health Score: ${overallFinancialHealthScore}`);
+        doc.text(`Echo Improvement Potential Score: ${echoImprovementPotential}`);
+        doc.moveDown();
+
+        doc.fontSize(16).text('Recommendations', { underline: true });
+        doc.moveDown(0.5);
+        if (overallFinancialHealthScore < 70) {
+            doc.fontSize(12).text('Consider consulting a financial advisor to improve your financial health.');
+        } else {
+            doc.fontSize(12).text('Great job! Keep maintaining your financial health.');
+        }
+
+        // Finalize PDF file
+        doc.end();
 
     } catch (error) {
         next(error);

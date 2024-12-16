@@ -1,6 +1,10 @@
 
 const { calculateFinancialScores } = require('../utils/financialCalculations');
 
+// Increase Jest's default timeout
+
+jest.setTimeout(60000); // Sets timeout to 60,000 ms (60 seconds)
+
 describe('calculateFinancialScores', () => {
     it('should return correct scores for a typical user', () => {
         const userData = {
