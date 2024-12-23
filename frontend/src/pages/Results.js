@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import Charts from '../components/Visualisations/Charts';
+import Charts from '../components/Visualisations/Charts.js';
 
 const Results = () => {
   const location = useLocation();

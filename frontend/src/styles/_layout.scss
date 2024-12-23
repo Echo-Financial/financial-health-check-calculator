@@ -1,5 +1,7 @@
 // frontend/src/styles/_layout.scss
 
+@use './variables' as *;
+
 .container {
   max-width: 1200px;
   margin: 0 auto;
@@ -25,4 +27,5 @@
 .mt-5 {
   margin-top: $spacing-unit * 5;
 }
+
 

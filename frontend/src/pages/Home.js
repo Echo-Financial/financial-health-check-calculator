@@ -1,7 +1,7 @@
 // frontend/src/pages/Home.js
 import React from 'react';
-import LeadCaptureForm from '../components/Forms/LeadCaptureForm';
-import AccordionItem from '../components/FAQ/AccordionItem';
+import LeadCaptureForm from '../components/Forms/LeadCaptureForm.jsx';
+import AccordionItem from '../components/FAQ/AccordionItem.js';
 
 const Home = () => {
   return (

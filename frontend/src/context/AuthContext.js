@@ -1,27 +1,30 @@
-import React, { createContext, useState, useEffect } from 'react';
+// frontend/src/context/AuthContext.js
 
-export const AuthContext = createContext();
+import React, { createContext, useState } from 'react';
 
-const AuthProvider = ({ children }) => {
-  const [token, setToken] = useState(() => localStorage.getItem('token') || null);
-  
-  const login = (jwtToken) => {
-    localStorage.setItem('token', jwtToken);
-    setToken(jwtToken);
+// Create the context object
+export const AuthContext = createContext(null);
+
+// Define and export AuthProvider
+export function AuthProvider({ children }) {
+  const [authState, setAuthState] = useState(null);
+
+  // Example: placeholder login function
+  const handleLogin = (userData) => {
+    setAuthState(userData);
+    // If using localStorage, ensure data is stored as JSON:
+    localStorage.setItem('user', JSON.stringify(userData));
   };
 
-  const logout = () => {
-    localStorage.removeItem('token');
-    setToken(null);
+  // Example: placeholder logout function
+  const handleLogout = () => {
+    setAuthState(null);
+    localStorage.removeItem('user');
   };
-
-  const isAuthenticated = () => !!token;
 
   return (
-    <AuthContext.Provider value={{ token, isAuthenticated, login, logout }}>
+    <AuthContext.Provider value={{ authState, handleLogin, handleLogout }}>
       {children}
     </AuthContext.Provider>
   );
-};
-
-export default AuthProvider;
+}

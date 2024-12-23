@@ -1,19 +1,17 @@
 // frontend/src/index.js
 
 import React from 'react';
-import ReactDOM from 'react-dom';
+import ReactDOM from 'react-dom/client';
+import App from './App.js';
 
-// Import Bootstrap CSS first
-import 'bootstrap/dist/css/bootstrap.min.css';
-
-// Import your custom styles after Bootstrap
-import './styles/main.scss'; 
-
-import App from './App';
-
-ReactDOM.render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>,
-  document.getElementById('root')
-);
+const rootElement = document.getElementById('root');
+if (!rootElement) {
+  console.error('Error: Could not find #root element in index.html');
+} else {
+  const root = ReactDOM.createRoot(rootElement);
+  root.render(
+    <React.StrictMode>
+      <App />
+    </React.StrictMode>
+  );
+}

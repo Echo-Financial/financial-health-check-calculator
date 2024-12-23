@@ -1,5 +1,7 @@
 // frontend/src/styles/_components.scss
 
+@use './variables' as *;
+
 // Form container for a polished look
 .lead-form-container {
   background: $white;

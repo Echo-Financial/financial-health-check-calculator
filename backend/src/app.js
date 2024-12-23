@@ -1,20 +1,18 @@
+// backend/src/app.js
 
 require('dotenv').config();
-
 const express = require('express');
 const cors = require('cors');
 const morgan = require('morgan');
 
+// Routes
 const submitRoute = require('./routes/submit');
 const authRoute = require('./routes/auth');
 const healthRoute = require('./routes/health'); // If implemented
-const testRoute = require('./routes/test'); // Optional for testing
+const testRoute = require('./routes/test');     // Optional
 
+// Error Handling Middleware
 const errorHandler = require('./middleware/errorHandler');
-
-console.log('Environment Variables Loaded:');
-console.log('PORT:', process.env.PORT);
-console.log('MONGO_URI:', process.env.MONGO_URI);
 
 const app = express();
 
@@ -27,9 +25,9 @@ app.use(morgan('dev'));
 app.use('/api/submit', submitRoute);
 app.use('/api/auth', authRoute);
 app.use('/api/health', healthRoute); // If implemented
-app.use('/api/test', testRoute); // Optional
+app.use('/api/test', testRoute);     // Optional
 
-// Error Handling Middleware
+// Error Handling
 app.use(errorHandler);
 
 module.exports = app;

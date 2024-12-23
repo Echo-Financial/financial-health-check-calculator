@@ -1,5 +1,7 @@
 // frontend/src/styles/_base.scss
 
+@use './variables' as *;
+
 *,
 *::before,
 *::after {
@@ -14,7 +16,7 @@ html {
 
 body {
   margin: 0;
-  font-family: $font-stack;
+  font-family: $font-stack; // Now correctly referenced
   color: $dark-gray;
   background-color: $light-gray;
 }
@@ -40,3 +42,4 @@ a {
     text-decoration: underline;
   }
 }
+

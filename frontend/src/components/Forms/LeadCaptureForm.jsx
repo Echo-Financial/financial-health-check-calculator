@@ -6,11 +6,11 @@ import { Formik, Form } from 'formik';
 import * as Yup from 'yup';
 import { useNavigate } from 'react-router-dom';
 import { Button, Modal, ProgressBar } from 'react-bootstrap';
-import PersonalDetails from '../InputSections/PersonalDetails';
-import ExpensesAssets from '../InputSections/ExpensesAssets';
-import RetirementPlanning from '../InputSections/RetirementPlanning';
-import RetirementGoals from '../InputSections/RetirementGoals';
-import CreditHealth from '../InputSections/CreditHealth'; // New component
+import PersonalDetails from '../InputSections/PersonalDetails.js';
+import ExpensesAssets from '../InputSections/ExpensesAssets.jsx';
+import RetirementPlanning from '../InputSections/RetirementPlanning.jsx';
+import RetirementGoals from '../InputSections/RetirementGoals.jsx';
+import CreditHealth from '../InputSections/CreditHealth.jsx'; // New component
 
 // Updated validationSchema to include all fields used in each step
 const validationSchema = Yup.object({
