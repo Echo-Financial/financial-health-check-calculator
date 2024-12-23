@@ -1,15 +1,10 @@
-// src/routes/health.js
 
 const express = require('express');
 const router = express.Router();
 
-/**
- * @route   GET /api/health
- * @desc    Health check endpoint
- * @access  Public
- */
+// GET /api/health
 router.get('/', (req, res) => {
-    res.status(200).json({ message: 'API is running smoothly!' });
+    res.json({ status: 'OK', timestamp: new Date() });
 });
 
 module.exports = router;

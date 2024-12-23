@@ -1,0 +1,28 @@
+// frontend/src/styles/_layout.scss
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: $spacing-unit * 2;
+}
+
+.text-center {
+  text-align: center;
+}
+
+.text-danger {
+  color: #d9534f;
+}
+
+.small-text {
+  font-size: 0.875rem;
+}
+
+.mt-3 {
+  margin-top: $spacing-unit * 3;
+}
+
+.mt-5 {
+  margin-top: $spacing-unit * 5;
+}
+

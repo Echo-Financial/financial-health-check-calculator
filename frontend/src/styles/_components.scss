@@ -1,0 +1,95 @@
+// frontend/src/styles/_components.scss
+
+// Form container for a polished look
+.lead-form-container {
+  background: $white;
+  border-radius: $border-radius;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+  padding: $spacing-unit * 4;
+  max-width: 600px;
+  margin: $spacing-unit * 5 auto;
+}
+
+.form-heading {
+  font-size: 1.75rem;
+  margin-bottom: $spacing-unit;
+  font-weight: 700;
+  color: $primary-color;
+}
+
+.form-subtext {
+  margin-bottom: $spacing-unit * 4;
+  color: #555;
+  line-height: 1.4;
+}
+
+.styled-form {
+  .form-section-heading {
+    margin-top: $spacing-unit * 4;
+    margin-bottom: $spacing-unit * 2;
+    font-size: 1.25rem;
+    color: $primary-color;
+    border-bottom: 1px solid #ddd;
+    padding-bottom: $spacing-unit;
+  }
+
+  .form-group {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: $spacing-unit * 2;
+
+    label {
+      font-weight: 600;
+      margin-bottom: $spacing-unit;
+    }
+
+    .input-field {
+      padding: $spacing-unit * 1.5;
+      border: 1px solid #ccc;
+      border-radius: $border-radius;
+      font-size: 1rem;
+
+      &:focus {
+        border-color: $primary-color;
+        outline: none;
+      }
+    }
+
+    .text-danger {
+      font-size: 0.875rem;
+      color: #d9534f;
+      margin-top: $spacing-unit;
+    }
+  }
+
+  .checkbox-group {
+    flex-direction: row;
+    align-items: center;
+    .checkbox-input {
+      margin-right: $spacing-unit;
+    }
+  }
+
+  .btn-submit {
+    display: inline-block;
+    background: $accent-color;
+    color: $white;
+    padding: $spacing-unit * 1.5 $spacing-unit * 3;
+    border: none;
+    border-radius: $border-radius;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: $spacing-unit * 4;
+    transition: background-color 0.3s ease;
+    text-align: center;
+
+    &:hover {
+      background: darken($accent-color, 10%);
+    }
+
+    &:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+  }
+}

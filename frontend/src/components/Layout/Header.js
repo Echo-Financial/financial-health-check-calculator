@@ -1,16 +1,23 @@
-
+// frontend/src/components/Layout/Header.js
 import React from 'react';
 import { Link } from 'react-router-dom';
 
 const Header = () => (
-  <header className="bg-primary text-white p-3">
+  <header className="site-header" role="banner">
     <div className="container">
-      <h1>Financial Health Check Calculator</h1>
-      <nav>
-        <Link to="/" className="text-white me-3">Home</Link>
-        <Link to="/results" className="text-white me-3">Results</Link>
-        <Link to="/report" className="text-white">Report</Link>
-      </nav>
+      <div className="header-top">
+        <Link to="/" className="site-logo" aria-label="Home - Financial Health Check Calculator">
+          <img src="/images/logo.svg" alt="Financial Health Check Calculator Logo" width="150" />
+        </Link>
+        <nav className="main-nav" role="navigation" aria-label="Main navigation">
+          <ul>
+            <li><a href="#how-it-works">How It Works</a></li>
+            <li><a href="#features">Features</a></li>
+            <li><a href="#testimonials">Testimonials</a></li>
+            <li><a href="#faq">FAQs</a></li>
+          </ul>
+        </nav>
+      </div>
     </div>
   </header>
 );

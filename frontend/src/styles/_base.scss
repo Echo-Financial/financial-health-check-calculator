@@ -1,0 +1,42 @@
+// frontend/src/styles/_base.scss
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  margin: 0;
+  font-family: $font-stack;
+  color: $dark-gray;
+  background-color: $light-gray;
+}
+
+h1, h2, h3 {
+  margin-top: $spacing-unit * 2;
+  margin-bottom: $spacing-unit;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+p {
+  margin: $spacing-unit * 2 0;
+  line-height: 1.5;
+}
+
+a {
+  color: $primary-color;
+  text-decoration: none;
+
+  &:hover,
+  &:focus {
+    text-decoration: underline;
+  }
+}

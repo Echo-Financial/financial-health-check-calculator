@@ -1,117 +1,73 @@
-// src/controllers/authController.js
 
 const User = require('../models/User');
+const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-// Remove Joi import since validation is handled by middleware
-// const Joi = require('joi');
+const Joi = require('joi');
 
-/**
- * JWT Secret and Expiration
- * 
- * Ensure that the JWT_SECRET is defined in your .env file.
- * Example: JWT_SECRET=your_jwt_secret_key
- */
+// Define Joi schema for registration
+const registerSchema = Joi.object({
+    name: Joi.string().min(1).required(),
+    email: Joi.string().email().required(),
+    password: Joi.string().min(6).required(),
+});
 
-const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret_key';
-const JWT_EXPIRES_IN = '1h'; // Token expires in 1 hour
-
-/**
- * Registration Controller
- * 
- * Handles user registration by creating a new user and generating a JWT token upon successful registration.
- */
-const register = async (req, res, next) => {
+const registerUser = async (req, res, next) => {
     try {
-        const { name, email, password } = req.body;
-
-        // Check if the user already exists
-        const existingUser = await User.findOne({ email });
-        if (existingUser) {
-            return res.status(409).json({ message: 'Email already in use' });
+        const { error, value } = registerSchema.validate(req.body);
+        if (error) {
+            return res.status(400).json({ success: false, message: error.details[0].message });
         }
 
-        // Create a new user
-        const newUser = new User({ name, email, password });
-        await newUser.save();
+        const { name, email, password } = value;
 
-        // Generate JWT token
-        const token = jwt.sign({ id: newUser._id }, JWT_SECRET, {
-            expiresIn: JWT_EXPIRES_IN,
-        });
+        // Check if user exists
+        let user = await User.findOne({ email });
+        if (user) {
+            return res.status(400).json({ success: false, message: 'User already exists' });
+        }
 
-        // Respond with user data and token
-        res.status(201).json({
-            message: 'User registered successfully',
-            user: {
-                id: newUser._id,
-                name: newUser.name,
-                email: newUser.email,
-            },
-            token,
-        });
+        // Create new user
+        user = new User({ name, email, password });
+
+        // Hash password
+        const salt = await bcrypt.genSalt(10);
+        user.password = await bcrypt.hash(password, salt);
+
+        await user.save();
+
+        // Create and assign a token
+        const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
+
+        res.json({ success: true, token });
     } catch (error) {
         next(error);
     }
 };
 
-/**
- * Login Controller
- * 
- * Handles user login by authenticating the user and generating a JWT token upon successful authentication.
- */
-const login = async (req, res, next) => {
+const loginUser = async (req, res, next) => {
     try {
         const { email, password } = req.body;
 
-        // Find the user by email
+        // Check if user exists
         const user = await User.findOne({ email });
         if (!user) {
-            return res.status(401).json({ message: 'Invalid email or password' });
+            return res.status(400).json({ success: false, message: 'Invalid credentials' });
         }
 
-        // Compare passwords
-        const isMatch = await user.comparePassword(password);
+        // Check password
+        const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) {
-            return res.status(401).json({ message: 'Invalid email or password' });
+            return res.status(400).json({ success: false, message: 'Invalid credentials' });
         }
 
-        // Generate JWT token
-        const token = jwt.sign({ id: user._id }, JWT_SECRET, {
-            expiresIn: JWT_EXPIRES_IN,
-        });
+        // Create and assign a token
+        const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
 
-        // Respond with user data and token
-        res.status(200).json({
-            message: 'Logged in successfully',
-            user: {
-                id: user._id,
-                name: user.name,
-                email: user.email,
-            },
-            token,
-        });
+        res.json({ success: true, token });
     } catch (error) {
         next(error);
     }
 };
 
-/**
- * Logout Controller (Optional)
- * 
- * Since JWTs are stateless, logout can be handled on the client side by deleting the token. Alternatively, implement token blacklisting for enhanced security.
- */
-const logout = async (req, res, next) => {
-    try {
-        // For stateless JWTs, instruct the client to delete the token
-        res.status(200).json({ message: 'Logged out successfully' });
-    } catch (error) {
-        next(error);
-    }
-};
+module.exports = { registerUser, loginUser };
 
-// Export the controllers
-module.exports = {
-    register,
-    login,
-    logout,
-};

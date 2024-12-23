@@ -1,136 +1,60 @@
-// src/controllers/submitController.js
 
-const FinancialData = require('../models/FinancialData'); // Import the FinancialData model
-const {
-    calculateNetWorth,
-    calculateDTI,
-    calculateSavingsRate,
-    calculateEmergencyFundCoverage,
-    calculateRetirementReadiness,
-    calculateFinancialIndependenceRatio,
-    calculateBudgetAllocationCheck,
-    calculateOverallFinancialHealthScore,
-    calculateEchoImprovementPotential
-} = require('../utils/financialCalculations'); // Import calculation utilities
-const { generateFinancialReport } = require('../services/pdfService'); // Import the PDF service
+const User = require('../models/User');
+const Joi = require('joi');
+const { calculateFinancialScores } = require('../utils/financialCalculations');
 
-/**
- * Controller to handle financial data submission.
- * Associates the data with the authenticated user's ID.
- */
-const submitFinancialData = async (req, res, next) => {
+// Define Joi schema for validation
+const userSchema = Joi.object({
+    personalDetails: Joi.object({
+        age: Joi.number().integer().min(18).required(),
+        annualIncome: Joi.number().min(0).required(),
+        incomeFromInterest: Joi.number().min(0).optional(),
+        incomeFromProperty: Joi.number().min(0).optional(),
+    }).required(),
+    expensesAssets: Joi.object({
+        monthlyExpenses: Joi.number().min(0).required(),
+        emergencyFunds: Joi.number().min(0).required(),
+        savings: Joi.number().min(0).required(),
+        totalDebt: Joi.number().min(0).required(),
+    }).required(),
+    retirementPlanning: Joi.object({
+        retirementAge: Joi.number().integer().min(18).required(),
+        expectedAnnualIncome: Joi.number().min(0).required(),
+        adjustForInflation: Joi.boolean().optional(),
+    }).required(),
+    contactInfo: Joi.object({
+        email: Joi.string().email().required(),
+        name: Joi.string().min(1).required(),
+        phone: Joi.string().optional(),
+    }).required(),
+});
+
+const submitUser = async (req, res, next) => {
+    console.log('Received POST /api/submit request');
+    console.log('Request Body:', req.body);
     try {
-        const userId = req.user.id; // Retrieved from authenticate middleware
+        // Validate the request body
+        const { error, value } = userSchema.validate(req.body);
+        if (error) {
+            console.error('Validation Error:', error.details[0].message);
+            return res.status(400).json({ success: false, message: error.details[0].message });
+        }
 
-        const {
-            totalAssets,
-            totalLiabilities,
-            totalMonthlyDebtPayments,
-            grossMonthlyIncome,
-            annualSavings,
-            grossIncome,
-            savings,
-            monthlyExpenses,
-            currentRetirementSavings,
-            targetRetirementSavings,
-            passiveIncome,
-            essentials,
-            discretionary,
-            savingsAllocation,
-            creditHealth
-        } = req.body;
+        const userData = value;
 
-        // Core Metrics Calculations
-        const netWorth = calculateNetWorth(totalAssets, totalLiabilities);
-        const dti = calculateDTI(totalMonthlyDebtPayments, grossMonthlyIncome);
-        const savingsRate = calculateSavingsRate(annualSavings, grossIncome);
-        const emergencyFundCoverage = calculateEmergencyFundCoverage(savings, monthlyExpenses);
-        const retirementReadiness = calculateRetirementReadiness(currentRetirementSavings, targetRetirementSavings);
-        const financialIndependenceRatio = calculateFinancialIndependenceRatio(passiveIncome, monthlyExpenses);
+        // Perform financial calculations
+        const financialScores = calculateFinancialScores(userData);
 
-        // Advanced Metrics
-        const budgetAllocation = calculateBudgetAllocationCheck(essentials, discretionary, savingsAllocation);
+        // Create and save a new User document
+        const user = new User(userData);
+        await user.save();
 
-        // Financial Health Score
-        const overallFinancialHealthScore = calculateOverallFinancialHealthScore({
-            netWorth,
-            dti,
-            savingsRate,
-            emergencyFundCoverage,
-            retirementReadiness,
-            financialIndependenceRatio,
-            budgetAllocation,
-            creditHealth
-        });
-
-        // Echo Improvement Potential Score
-        const echoImprovementPotential = calculateEchoImprovementPotential({
-            netWorth,
-            dti,
-            savingsRate,
-            emergencyFundCoverage,
-            retirementReadiness,
-            financialIndependenceRatio,
-            budgetAllocation,
-            creditHealth
-        });
-
-        // Save the data and scores to the database
-        const financialData = new FinancialData({
-            user: userId,
-            totalAssets,
-            totalLiabilities,
-            totalMonthlyDebtPayments,
-            grossMonthlyIncome,
-            annualSavings,
-            grossIncome,
-            savings,
-            monthlyExpenses,
-            currentRetirementSavings,
-            targetRetirementSavings,
-            passiveIncome,
-            essentials,
-            discretionary,
-            savingsAllocation,
-            creditHealth,
-            netWorth,
-            dti,
-            savingsRate,
-            emergencyFundCoverage,
-            retirementReadiness,
-            financialIndependenceRatio,
-            budgetAllocation,
-            overallFinancialHealthScore,
-            echoImprovementPotential
-        });
-
-        await financialData.save();
-
-        // Generate PDF Report using the PDF Service
-        const pdfData = await generateFinancialReport(userId, {
-            netWorth,
-            dti,
-            savingsRate,
-            emergencyFundCoverage,
-            retirementReadiness,
-            financialIndependenceRatio,
-            budgetAllocation,
-            overallFinancialHealthScore,
-            echoImprovementPotential
-        });
-
-        // Set response headers for PDF download
-        res.set({
-            'Content-Length': Buffer.byteLength(pdfData),
-            'Content-Type': 'application/pdf',
-            'Content-Disposition': 'attachment;filename=Financial_Report.pdf',
-        }).status(200).send(pdfData);
-
+        // Respond with financial scores
+        res.json({ success: true, scores: financialScores });
     } catch (error) {
-        next(error);
+        console.error('Error in /submit route:', error);
+        next(error); // Pass to error handling middleware
     }
 };
 
-module.exports = {
-    submitFinancialData
-};
+module.exports = { submitUser };
