@@ -1,3 +1,4 @@
+
 const calculateFinancialScores = (userData) => {
     const { personalDetails, expensesAssets, retirementPlanning } = userData;
 
@@ -18,22 +19,24 @@ const calculateFinancialScores = (userData) => {
     const retirementScore = retirementPlanning.expectedAnnualIncome >= (personalDetails.annualIncome * 0.7)
        ? 100 : (retirementPlanning.expectedAnnualIncome / (personalDetails.annualIncome * 0.7)) * 100;
 
-    // Growth Opportunity Score (Dynamic based on income)
-    const growthOpportunityScore = personalDetails.annualIncome <= 20000 ? 20 : 
-        (personalDetails.annualIncome > 20000 && personalDetails.annualIncome <= 50000) ? 50 : 
-        (personalDetails.annualIncome > 50000 && personalDetails.annualIncome <= 100000) ? 80 : 100;
+     // Growth Opportunity Score (Dynamic based on savings, emergency funds and investments)
+    const growthOpportunityScore = ((expensesAssets.savings + expensesAssets.emergencyFunds + expensesAssets.totalInvestments) / personalDetails.annualIncome) * 100;
+        const scaledGrowthOpportunityScore = growthOpportunityScore < 5 ? 20 :
+            (growthOpportunityScore >= 5 && growthOpportunityScore <= 10) ? 50 :
+            (growthOpportunityScore > 10 && growthOpportunityScore <= 20) ? 80 : 100;
 
     // Potential for Improvement Score (Considering all factors)
-    const potentialForImprovementScore = (100 - emergencyFundScore) * 0.3 + (100 - savingsScore) * 0.3 + (100 - dtiScore) * 0.4;
+    const potentialForImprovementScore = ((100 - dtiScore) + (100 - savingsScore) + (100 - emergencyFundScore) + (100 - retirementScore) + (100 - scaledGrowthOpportunityScore)) / 5;
 
-    const overallFinancialHealthScore = (dtiScore + savingsScore + emergencyFundScore + retirementScore + growthOpportunityScore + potentialForImprovementScore) / 6;
+
+    const overallFinancialHealthScore = (dtiScore + savingsScore + emergencyFundScore + retirementScore + scaledGrowthOpportunityScore + potentialForImprovementScore) / 6;
 
     return {
         dtiScore: Math.round(dtiScore),
         savingsScore: Math.round(savingsScore),
         emergencyFundScore: Math.round(emergencyFundScore),
         retirementScore: Math.round(retirementScore),
-        growthOpportunityScore: Math.round(growthOpportunityScore),
+        growthOpportunityScore: Math.round(scaledGrowthOpportunityScore),
         potentialForImprovementScore: Math.round(potentialForImprovementScore),
         overallFinancialHealthScore: Math.round(overallFinancialHealthScore),
     };

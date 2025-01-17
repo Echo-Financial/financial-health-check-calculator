@@ -1,77 +1,68 @@
 // backend/src/controllers/authController.js
 
 const User = require('../models/User');
-const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
 const Joi = require('joi');
 
-// Joi schema for registration
+// Joi schema for registration, using only contactInfo.email and contactInfo.name
 const registerSchema = Joi.object({
-  name: Joi.string().min(1).required(),
-  email: Joi.string().email().required(),
-  password: Joi.string().min(6).required(),
+  personalDetails: Joi.object({
+    age: Joi.number().integer().min(18).required(),
+    annualIncome: Joi.number().min(0).required(),
+    incomeFromInterest: Joi.number().min(0).optional(),
+    incomeFromProperty: Joi.number().min(0).optional(),
+  }).required(),
+  expensesAssets: Joi.object({
+    monthlyExpenses: Joi.number().min(0).required(),
+    emergencyFunds: Joi.number().min(0).required(),
+    savings: Joi.number().min(0).required(),
+    totalDebt: Joi.number().min(0).required(),
+  }).required(),
+  retirementPlanning: Joi.object({
+    retirementAge: Joi.number().integer().min(18).required(),
+    expectedAnnualIncome: Joi.number().min(0).required(),
+    adjustForInflation: Joi.boolean().optional(),
+  }).required(),
+  contactInfo: Joi.object({
+    email: Joi.string().email().required(), // The unique user identifier
+    name: Joi.string().min(1).required(),
+    phone: Joi.string().optional(),
+  }).required(),
 });
 
+//
+// Register a new user without a password
+//
 async function registerUser(req, res, next) {
   try {
+    // Validate the request body against the schema above
     const { error, value } = registerSchema.validate(req.body);
     if (error) {
       return res.status(400).json({ success: false, message: error.details[0].message });
     }
 
-    const { name, email, password } = value;
-
-    // Check if user exists
-    let user = await User.findOne({ email });
-    if (user) {
-      return res.status(400).json({ success: false, message: 'User already exists' });
+    // Check if user with this contactInfo.email already exists
+    const existingUser = await User.findOne({ 'contactInfo.email': value.contactInfo.email });
+    if (existingUser) {
+      return res.status(400).json({
+        success: false,
+        message: 'User with this email already exists',
+      });
     }
 
-    // Create new user
-    user = new User({ name, email, password });
+    // Create a new user record
+    const newUser = new User(value);
+    await newUser.save();
 
-    // Hash password
-    const salt = await bcrypt.genSalt(10);
-    user.password = await bcrypt.hash(password, salt);
-
-    await user.save();
-
-    // Create and assign a token
-    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
-      expiresIn: '1h',
+    // Respond with success
+    res.json({
+      success: true,
+      message: 'User registered successfully',
     });
-
-    res.json({ success: true, token });
-  } catch (error) {
-    next(error);
+  } catch (err) {
+    next(err);
   }
 }
 
-async function loginUser(req, res, next) {
-  try {
-    const { email, password } = req.body;
-
-    // Check if user exists
-    const user = await User.findOne({ email });
-    if (!user) {
-      return res.status(400).json({ success: false, message: 'Invalid credentials' });
-    }
-
-    // Check password
-    const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) {
-      return res.status(400).json({ success: false, message: 'Invalid credentials' });
-    }
-
-    // Create and assign a token
-    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
-      expiresIn: '1h',
-    });
-
-    res.json({ success: true, token });
-  } catch (error) {
-    next(error);
-  }
-}
-
-module.exports = { registerUser, loginUser };
+module.exports = {
+  registerUser,
+};

@@ -1,5 +1,3 @@
-// frontend/src/styles/_components.scss
-
 @use './variables' as *;
 
 // Form container for a polished look
@@ -10,6 +8,11 @@
   padding: $spacing-unit * 4;
   max-width: 600px;
   margin: $spacing-unit * 5 auto;
+
+   @media (max-width: 768px) {
+    padding: $spacing-unit * 2;
+     margin: $spacing-unit * 2 auto;
+  }
 }
 
 .form-heading {
@@ -93,5 +96,20 @@
       opacity: 0.6;
       cursor: not-allowed;
     }
+  }
+}
+
+// Custom styles for the progress bar
+.progress {
+  margin-bottom: $spacing-unit * 3;
+  background-color: $light-gray;
+  border-radius: $border-radius;
+  overflow: hidden;
+  
+  .progress-bar {
+    background-color: $accent-color;
+    color: $white;
+    text-align: center;
+    transition: width 0.3s ease;
   }
 }

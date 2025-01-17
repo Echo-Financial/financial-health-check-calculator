@@ -1,4 +1,3 @@
-
 const mongoose = require('mongoose');
 
 const userSchema = new mongoose.Schema({
@@ -13,15 +12,15 @@ const userSchema = new mongoose.Schema({
         emergencyFunds: { type: Number, required: true },
         savings: { type: Number, required: true },
         totalDebt: { type: Number, required: true },
+        totalInvestments: { type: Number, required: true },
     },
     retirementPlanning: {
         retirementAge: { type: Number, required: true },
         expectedAnnualIncome: { type: Number, required: true },
         adjustForInflation: { type: Boolean, default: false },
     },
-    email: { type: String, required: true, unique: true },
     contactInfo: {
-        email: { type: String, required: true, unique: true },
+        email: { type: String, required: true, /*unique: true*/ }, // unique constraint removed
         name: { type: String, required: true },
         phone: { type: String },
     },

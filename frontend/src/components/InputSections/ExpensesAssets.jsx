@@ -1,5 +1,3 @@
-// src/components/InputSections/ExpensesAssets.jsx
-
 import React from 'react';
 import { Field, ErrorMessage } from 'formik';
 
@@ -52,6 +50,18 @@ const ExpensesAssets = () => (
         placeholder="e.g., 10000"
       />
       <ErrorMessage name="emergencyFunds" component="div" className="text-danger" />
+    </div>
+    {/* New totalInvestments Field */}
+    <div className="form-group">
+        <label htmlFor="totalInvestments">Total Investments *</label>
+        <Field
+            type="number"
+            id="totalInvestments"
+            name="totalInvestments"
+            className="input-field"
+            placeholder="e.g., 2000"
+        />
+        <ErrorMessage name="totalInvestments" component="div" className="text-danger" />
     </div>
   </>
 );
