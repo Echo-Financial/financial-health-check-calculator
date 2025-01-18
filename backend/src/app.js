@@ -1,5 +1,3 @@
-// backend/src/app.js
-
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
@@ -9,7 +7,7 @@ const morgan = require('morgan');
 const submitRoute = require('./routes/submit');
 const authRoute = require('./routes/auth');
 const healthRoute = require('./routes/health'); // If implemented
-const testRoute = require('./routes/test');     // Optional
+// const testRoute = require('./routes/test');     // Removed
 
 // Error Handling Middleware
 const errorHandler = require('./middleware/errorHandler');
@@ -25,7 +23,7 @@ app.use(morgan('dev'));
 app.use('/api/submit', submitRoute);
 app.use('/api/auth', authRoute);
 app.use('/api/health', healthRoute); // If implemented
-app.use('/api/test', testRoute);     // Optional
+// app.use('/api/test', testRoute);     // Removed
 
 // Error Handling
 app.use(errorHandler);

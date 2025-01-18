@@ -16,7 +16,7 @@ const userSchema = new mongoose.Schema({
     },
     retirementPlanning: {
         retirementAge: { type: Number, required: true },
-        expectedAnnualIncome: { type: Number, required: true },
+       targetRetirementSavings: { type: Number, required: true },
         adjustForInflation: { type: Boolean, default: false },
     },
     contactInfo: {

@@ -3,11 +3,10 @@ import axios from 'axios';
 import { Formik, Form } from 'formik';
 import * as Yup from 'yup';
 import { useNavigate } from 'react-router-dom';
-import { Button, Modal, ProgressBar } from 'react-bootstrap';
+import { Button, ProgressBar } from 'react-bootstrap';
 import PersonalDetails from '../InputSections/PersonalDetails.js';
 import ExpensesAssets from '../InputSections/ExpensesAssets.jsx';
 import RetirementPlanning from '../InputSections/RetirementPlanning.jsx';
-import RetirementGoals from '../InputSections/RetirementGoals.jsx';
 import CreditHealth from '../InputSections/CreditHealth.jsx';
 import ContactDetails from '../InputSections/ContactDetails.jsx';
 
@@ -46,15 +45,12 @@ const validationSchema = Yup.object({
     currentRetirementSavings: Yup.number()
         .required('Current Retirement Savings is required')
         .min(0, 'Must be at least 0'),
-    targetRetirementSavings: Yup.number()
+     targetRetirementSavings: Yup.number()
         .required('Target Retirement Savings is required')
         .min(0, 'Must be at least 0'),
     retirementAge: Yup.number()
         .required('Retirement Age is required')
         .min(18, 'Must be at least 18'),
-    expectedAnnualIncomeInRetirement: Yup.number()
-        .required('Expected Annual Income in Retirement is required')
-        .min(0, 'Must be at least 0'),
     creditScore: Yup.number()
         .required('Credit Score is required')
         .min(300, 'Minimum is 300')
@@ -82,9 +78,8 @@ const transformValues = (values) => {
         'totalAssets',
         'totalInvestments',
         'currentRetirementSavings',
-        'targetRetirementSavings',
+          'targetRetirementSavings',
         'retirementAge',
-        'expectedAnnualIncomeInRetirement',
         'creditScore',
     ];
 
@@ -99,10 +94,11 @@ const LeadCaptureForm = () => {
     const [error, setError] = useState('');
     const navigate = useNavigate();
     const [step, setStep] = useState(0);
-    const totalSteps = 6; // Updated to 6
+    const totalSteps = 5;
     const [showModal, setShowModal] = useState(false);
+    const [scores, setScores] = useState(null);
 
-    const handleSubmit = async (values, { setSubmitting, resetForm }) => {
+    const handleSubmit = async (values, { setSubmitting }) => {
         console.log('handleSubmit called');
         try {
             const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
@@ -124,23 +120,24 @@ const LeadCaptureForm = () => {
                 },
                 retirementPlanning: {
                     retirementAge: transformedValues.retirementAge,
-                    expectedAnnualIncome: transformedValues.expectedAnnualIncomeInRetirement,
+                     targetRetirementSavings: transformedValues.targetRetirementSavings,
                 },
-                contactInfo: {
+               contactInfo: {
                    email: transformedValues.email,
                    name: transformedValues.name,
                    phone: transformedValues.phone,
-                },
+               },
             };
-            await axios.post(`${API_URL}/api/submit`, payload);
+            const response = await axios.post(`${API_URL}/api/submit`, payload);
+            setScores(response.data.scores);
+            setSubmitting(false);
         } catch (err) {
             const message =
                 err.response?.data?.message || 'Submission failed. Please try again.';
            setError(message);
-        } finally{
-          resetForm();
-            setShowModal(true);
             setSubmitting(false);
+        } finally{
+           setShowModal(true);
         }
     };
 
@@ -148,10 +145,9 @@ const LeadCaptureForm = () => {
         const errors = await formik.validateForm();
         const currentStepErrors = getCurrentStepErrors(errors, step);
         if (Object.keys(currentStepErrors).length === 0) {
-          const stepFields = getFieldsForStep(step);
-          stepFields.forEach(field => formik.setFieldTouched(field, true));
+            const stepFields = getFieldsForStep(step);
+            stepFields.forEach(field => formik.setFieldTouched(field, true));
             setStep(step + 1);
-
         } else {
             Object.keys(currentStepErrors).forEach((field) =>
                 formik.setFieldTouched(field, true)
@@ -168,16 +164,10 @@ const LeadCaptureForm = () => {
             case 2:
                 return ['monthlyExpenses', 'totalDebt', 'savings', 'emergencyFunds', 'totalInvestments'];
             case 3:
-                return ['totalAssets', 'currentRetirementSavings'];
+                return ['totalAssets', 'currentRetirementSavings', 'targetRetirementSavings', 'retirementAge'];
             case 4:
-                return [
-                    'targetRetirementSavings',
-                    'retirementAge',
-                    'expectedAnnualIncomeInRetirement',
-                ];
-            case 5:
                 return ['creditScore'];
-             case 6:
+             case 5:
                 return ['email', 'name', 'phone'];
             default:
                 return [];
@@ -201,17 +191,15 @@ const LeadCaptureForm = () => {
             case 3:
                 return <RetirementPlanning />;
             case 4:
-                return <RetirementGoals />;
-            case 5:
                 return <CreditHealth />;
-           case 6:
+            case 5:
                 return <ContactDetails />;
             default:
                 return null;
         }
     };
 
-    return (
+   return (
         <div className="lead-form-container" data-testid="lead-capture-form">
             <h2>Complete Your Financial Health Check</h2>
             <p>
@@ -232,9 +220,8 @@ const LeadCaptureForm = () => {
                     totalInvestments: '',
                     totalAssets: '',
                     currentRetirementSavings: '',
-                    targetRetirementSavings: '',
+                     targetRetirementSavings: '',
                     retirementAge: '',
-                    expectedAnnualIncomeInRetirement: '',
                     creditScore: '',
                     email: '',
                     name: '',
@@ -273,23 +260,26 @@ const LeadCaptureForm = () => {
                     </Form>
                 )}
             </Formik>
-            <Modal show={showModal} onHide={() => setShowModal(false)} centered>
-                <Modal.Header closeButton>
-                    <Modal.Title>Get Your Results</Modal.Title>
-                </Modal.Header>
-                <Modal.Body>
-                    <p>
-                        Click below to continue and receive your financial health check results:
-                    </p>
-                    <Button
-                        href="https://your-leadpal-link.com"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                    >
-                        Continue with Google, LinkedIn, or Outlook
-                    </Button>
-                </Modal.Body>
-            </Modal>
+            {showModal && (
+                <div className="modal-container">
+                    <div className="modal-content">
+                        <div className="modal-header">
+                            <h5 className="modal-title">Get Your Results</h5>
+                        </div>
+                        <div className="modal-body">
+                            <p>Click below to continue and receive your financial health check results:</p>
+                            <Button
+                                    onClick={() => {
+                                        navigate('/report', { state: { scores } });
+                                        setShowModal(false);
+                                    }}
+                                >
+                                Continue
+                            </Button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

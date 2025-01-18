@@ -18,7 +18,7 @@ const userSchema = Joi.object({
     }).required(),
     retirementPlanning: Joi.object({
         retirementAge: Joi.number().integer().min(18).required(),
-        expectedAnnualIncome: Joi.number().min(0).required(),
+       targetRetirementSavings: Joi.number().min(0).required(),
         adjustForInflation: Joi.boolean().optional(),
     }).required(),
     contactInfo: Joi.object({
@@ -51,8 +51,7 @@ async function submitUser(req, res, next) {
 
     } catch (error) {
         console.error('Error in /submit route:', error);
-        return res.status(400).json({ success: false, message: error.message }); // Modified to return raw error message
-
+       return res.status(400).json({ success: false, message: error.message }); // Modified to return raw error message
         next(error);
     }
 }

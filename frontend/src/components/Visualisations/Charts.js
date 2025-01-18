@@ -1,3 +1,5 @@
+// frontend/src/components/Visualisations/Charts.js
+
 import React from 'react';
 import { Bar } from 'react-chartjs-2';
 import {
@@ -10,22 +12,30 @@ import {
   Legend,
 } from 'chart.js';
 
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  BarElement,
-  Title,
-  Tooltip,
-  Legend
-);
+// Register Chart.js plugins
+ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
+
+/**
+ * Helper function to format score labels
+ * (Ensure it's declared BEFORE you use it in chartData)
+ */
+function formatScoreLabel(label) {
+  return label
+    .replace(/([A-Z])/g, ' $1') // Insert space before capital letters
+    .replace(/^./, (str) => str.toUpperCase()); // Capitalize the first letter
+}
 
 const Charts = ({ scores }) => {
+  // Prepare data labels & values
+  const chartLabels = scores ? Object.keys(scores).map(formatScoreLabel) : [];
+  const chartValues = scores ? Object.values(scores) : [];
+
   const chartData = {
-    labels: scores ? Object.keys(scores).map(label => formatScoreLabel(label)) : [],
+    labels: chartLabels,
     datasets: [
       {
         label: 'Financial Scores',
-        data: scores ? Object.values(scores) : [],
+        data: chartValues,
         backgroundColor: [
           'rgba(75, 192, 192, 0.6)',
           'rgba(255, 99, 132, 0.6)',
@@ -50,26 +60,15 @@ const Charts = ({ scores }) => {
   const chartOptions = {
     responsive: true,
     plugins: {
-      legend: {
-        position: 'top',
-      },
-      title: {
-        display: true,
-        text: 'Your Financial Health Scores',
-      },
+      legend: { position: 'top' },
+      title: { display: true, text: 'Your Financial Health Scores' },
     },
     scales: {
       y: {
         beginAtZero: true,
-        max: 100,
+        max: 100, // Assuming scores range from 0 to 100
       },
     },
-  };
-
-  const formatScoreLabel = (label) => {
-    return label
-      .replace(/([A-Z])/g, ' $1') // Insert space before capital letters
-      .replace(/^./, (str) => str.toUpperCase()); // Capitalize the first letter
   };
 
   return <Bar data={chartData} options={chartOptions} />;

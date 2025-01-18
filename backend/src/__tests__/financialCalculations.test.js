@@ -13,11 +13,12 @@ describe('calculateFinancialScores', () => {
                 monthlyExpenses: 1800,
                 emergencyFunds: 12000,
                 savings: 40000,
+                totalInvestments: 20000,
                 totalDebt: 20000,
             },
             retirementPlanning: {
                 retirementAge: 60,
-                expectedAnnualIncome: 35000,
+                targetRetirementSavings: 100000,
                 adjustForInflation: false,
             },
             contactInfo: {
@@ -28,13 +29,13 @@ describe('calculateFinancialScores', () => {
         };
 
         const expectedScores = {
-            dtiScore: 33,                  // Updated logic
-            savingsScore: 100,             // Updated logic
-            emergencyFundScore: 100,       // Emergency fund >= 6 months
-            retirementScore: 83,           // Updated retirement logic
-            growthOpportunityScore: 80,    // Income falls in the $50,000-$100,000 range
-            potentialForImprovementScore: 27, // Updated logic
-            overallFinancialHealthScore: 71, // Average of all scores
+            dtiScore: 33,
+            savingsScore: 100,
+            emergencyFundScore: 100,
+            retirementScore: 72,
+            growthOpportunityScore: 120,
+            potentialForImprovementScore: 15,
+            overallFinancialHealthScore: 73,
         };
 
         const scores = calculateFinancialScores(userData);
@@ -54,11 +55,12 @@ describe('calculateFinancialScores', () => {
                 monthlyExpenses: 2000,
                 emergencyFunds: 15000,
                 savings: 50000,
+                 totalInvestments: 30000,
                 totalDebt: 0,
             },
             retirementPlanning: {
                 retirementAge: 65,
-                expectedAnnualIncome: 50000,
+                 targetRetirementSavings: 200000,
                 adjustForInflation: true,
             },
             contactInfo: {
@@ -69,13 +71,13 @@ describe('calculateFinancialScores', () => {
         };
 
         const expectedScores = {
-            dtiScore: 100,                 // Zero debt = maximum score
-            savingsScore: 100,             // Updated logic
-            emergencyFundScore: 100,       // Emergency fund >= 6 months
-            retirementScore: 89,           // Updated retirement logic
-            growthOpportunityScore: 80,    // Income falls in the $50,000-$100,000 range
-            potentialForImprovementScore: 0, // No improvement needed
-            overallFinancialHealthScore: 78, // Average of all scores
+            dtiScore: 100,
+            savingsScore: 100,
+            emergencyFundScore: 100,
+             retirementScore: 48,
+            growthOpportunityScore: 119,
+            potentialForImprovementScore: 7,
+            overallFinancialHealthScore: 79,
         };
 
         const scores = calculateFinancialScores(userData);
@@ -95,14 +97,15 @@ describe('calculateFinancialScores', () => {
                 monthlyExpenses: 2500,
                 emergencyFunds: 10000, // Less than 6 months (2500*6 = 15000)
                 savings: 60000,
+                totalInvestments: 20000,
                 totalDebt: 30000,
             },
             retirementPlanning: {
                 retirementAge: 65,
-                expectedAnnualIncome: 60000,
+                targetRetirementSavings: 300000,
                 adjustForInflation: true,
             },
-            contactInfo: {
+             contactInfo: {
                 email: 'insufficientFunds@example.com',
                 name: 'Alice Johnson',
                 phone: '555123456',
@@ -110,13 +113,13 @@ describe('calculateFinancialScores', () => {
         };
 
         const expectedScores = {
-            dtiScore: 33,                  // Updated logic
-            savingsScore: 100,             // Updated logic
-            emergencyFundScore: 67,        // Emergency fund < 6 months
-            retirementScore: 95,           // Updated retirement logic
-            growthOpportunityScore: 80,    // Income falls in the $50,000-$100,000 range
-            potentialForImprovementScore: 37, // Updated logic
-            overallFinancialHealthScore: 69, // Average of all scores
+            dtiScore: 33,
+            savingsScore: 100,
+            emergencyFundScore: 67,
+            retirementScore: 30,
+            growthOpportunityScore: 100,
+            potentialForImprovementScore: 34,
+             overallFinancialHealthScore: 61,
         };
 
         const scores = calculateFinancialScores(userData);

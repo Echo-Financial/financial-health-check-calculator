@@ -1,4 +1,3 @@
-
 const calculateFinancialScores = (userData) => {
     const { personalDetails, expensesAssets, retirementPlanning } = userData;
 
@@ -15,28 +14,47 @@ const calculateFinancialScores = (userData) => {
         ? 100
         : (expensesAssets.emergencyFunds / (expensesAssets.monthlyExpenses * 6)) * 100;
 
-    // Retirement Score based on the ability to meet retirement goals
-    const retirementScore = retirementPlanning.expectedAnnualIncome >= (personalDetails.annualIncome * 0.7)
-       ? 100 : (retirementPlanning.expectedAnnualIncome / (personalDetails.annualIncome * 0.7)) * 100;
+    // Retirement Score
+    const currentRetirementSavings = expensesAssets.savings + expensesAssets.emergencyFunds + expensesAssets.totalInvestments;
+    const savingsGap = retirementPlanning.targetRetirementSavings - currentRetirementSavings;
+    const yearsToRetirement = retirementPlanning.retirementAge - personalDetails.age;
+    const debtCost = expensesAssets.totalDebt / 10; // an estimated cost of debt
+    const costOfLiving = personalDetails.annualIncome / 10; // an estimated cost of living, we may want to expand this later
+    const savingsRateForRetirement = ((personalDetails.annualIncome - expensesAssets.monthlyExpenses - debtCost - costOfLiving) / personalDetails.annualIncome) * 100;
+    let retirementScore = 0;
 
-     // Growth Opportunity Score (Dynamic based on savings, emergency funds and investments)
+    if (currentRetirementSavings >= retirementPlanning.targetRetirementSavings){
+        retirementScore = 100;
+    } else if (savingsRateForRetirement >= 10) {
+        retirementScore = (currentRetirementSavings / retirementPlanning.targetRetirementSavings) * 100;
+    } else if (savingsRateForRetirement <= 5) {
+        retirementScore = (savingsRateForRetirement / 5) * 50;
+    }
+
+    // Ensure score is not higher than 100
+    if (retirementScore > 100) {
+        retirementScore = 100;
+    }
+    if (retirementScore < 0) {
+        retirementScore = 0;
+    }
+
+
+    // Growth Opportunity Score (Dynamic based on savings, emergency funds and investments)
     const growthOpportunityScore = ((expensesAssets.savings + expensesAssets.emergencyFunds + expensesAssets.totalInvestments) / personalDetails.annualIncome) * 100;
-        const scaledGrowthOpportunityScore = growthOpportunityScore < 5 ? 20 :
-            (growthOpportunityScore >= 5 && growthOpportunityScore <= 10) ? 50 :
-            (growthOpportunityScore > 10 && growthOpportunityScore <= 20) ? 80 : 100;
 
     // Potential for Improvement Score (Considering all factors)
-    const potentialForImprovementScore = ((100 - dtiScore) + (100 - savingsScore) + (100 - emergencyFundScore) + (100 - retirementScore) + (100 - scaledGrowthOpportunityScore)) / 5;
+    const potentialForImprovementScore = ((100 - dtiScore) + (100 - savingsScore) + (100 - emergencyFundScore) + (100 - retirementScore) + (100 - growthOpportunityScore)) / 5;
 
 
-    const overallFinancialHealthScore = (dtiScore + savingsScore + emergencyFundScore + retirementScore + scaledGrowthOpportunityScore + potentialForImprovementScore) / 6;
+    const overallFinancialHealthScore = (dtiScore + savingsScore + emergencyFundScore + retirementScore + growthOpportunityScore + potentialForImprovementScore) / 6;
 
     return {
         dtiScore: Math.round(dtiScore),
         savingsScore: Math.round(savingsScore),
         emergencyFundScore: Math.round(emergencyFundScore),
         retirementScore: Math.round(retirementScore),
-        growthOpportunityScore: Math.round(scaledGrowthOpportunityScore),
+        growthOpportunityScore: Math.round(growthOpportunityScore),
         potentialForImprovementScore: Math.round(potentialForImprovementScore),
         overallFinancialHealthScore: Math.round(overallFinancialHealthScore),
     };
