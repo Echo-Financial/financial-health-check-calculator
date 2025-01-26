@@ -1,24 +1,28 @@
-// src/components/InputSections/CreditHealth.jsx
-
 import React from 'react';
-import { Field, ErrorMessage } from 'formik';
+import FormField from '../Forms/FormField.jsx';
+import { useFormikContext } from 'formik';
+import { Typography } from '@mui/material';
 
-const CreditHealth = () => (
-  <>
-    <h3 data-testid="step-5-heading">Credit Health</h3>
-    <div className="form-group">
-      <label htmlFor="creditScore">Credit Score (300-850) *</label>
-      <Field
-        type="number"
-        id="creditScore"
-        name="creditScore"
-        className="input-field"
-        placeholder="e.g. 700"
-        data-testid="credit-score-field"
-      />
-      <ErrorMessage name="creditScore" component="div" className="text-danger" />
+const CreditHealth = () => {
+  const { values, handleChange, handleBlur, touched, errors } = useFormikContext();
+
+  return (
+    <div data-testid="step-4-container">
+          <Typography variant="h3" data-testid="step-4-heading">Credit Health</Typography>
+          <FormField
+              label="Credit Score (300-850) *"
+              id="creditScore"
+              type="number"
+              placeholder="e.g. 700"
+              value={values.creditScore}
+              onChange={handleChange}
+              onBlur={handleBlur}
+              error={touched.creditScore && Boolean(errors.creditScore)}
+              helperText={touched.creditScore && errors.creditScore}
+               data-testid="credit-score-field"
+            />
     </div>
-  </>
-);
+  );
+};
 
 export default CreditHealth;

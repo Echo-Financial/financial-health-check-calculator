@@ -1,21 +1,25 @@
-// src/_tests_/PersonalDetails.test.js
-
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom/extend-expect';
 import PersonalDetails from '../components/InputSections/PersonalDetails';
-import { Formik } from 'formik';
+import { Formik, Form } from 'formik';
 import * as Yup from 'yup';
+import axios from 'axios';
+
+jest.mock('axios');
 
 const renderWithFormik = (component, initialValues = {}, validationSchema = {}) => {
   return render(
     <Formik initialValues={initialValues} validationSchema={validationSchema} onSubmit={jest.fn()}>
-      {component}
+        <Form data-testid="personal-details-form">{component}</Form>
     </Formik>
   );
 };
 
 describe('PersonalDetails Component', () => {
+   beforeEach(() => {
+    axios.post.mockClear();
+  });
   const initialValues = {
     age: '',
     annualIncome: '',
@@ -42,10 +46,7 @@ describe('PersonalDetails Component', () => {
 
   test('shows validation errors for required fields', async () => {
     renderWithFormik(<PersonalDetails />, initialValues, validationSchema);
-
-    // Trigger validation by attempting to submit the form
-    fireEvent.submit(screen.getByRole('form'));
-
+     fireEvent.submit(screen.getByTestId('personal-details-form'));
     // Check for validation messages
     expect(await screen.findByText(/Age is required/i)).toBeInTheDocument();
     expect(await screen.findByText(/Annual Income is required/i)).toBeInTheDocument();
@@ -53,35 +54,29 @@ describe('PersonalDetails Component', () => {
 
   test('shows specific validation errors for invalid inputs', async () => {
     renderWithFormik(<PersonalDetails />, initialValues, validationSchema);
-
-    // Fill invalid inputs
-    fireEvent.change(screen.getByLabelText(/Age \*/i), { target: { value: '16' } }); // Invalid: too young
-    fireEvent.change(screen.getByLabelText(/Annual Income \*/i), { target: { value: '-5000' } }); // Invalid: negative
-    fireEvent.change(screen.getByLabelText(/Income from Interest/i), { target: { value: '-200' } }); // Invalid: negative
-    fireEvent.change(screen.getByLabelText(/Income from Property/i), { target: { value: '-150' } }); // Invalid: negative
-
-    // Trigger validation
-    fireEvent.submit(screen.getByRole('form'));
-
+       // Fill invalid inputs
+      fireEvent.change(screen.getByLabelText(/Age \*/i), { target: { value: '16' } }); // Invalid: too young
+       fireEvent.change(screen.getByLabelText(/Annual Income \*/i), { target: { value: '-5000' } }); // Invalid: negative
+       fireEvent.change(screen.getByLabelText(/Income from Interest/i), { target: { value: '-200' } }); // Invalid: negative
+       fireEvent.change(screen.getByLabelText(/Income from Property/i), { target: { value: '-150' } }); // Invalid: negative
+       // Trigger validation
+       fireEvent.submit(screen.getByTestId('personal-details-form'));
     // Check for specific error messages
     expect(await screen.findByText(/Must be at least 18/i)).toBeInTheDocument();
-    expect(await screen.findAllByText(/Must be at least 0/i)).toHaveLength(3); // For annualIncome, incomeFromInterest, incomeFromProperty
+      expect(await screen.findAllByText(/Must be at least 0/i)).toHaveLength(3); // For annualIncome, incomeFromInterest, incomeFromProperty
   });
 
   test('accepts valid inputs', async () => {
     renderWithFormik(<PersonalDetails />, initialValues, validationSchema);
-
-    // Fill valid inputs
-    fireEvent.change(screen.getByLabelText(/Age \*/i), { target: { value: '30' } });
-    fireEvent.change(screen.getByLabelText(/Annual Income \*/i), { target: { value: '50000' } });
-    fireEvent.change(screen.getByLabelText(/Income from Interest/i), { target: { value: '2000' } });
-    fireEvent.change(screen.getByLabelText(/Income from Property/i), { target: { value: '1500' } });
-
-    // Trigger validation
-    fireEvent.submit(screen.getByRole('form'));
-
+      // Fill valid inputs
+     fireEvent.change(screen.getByLabelText(/Age \*/i), { target: { value: '30' } });
+      fireEvent.change(screen.getByLabelText(/Annual Income \*/i), { target: { value: '50000' } });
+      fireEvent.change(screen.getByLabelText(/Income from Interest/i), { target: { value: '2000' } });
+     fireEvent.change(screen.getByLabelText(/Income from Property/i), { target: { value: '1500' } });
+     // Trigger validation
+        fireEvent.submit(screen.getByTestId('personal-details-form'));
     // Check that no error messages appear
-    expect(screen.queryByText(/is required/i)).not.toBeInTheDocument();
-    expect(screen.queryByText(/Must be at least/i)).not.toBeInTheDocument();
+      expect(screen.queryByText(/is required/i)).not.toBeInTheDocument();
+      expect(screen.queryByText(/Must be at least/i)).not.toBeInTheDocument();
   });
 });

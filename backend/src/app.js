@@ -7,6 +7,7 @@ const morgan = require('morgan');
 const submitRoute = require('./routes/submit');
 const authRoute = require('./routes/auth');
 const healthRoute = require('./routes/health'); // If implemented
+const gptRoute = require('./routes/gpt'); // Add the gpt route
 // const testRoute = require('./routes/test');     // Removed
 
 // Error Handling Middleware
@@ -23,6 +24,7 @@ app.use(morgan('dev'));
 app.use('/api/submit', submitRoute);
 app.use('/api/auth', authRoute);
 app.use('/api/health', healthRoute); // If implemented
+app.use('/api', gptRoute); // Add the gpt route
 // app.use('/api/test', testRoute);     // Removed
 
 // Error Handling

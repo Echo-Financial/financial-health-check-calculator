@@ -1,0 +1,15 @@
+// Frontend/src/styles/Report.css
+
+.report-container .insight-container {
+  margin-top: 20px;
+  padding: 15px;
+  border-left: 3px solid #ddd;
+  background-color: #f9f9f9;
+  border-radius: 5px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  }
+
+.report-container .insight-container p {
+    margin-bottom: 10px;
+    line-height: 1.6;
+}

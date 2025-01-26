@@ -1,69 +1,76 @@
 import React from 'react';
-import { Field, ErrorMessage } from 'formik';
+import { useFormikContext } from 'formik';
+import FormField from '../Forms/FormField.jsx';
+import { Typography } from '@mui/material';
 
-const ExpensesAssets = () => (
-  <>
-    <h3 data-testid="step-2-heading">Expenses & Debt</h3>
-    <div className="form-group">
-      <label htmlFor="monthlyExpenses">Monthly Expenses *</label>
-      <Field
-        type="number"
-        id="monthlyExpenses"
-        name="monthlyExpenses"
-        className="input-field"
-        placeholder="e.g., 2000"
-      />
-      <ErrorMessage name="monthlyExpenses" component="div" className="text-danger" />
-    </div>
-    
-    <div className="form-group">
-      <label htmlFor="totalDebt">Total Debt *</label>
-      <Field
-        type="number"
-        id="totalDebt"
-        name="totalDebt"
-        className="input-field"
-        placeholder="e.g., 10000"
-      />
-      <ErrorMessage name="totalDebt" component="div" className="text-danger" />
-    </div>
+const ExpensesAssets = () => {
+  const { values, handleChange, handleBlur, touched, errors } = useFormikContext();
 
-    <div className="form-group">
-      <label htmlFor="savings">Savings *</label>
-      <Field
-        type="number"
-        id="savings"
-        name="savings"
-        className="input-field"
-        placeholder="e.g., 5000"
-      />
-      <ErrorMessage name="savings" component="div" className="text-danger" />
-    </div>
-
-    <div className="form-group">
-      <label htmlFor="emergencyFunds">Emergency Funds *</label>
-      <Field
-        type="number"
-        id="emergencyFunds"
-        name="emergencyFunds"
-        className="input-field"
-        placeholder="e.g., 10000"
-      />
-      <ErrorMessage name="emergencyFunds" component="div" className="text-danger" />
-    </div>
-    {/* New totalInvestments Field */}
-    <div className="form-group">
-        <label htmlFor="totalInvestments">Total Investments *</label>
-        <Field
+  return (
+    <div data-testid="step-2-container">
+        <Typography variant="h3" data-testid="step-2-heading">Expenses & Debt</Typography>
+        <FormField
+            label="Monthly Expenses *"
+            id="monthlyExpenses"
             type="number"
-            id="totalInvestments"
-            name="totalInvestments"
-            className="input-field"
             placeholder="e.g., 2000"
+            value={values.monthlyExpenses}
+            onChange={handleChange}
+            onBlur={handleBlur}
+            error={touched.monthlyExpenses && Boolean(errors.monthlyExpenses)}
+            helperText={touched.monthlyExpenses && errors.monthlyExpenses}
+            data-testid="monthly-expenses-input"
         />
-        <ErrorMessage name="totalInvestments" component="div" className="text-danger" />
+        <FormField
+            label="Total Debt *"
+            id="totalDebt"
+            type="number"
+            placeholder="e.g., 10000"
+            value={values.totalDebt}
+            onChange={handleChange}
+            onBlur={handleBlur}
+            error={touched.totalDebt && Boolean(errors.totalDebt)}
+            helperText={touched.totalDebt && errors.totalDebt}
+             data-testid="total-debt-input"
+        />
+        <FormField
+            label="Savings *"
+            id="savings"
+            type="number"
+            placeholder="e.g., 5000"
+            value={values.savings}
+            onChange={handleChange}
+            onBlur={handleBlur}
+            error={touched.savings && Boolean(errors.savings)}
+            helperText={touched.savings && errors.savings}
+             data-testid="savings-input"
+        />
+        <FormField
+            label="Emergency Funds *"
+            id="emergencyFunds"
+            type="number"
+            placeholder="e.g., 10000"
+            value={values.emergencyFunds}
+            onChange={handleChange}
+            onBlur={handleBlur}
+            error={touched.emergencyFunds && Boolean(errors.emergencyFunds)}
+            helperText={touched.emergencyFunds && errors.emergencyFunds}
+           data-testid="emergency-funds-input"
+        />
+        <FormField
+            label="Total Investments *"
+             id="totalInvestments"
+             type="number"
+             placeholder="e.g., 2000"
+            value={values.totalInvestments}
+             onChange={handleChange}
+            onBlur={handleBlur}
+            error={touched.totalInvestments && Boolean(errors.totalInvestments)}
+             helperText={touched.totalInvestments && errors.totalInvestments}
+              data-testid="total-investments-input"
+        />
     </div>
-  </>
-);
+  );
+};
 
 export default ExpensesAssets;

@@ -1,6 +1,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-
+import { ThemeProvider } from '@mui/material';
+import theme from './theme.js';
 // Import the AuthProvider instead of AuthContext
 import { AuthProvider } from './context/AuthContext.js';
 
@@ -16,32 +17,34 @@ import './styles/main.scss';
 
 function App() {
   return (
-    <AuthProvider>
-      <Router>
-        <div className="App">
-          <Header />
-          <main className="container mt-5">
-            <Routes>
-              <Route path="/" element={<Home />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/register" element={<Register />} />
+      <ThemeProvider theme={theme}>
+      <AuthProvider>
+          <Router>
+              <div className="App">
+                  <Header />
+                  <main className="container mt-5">
+                      <Routes>
+                          <Route path="/" element={<Home />} />
+                          <Route path="/login" element={<Login />} />
+                          <Route path="/register" element={<Register />} />
 
-              {/* 
-                Removed the old "/results" route entirely to avoid references 
+                          {/*
+                Removed the old "/results" route entirely to avoid references
                 to the deleted Results.js file.
               */}
 
-              {/* 
-                The user is navigated to "/report" from LeadCaptureForm.jsx 
+                          {/*
+                The user is navigated to "/report" from LeadCaptureForm.jsx
                 after submission. This route displays the merged Report component.
               */}
-              <Route path="/report" element={<Report />} />
-            </Routes>
-          </main>
-          <Footer />
-        </div>
-      </Router>
-    </AuthProvider>
+                          <Route path="/report" element={<Report />} />
+                      </Routes>
+                  </main>
+                  <Footer />
+              </div>
+          </Router>
+      </AuthProvider>
+      </ThemeProvider>
   );
 }
 

@@ -1,43 +1,52 @@
 import React from 'react';
-import { Field, ErrorMessage } from 'formik';
+import FormField from '../Forms/FormField.jsx';
+import { useFormikContext } from 'formik';
+import { Typography } from '@mui/material';
 
-const ContactDetails = () => (
-    <>
-        <h3 data-testid="step-5-heading">Contact Details</h3>
-        <div className="form-group">
-            <label htmlFor="email">Email *</label>
-            <Field
-                type="email"
-                id="email"
-                name="email"
-                className="input-field"
-                placeholder="e.g., test@example.com"
-            />
-           <ErrorMessage name="email" component="div" className="text-danger" />
-        </div>
-       <div className="form-group">
-            <label htmlFor="name">Name *</label>
-            <Field
-                type="text"
-                id="name"
-                name="name"
-                className="input-field"
-                placeholder="e.g., John Doe"
-            />
-            <ErrorMessage name="name" component="div" className="text-danger" />
-        </div>
-         <div className="form-group">
-            <label htmlFor="phone">Phone</label>
-            <Field
-                type="text"
-                id="phone"
-                name="phone"
-                className="input-field"
-                placeholder="e.g., 123-456-7890"
-            />
-             <ErrorMessage name="phone" component="div" className="text-danger" />
-        </div>
-    </>
-);
+const ContactDetails = () => {
+    const { values, handleChange, handleBlur, touched, errors } = useFormikContext();
+
+  return (
+    <div data-testid="step-5-container">
+        <Typography variant="h3" data-testid="step-5-heading">Contact Details</Typography>
+          <FormField
+              label="Email *"
+               id="email"
+              type="email"
+            placeholder="e.g., test@example.com"
+             value={values.email}
+             onChange={handleChange}
+              onBlur={handleBlur}
+             error={touched.email && Boolean(errors.email)}
+            helperText={touched.email && errors.email}
+             data-testid="email-input"
+         />
+        <FormField
+             label="Name *"
+            id="name"
+            type="text"
+            placeholder="e.g., John Doe"
+            value={values.name}
+            onChange={handleChange}
+            onBlur={handleBlur}
+             error={touched.name && Boolean(errors.name)}
+              helperText={touched.name && errors.name}
+            data-testid="name-input"
+         />
+         <FormField
+              label="Phone"
+              id="phone"
+              type="text"
+              placeholder="e.g., 123-456-7890"
+             value={values.phone}
+             onChange={handleChange}
+             onBlur={handleBlur}
+            error={touched.phone && Boolean(errors.phone)}
+            helperText={touched.phone && errors.phone}
+             data-testid="phone-input"
+        />
+    </div>
+  );
+};
 
 export default ContactDetails;

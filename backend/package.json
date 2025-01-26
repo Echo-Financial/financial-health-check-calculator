@@ -3,6 +3,11 @@
   "version": "1.0.0",
   "description": "Backend for Financial Health Check Calculator",
   "main": "src/index.js",
+  "jest": {
+    "setupFiles": [
+      "<rootDir>/jest.setup.js"
+    ]
+  },
   "scripts": {
     "dev": "nodemon src/index.js",
     "start": "node src/index.js",
@@ -17,7 +22,9 @@
     "jsonwebtoken": "^9.0.2",
     "mongodb": "^6.12.0",
     "mongoose": "^8.9.2",
-    "morgan": "^1.10.0"
+    "morgan": "^1.10.0",
+    "openai": "^4.79.1",
+    "winston": "^3.17.0"
   },
   "devDependencies": {
     "jest": "^27.0.6",

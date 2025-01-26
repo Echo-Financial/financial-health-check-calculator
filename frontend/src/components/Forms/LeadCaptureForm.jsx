@@ -97,9 +97,11 @@ const LeadCaptureForm = () => {
     const totalSteps = 5;
     const [showModal, setShowModal] = useState(false);
     const [scores, setScores] = useState(null);
+    const [isLoading, setIsLoading] = useState(false); // added loading state
 
     const handleSubmit = async (values, { setSubmitting }) => {
         console.log('handleSubmit called');
+        setIsLoading(true); // Start loading
         try {
             const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
             const transformedValues = transformValues(values);
@@ -130,14 +132,16 @@ const LeadCaptureForm = () => {
             };
             const response = await axios.post(`${API_URL}/api/submit`, payload);
             setScores(response.data.scores);
-            setSubmitting(false);
+          setShowModal(true);  // move inside try
         } catch (err) {
-            const message =
-                err.response?.data?.message || 'Submission failed. Please try again.';
+             let message = 'Submission failed. Please try again.';
+            if(err.response?.data?.message){
+                message = err.response.data.message;
+            }
            setError(message);
             setSubmitting(false);
-        } finally{
-           setShowModal(true);
+        } finally {
+            setIsLoading(false); // End loading
         }
     };
 
@@ -155,7 +159,10 @@ const LeadCaptureForm = () => {
         }
     };
 
-    const handlePrevious = () => setStep(step - 1);
+    const handlePrevious = () => {
+        setStep(step - 1);
+         setShowModal(false);  // close modal when navigating backwards
+    }
 
     const getFieldsForStep = (step) => {
         switch (step) {
@@ -252,15 +259,15 @@ const LeadCaptureForm = () => {
                                     Next
                                 </Button>
                             ) : (
-                                <Button type="submit" variant="success" disabled={formik.isSubmitting}>
-                                    {formik.isSubmitting ? 'Submitting...' : 'Submit'}
+                                <Button type="submit" variant="success" disabled={formik.isSubmitting || isLoading}>
+                                    {isLoading ? 'Submitting...' : formik.isSubmitting ? 'Submitting...' : 'Submit'}
                                 </Button>
                             )}
                         </div>
                     </Form>
                 )}
             </Formik>
-            {showModal && (
+            {showModal && scores && (
                 <div className="modal-container">
                     <div className="modal-content">
                         <div className="modal-header">

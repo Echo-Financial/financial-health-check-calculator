@@ -1,6 +1,7 @@
 // backend/src/index.js
 
-require('dotenv').config();
+require('dotenv').config({ path: './.env' });
+console.log("OPENAI_API_KEY (dev mode):", process.env.OPENAI_API_KEY);
 const mongoose = require('mongoose');
 const app = require('./app');
 

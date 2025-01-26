@@ -1896,7 +1896,7 @@
   resolved "https://registry.npmjs.org/@mui/core-downloads-tracker/-/core-downloads-tracker-5.16.14.tgz"
   integrity sha512-sbjXW+BBSvmzn61XyTMun899E7nGPTXwqD9drm1jBUAvWEhJpPFIRxwQQiATWZnd9rvdxtnhhdsDxEGWI0jxqA==
 
-"@mui/material@^5.14.19":
+"@mui/material@^5.16.14":
   version "5.16.14"
   resolved "https://registry.npmjs.org/@mui/material/-/material-5.16.14.tgz"
   integrity sha512-eSXQVCMKU2xc7EcTxe/X/rC9QsV2jUe8eLM3MUCPYbo6V52eCE436akRIvELq/AqZpxx2bwkq7HC0cRhLB+yaw==

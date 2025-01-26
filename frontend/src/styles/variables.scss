@@ -1,5 +1,3 @@
-// frontend/src/styles/_variables.scss
-
 // Colors
 $primary-color: #00274D;   // Navy, professional and trustworthy
 $accent-color: #3CB371;    // Teal/Green, suggests growth and success
@@ -14,3 +12,12 @@ $font-stack: 'Nunito Sans, Arial, sans-serif';
 $spacing-unit: 8px;
 $border-radius: 4px; 
 
+@function color-from-score($score) {
+    $hue: calc(120deg * ($score / 100));
+    @return hsl($hue, 100%, 50%, 0.6); // using 60% opacity
+  }
+  
+  @function border-color-from-score($score){
+      $hue: calc(120deg * ($score / 100));
+      @return hsl($hue, 100%, 50%, 1); // opaque
+  }

@@ -1,59 +1,64 @@
-// src/components/InputSections/PersonalDetails.jsx
-
 import React from 'react';
-import { Field, ErrorMessage } from 'formik';
+import { useFormikContext } from 'formik';
+import FormField from '../Forms/FormField.jsx';
+import { Typography } from '@mui/material';
 
-const PersonalDetails = () => (
-  <>
-    <h3 data-testid="step-1-heading">Personal Details</h3>
-    <div className="form-group">
-      <label htmlFor="age">Age *</label>
-      <Field
-        type="number"
-        id="age"
-        name="age"
-        className="input-field"
-        placeholder="e.g., 30"
-      />
-      <ErrorMessage name="age" component="div" className="text-danger" />
-    </div>
-    
-    <div className="form-group">
-      <label htmlFor="annualIncome">Annual Income *</label>
-      <Field
-        type="number"
-        id="annualIncome"
-        name="annualIncome"
-        className="input-field"
-        placeholder="e.g., 50000"
-      />
-      <ErrorMessage name="annualIncome" component="div" className="text-danger" />
-    </div>
+const PersonalDetails = () => {
+  const { values, handleChange, handleBlur, touched, errors } = useFormikContext();
 
-    <div className="form-group">
-      <label htmlFor="incomeFromInterest">Income from Interest *</label>
-      <Field
-        type="number"
-        id="incomeFromInterest"
-        name="incomeFromInterest"
-        className="input-field"
-        placeholder="e.g., 2000"
+  return (
+    <div data-testid="step-1-container">
+      <Typography variant="h3" data-testid="step-1-heading">Personal Details</Typography>
+       <FormField
+            label="Age *"
+             id="age"
+            type="number"
+          placeholder="e.g., 30"
+           value={values.age}
+           onChange={handleChange}
+            onBlur={handleBlur}
+            error={touched.age && Boolean(errors.age)}
+            helperText={touched.age && errors.age}
+             data-testid="age-input"
       />
-      <ErrorMessage name="incomeFromInterest" component="div" className="text-danger" />
+       <FormField
+            label="Annual Income *"
+           id="annualIncome"
+           type="number"
+           placeholder="e.g., 50000"
+          value={values.annualIncome}
+            onChange={handleChange}
+            onBlur={handleBlur}
+            error={touched.annualIncome && Boolean(errors.annualIncome)}
+           helperText={touched.annualIncome && errors.annualIncome}
+           data-testid="annual-income-input"
+        />
+         <FormField
+             label="Income from Interest *"
+              id="incomeFromInterest"
+            type="number"
+          placeholder="e.g., 1000"
+            value={values.incomeFromInterest}
+            onChange={handleChange}
+             onBlur={handleBlur}
+             error={touched.incomeFromInterest && Boolean(errors.incomeFromInterest)}
+            helperText={touched.incomeFromInterest && errors.incomeFromInterest}
+            data-testid="income-from-interest-input"
+        />
+        <FormField
+             label="Income from Property *"
+             id="incomeFromProperty"
+           type="number"
+           placeholder="e.g., 5000"
+           value={values.incomeFromProperty}
+            onChange={handleChange}
+           onBlur={handleBlur}
+           error={touched.incomeFromProperty && Boolean(errors.incomeFromProperty)}
+           helperText={touched.incomeFromProperty && errors.incomeFromProperty}
+          data-testid="income-from-property-input"
+       />
     </div>
-    
-    <div className="form-group">
-      <label htmlFor="incomeFromProperty">Income from Property *</label>
-      <Field
-        type="number"
-        id="incomeFromProperty"
-        name="incomeFromProperty"
-        className="input-field"
-        placeholder="e.g., 1500"
-      />
-      <ErrorMessage name="incomeFromProperty" component="div" className="text-danger" />
-    </div>
-  </>
-);
+  );
+};
 
 export default PersonalDetails;

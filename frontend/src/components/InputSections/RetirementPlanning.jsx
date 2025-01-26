@@ -1,55 +1,64 @@
 import React from 'react';
-import { Field, ErrorMessage } from 'formik';
+import { useFormikContext } from 'formik';
+import FormField from '../Forms/FormField.jsx';
+import { Typography } from '@mui/material';
 
-const RetirementPlanning = () => (
-  <>
-    <h3 data-testid="step-3-heading">Assets & Savings</h3>
-    <div className="form-group">
-      <label htmlFor="totalAssets">Total Assets *</label>
-      <Field
-        type="number"
-        id="totalAssets"
-        name="totalAssets"
-        className="input-field"
-        placeholder="e.g., 20000"
-      />
-      <ErrorMessage name="totalAssets" component="div" className="text-danger" />
+const RetirementPlanning = () => {
+  const { values, handleChange, handleBlur, touched, errors } = useFormikContext();
+
+  return (
+    <div data-testid="step-3-container">
+         <Typography variant="h3" data-testid="step-3-heading">Assets & Savings</Typography>
+        <FormField
+           label="Total Assets *"
+            id="totalAssets"
+           type="number"
+            placeholder="e.g., 20000"
+           value={values.totalAssets}
+            onChange={handleChange}
+           onBlur={handleBlur}
+           error={touched.totalAssets && Boolean(errors.totalAssets)}
+           helperText={touched.totalAssets && errors.totalAssets}
+             data-testid="total-assets-input"
+        />
+       <FormField
+             label="Current Retirement Savings *"
+             id="currentRetirementSavings"
+              type="number"
+           placeholder="e.g., 15000"
+            value={values.currentRetirementSavings}
+            onChange={handleChange}
+            onBlur={handleBlur}
+            error={touched.currentRetirementSavings && Boolean(errors.currentRetirementSavings)}
+             helperText={touched.currentRetirementSavings && errors.currentRetirementSavings}
+              data-testid="current-retirement-savings-input"
+        />
+       <FormField
+           label="Target Retirement Savings *"
+             id="targetRetirementSavings"
+            type="number"
+             placeholder="e.g., 300000"
+            value={values.targetRetirementSavings}
+            onChange={handleChange}
+             onBlur={handleBlur}
+             error={touched.targetRetirementSavings && Boolean(errors.targetRetirementSavings)}
+            helperText={touched.targetRetirementSavings && errors.targetRetirementSavings}
+             data-testid="target-retirement-savings-input"
+         />
+       <FormField
+             label="Retirement Age *"
+             id="retirementAge"
+             type="number"
+            placeholder="e.g., 65"
+             value={values.retirementAge}
+             onChange={handleChange}
+            onBlur={handleBlur}
+            error={touched.retirementAge && Boolean(errors.retirementAge)}
+           helperText={touched.retirementAge && errors.retirementAge}
+           data-testid="retirement-age-input"
+        />
     </div>
-    
-    <div className="form-group">
-      <label htmlFor="currentRetirementSavings">Current Retirement Savings *</label>
-      <Field
-        type="number"
-        id="currentRetirementSavings"
-        name="currentRetirementSavings"
-        className="input-field"
-        placeholder="e.g., 15000"
-      />
-      <ErrorMessage name="currentRetirementSavings" component="div" className="text-danger" />
-    </div>
-      <div className="form-group">
-      <label htmlFor="targetRetirementSavings">Target Retirement Savings *</label>
-      <Field
-        type="number"
-        id="targetRetirementSavings"
-        name="targetRetirementSavings"
-        className="input-field"
-        placeholder="e.g., 300000"
-      />
-      <ErrorMessage name="targetRetirementSavings" component="div" className="text-danger" />
-    </div>
-     <div className="form-group">
-      <label htmlFor="retirementAge">Retirement Age *</label>
-      <Field
-        type="number"
-        id="retirementAge"
-        name="retirementAge"
-        className="input-field"
-        placeholder="e.g., 65"
-      />
-      <ErrorMessage name="retirementAge" component="div" className="text-danger" />
-    </div>
-  </>
-);
+  );
+};
 
 export default RetirementPlanning;
