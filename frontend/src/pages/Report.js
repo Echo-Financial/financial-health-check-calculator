@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import Charts from '../components/Visualisations/Charts.js';
 import Gauge from '../components/Visualisations/Gauge.js';
@@ -13,15 +13,7 @@ const Report = () => {
     const [insights, setInsights] = useState('');
     const [loading, setLoading] = useState(false);
 
-
-    useEffect(() => {
-        if(scores){
-           fetchInsights();
-        }
-    }, [scores]);
-
-
-    const fetchInsights = async () => {
+    const fetchInsights = useCallback(async () => {
         setLoading(true);
          try {
              const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
@@ -45,7 +37,14 @@ const Report = () => {
          } finally {
             setLoading(false);
          }
-    };
+    }, [scores]);
+
+
+    useEffect(() => {
+        if(scores){
+           fetchInsights();
+        }
+    }, [scores, fetchInsights]);
 
 
   // If no scores are present, redirect to home
@@ -67,6 +66,9 @@ const Report = () => {
 
   // Extract the "overallFinancialHealthScore" (change this property name if your backend uses a different key)
   const overallScore = scores.overallFinancialHealthScore || 0;
+    const removeAsterisks = (text) => {
+        return text.replace(/\*/g, '');
+    };
 
 
   return (
@@ -83,10 +85,6 @@ const Report = () => {
         ))}
       </ul>
 
-        <div style={{ backgroundColor: `hsl(120, 100%, 50%, 0.6)`, padding: '10px' }}>Test - HSL Color</div>
-        <div style={{ backgroundColor: `var(--color-from-score-100)`, padding: '10px' }}>Test - var(--color-from-score-100)</div>
-        <div style={{ backgroundColor: `var(--color-from-score-0)`, padding: '10px' }}>Test - var(--color-from-score-0)</div>
-
       {/* Highlight the overall financial health with a radial gauge */}
       <h3>Overall Financial Health</h3>
       <Gauge value={overallScore} label="Overall Health Score" />
@@ -102,13 +100,11 @@ const Report = () => {
                 Our experienced advisors at Echo Financial Advisors Ltd can provide detailed insights and a
                 tailored plan to help you reach your goals.
             </p>
-            <a href="https://echofinancialadvisors.trafft.com/" target="_blank" className="btn btn-primary btn-submit">
+            <a href="https://echofinancialadvisors.trafft.com/" target="_blank"  rel="noopener noreferrer" className="btn btn-primary btn-submit">
                 Schedule a Consultation
             </a>
             {loading ? <p>Loading...</p> : null}
-             {insights && <div className="mt-4 insight-container">{insights.split('\n\n').map((paragraph, index) => (
-            <p key={index}>{paragraph}</p>
-            ))}</div>}
+             {insights && <div className="mt-4 insight-container" dangerouslySetInnerHTML={{__html: removeAsterisks(insights)}}></div>}
         </div>
     </div>
   );
