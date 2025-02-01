@@ -123,6 +123,7 @@ const LeadCaptureForm = () => {
                 retirementPlanning: {
                     retirementAge: transformedValues.retirementAge,
                      targetRetirementSavings: transformedValues.targetRetirementSavings,
+                     currentRetirementSavings: transformedValues.currentRetirementSavings, // <-- ADDED
                 },
                contactInfo: {
                    email: transformedValues.email,
@@ -210,9 +211,10 @@ const LeadCaptureForm = () => {
         <div className="lead-form-container" data-testid="lead-capture-form">
             <h2>Complete Your Financial Health Check</h2>
             <p>
-                Provide the essential details in a few simple steps. After submitting, you'll have the
-                option to continue via LeadPal to receive your personalized report.
+                Provide your essential details in just a few simple steps. Once you submit the form,
+                we'll generate your personalized financial report, which you can review immediately.
             </p>
+
             {error && <p className="text-danger">{error}</p>}
             <Formik
                 initialValues={{

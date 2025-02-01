@@ -17,6 +17,7 @@ const userSchema = Joi.object({
     retirementPlanning: Joi.object({
         retirementAge: Joi.number().integer().min(18).required(),
         targetRetirementSavings: Joi.number().min(0).required(),
+        currentRetirementSavings: Joi.number().min(0).required(), // <-- ADDED
         adjustForInflation: Joi.boolean().optional(),
     }).required(),
     contactInfo: Joi.object({

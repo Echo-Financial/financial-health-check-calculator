@@ -1,55 +1,66 @@
-@use './variables' as *;
+/******************************************************
+ * _base.scss
+ * Base resets & global typography using the new brand
+ ******************************************************/
 
-*,
-*::before,
-*::after {
-  box-sizing: border-box;
-}
+ @use './brand' as brand;
 
-html {
-  font-size: 16px;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
-body {
-  margin: 0;
-  font-family: $font-stack; // Now correctly referenced
-  color: $dark-gray;
-  background-color: $light-gray;
-}
-
-h1, h2, h3 {
-  margin-top: $spacing-unit * 2;
-  margin-bottom: $spacing-unit;
-  font-weight: 700;
-  line-height: 1.2;
-}
-
-p {
-  margin: $spacing-unit * 2 0;
-  line-height: 1.5;
-}
-
-a {
-  color: $primary-color;
-  text-decoration: none;
-
-  &:hover,
-  &:focus {
-    text-decoration: underline;
-  }
-}
-
-// Responsive font sizes for headings
-@media (max-width: 768px) {
-  h1 {
-    font-size: 2rem;
-  }
-  h2 {
-    font-size: 1.75rem;
-  }
-  h3 {
-    font-size: 1.25rem;
-  }
-}
+ *,
+ *::before,
+ *::after {
+   box-sizing: border-box;
+ }
+ 
+ html {
+   font-size: 16px; 
+   -webkit-font-smoothing: antialiased;
+   -moz-osx-font-smoothing: grayscale;
+ }
+ 
+ /* Body defaults */
+ body {
+   margin: 0;
+   background-color: darken(brand.$brand-primary, 20%);
+   color: brand.$brand-text-light;
+   font-family: brand.$font-body;;
+   line-height: 1.6;
+ }
+ 
+ /* Headings: use the brand heading font */
+ h1, h2, h3 {
+   margin-top: brand.$spacing-base * 2; 
+   margin-bottom: brand.$spacing-base;
+   font-weight: 700;
+   line-height: 1.2;
+   font-family: brand.$font-heading;
+ }
+ 
+ /* Paragraph spacing */
+ p {
+   margin: brand.$spacing-base * 2 0;
+ }
+ 
+ /* Links */
+ a {
+   color: brand.$brand-primary;
+   text-decoration: none;
+ 
+   &:hover,
+   &:focus {
+     text-decoration: underline;
+   }
+ }
+ 
+ /* Responsive headings */
+ @media (max-width: 768px) {
+   h1 {
+     font-size: 2rem;
+   }
+   h2 {
+     font-size: 1.75rem;
+   }
+   h3 {
+     font-size: 1.25rem;
+   }
+ }
+ 

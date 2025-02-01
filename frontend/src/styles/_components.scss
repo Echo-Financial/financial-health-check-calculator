@@ -1,115 +1,186 @@
-@use './variables' as *;
+/******************************************************
+ * _components.scss
+ * Combines original form/progress styles + new feature/FAQ styles
+ ******************************************************/
 
-// Form container for a polished look
-.lead-form-container {
-  background: $white;
-  border-radius: $border-radius;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-  padding: $spacing-unit * 4;
-  max-width: 600px;
-  margin: $spacing-unit * 5 auto;
+ @use './brand' as brand;
 
+ /* --- Existing: Lead Form Container --- */
+ .lead-form-container {
+  background-color: brand.$brand-text-light; /* White (#FFFFFF) */
+  color: brand.$brand-text-dark;            /* #333 or black */
+   border-radius: brand.$border-radius-base;
+   box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+   padding: brand.$spacing-base * 4;
+   max-width: 600px;
+   margin: brand.$spacing-base * 5 auto;
+ 
    @media (max-width: 768px) {
-    padding: $spacing-unit * 2;
-     margin: $spacing-unit * 2 auto;
-  }
-}
-
-.form-heading {
-  font-size: 1.75rem;
-  margin-bottom: $spacing-unit;
-  font-weight: 700;
-  color: $primary-color;
-}
-
-.form-subtext {
-  margin-bottom: $spacing-unit * 4;
-  color: #555;
-  line-height: 1.4;
-}
-
-.styled-form {
-  .form-section-heading {
-    margin-top: $spacing-unit * 4;
-    margin-bottom: $spacing-unit * 2;
-    font-size: 1.25rem;
-    color: $primary-color;
-    border-bottom: 1px solid #ddd;
-    padding-bottom: $spacing-unit;
-  }
-
-  .form-group {
-    display: flex;
-    flex-direction: column;
-    margin-bottom: $spacing-unit * 2;
-
-    label {
-      font-weight: 600;
-      margin-bottom: $spacing-unit;
-    }
-
-    .input-field {
-      padding: $spacing-unit * 1.5;
-      border: 1px solid #ccc;
-      border-radius: $border-radius;
-      font-size: 1rem;
-
-      &:focus {
-        border-color: $primary-color;
-        outline: none;
-      }
-    }
-
-    .text-danger {
-      font-size: 0.875rem;
-      color: #d9534f;
-      margin-top: $spacing-unit;
-    }
-  }
-
-  .checkbox-group {
-    flex-direction: row;
-    align-items: center;
-    .checkbox-input {
-      margin-right: $spacing-unit;
-    }
-  }
-
-  .btn-submit {
-    display: inline-block;
-    background: $accent-color;
-    color: $white;
-    padding: $spacing-unit * 1.5 $spacing-unit * 3;
-    border: none;
-    border-radius: $border-radius;
-    font-weight: 600;
-    cursor: pointer;
-    margin-top: $spacing-unit * 4;
-    transition: background-color 0.3s ease;
-    text-align: center;
-
-    &:hover {
-      background: darken($accent-color, 10%);
-    }
-
-    &:disabled {
-      opacity: 0.6;
-      cursor: not-allowed;
-    }
-  }
-}
-
-// Custom styles for the progress bar
-.progress {
-  margin-bottom: $spacing-unit * 3;
-  background-color: $light-gray;
-  border-radius: $border-radius;
-  overflow: hidden;
-  
-  .progress-bar {
-    background-color: $accent-color;
-    color: $white;
-    text-align: center;
-    transition: width 0.3s ease;
-  }
-}
+     padding: brand.$spacing-base * 2;
+     margin: brand.$spacing-base * 2 auto;
+   }
+ }
+ 
+ .form-heading {
+   font-size: 1.75rem;
+   margin-bottom: brand.$spacing-base;
+   font-weight: 700;
+   color: brand.$brand-primary; 
+ }
+ 
+ .form-subtext {
+   margin-bottom: brand.$spacing-base * 4;
+   color: #555;
+   line-height: 1.4;
+ }
+ 
+ /* --- Existing: Styled Form Groups, Checkboxes, Submit Button --- */
+ .styled-form {
+   .form-section-heading {
+     margin-top: brand.$spacing-base * 4;
+     margin-bottom: brand.$spacing-base * 2;
+     font-size: 1.25rem;
+     color: brand.$brand-primary;
+     border-bottom: 1px solid #ddd;
+     padding-bottom: brand.$spacing-base;
+   }
+ 
+   .form-group {
+     display: flex;
+     flex-direction: column;
+     margin-bottom: brand.$spacing-base * 2;
+ 
+     label {
+       font-weight: 600;
+       margin-bottom: brand.$spacing-base;
+     }
+ 
+     .input-field {
+       padding: brand.$spacing-base * 1.5;
+       border: 1px solid #ccc;
+       border-radius: brand.$border-radius-base;
+       font-size: 1rem;
+ 
+       &:focus {
+         border-color: brand.$brand-primary;
+         outline: none;
+       }
+     }
+ 
+     .text-danger {
+       font-size: 0.875rem;
+       color: #d9534f;
+       margin-top: brand.$spacing-base;
+     }
+   }
+ 
+   .checkbox-group {
+     flex-direction: row;
+     align-items: center;
+ 
+     .checkbox-input {
+       margin-right: brand.$spacing-base;
+     }
+   }
+ 
+   .btn-submit {
+     display: inline-block;
+     background: brand.$brand-accent;
+     color: brand.$brand-text-light;
+     padding: brand.$spacing-base * 1.5 brand.$spacing-base * 3;
+     border: none;
+     border-radius: brand.$border-radius-base;
+     font-weight: 600;
+     cursor: pointer;
+     margin-top: brand.$spacing-base * 4;
+     transition: background-color 0.3s ease;
+     text-align: center;
+ 
+     &:hover {
+       background: darken(brand.$brand-accent, 10%);
+     }
+ 
+     &:disabled {
+       opacity: 0.6;
+       cursor: not-allowed;
+     }
+   }
+ }
+ 
+ /* --- Existing: Progress Bar --- */
+ .progress {
+   margin-bottom: brand.$spacing-base * 3;
+   background-color: brand.$brand-bg-light;
+   border-radius: brand.$border-radius-base;
+   overflow: hidden;
+   
+   .progress-bar {
+     background-color: brand.$brand-accent;
+     color: brand.$brand-text-light;
+     text-align: center;
+     transition: width 0.3s ease;
+   }
+ }
+ 
+ /* --- Feature Grid & Cards --- */
+ .feature-intro {
+   /* Extra spacing below the intro text so it’s clearly separate from the cards */
+   margin-bottom: brand.$spacing-base * 5;
+   max-width: 700px;
+ 
+   p {
+     margin: 0;
+     line-height: 1.5;
+     color: brand.$brand-text-dark; // or another brand color if you prefer
+   }
+ }
+ 
+ .feature-grid {
+   /* Provide even spacing around edges with space-evenly or space-around */
+   display: flex;
+   flex-wrap: wrap;
+   justify-content: space-evenly; 
+   gap: 2rem;
+   /* Extra top margin so cards have space below the intro */
+   margin-top: brand.$spacing-base * 2;
+   margin-bottom: brand.$spacing-base * 2;
+ }
+ 
+ .feature-card {
+   background-color: brand.$brand-bg-light; 
+   color: brand.$brand-text-dark;
+   border-radius: brand.$border-radius-base;
+   box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+   padding: 1.5rem;
+   flex: 1 1 250px;
+   max-width: 300px;
+   text-align: center;
+   margin: 0 auto; /* ensures card is centered if narrower than container */
+ 
+   img {
+     margin-bottom: 0.75rem;
+   }
+ 
+   h3 {
+     margin-bottom: 0.5rem;
+     color: brand.$brand-primary;
+     font-weight: 600;
+   }
+ 
+   p {
+     margin: 0;
+     line-height: 1.4;
+   }
+ }
+ 
+ /* --- Boxed FAQ --- */
+ .faq-box {
+   background-color: brand.$brand-bg-light;
+   color: brand.$brand-text-dark;
+   border: 1px solid #eee; 
+   border-radius: brand.$border-radius-base;
+   padding: 1.5rem;
+   margin-bottom: 1rem;
+   box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+ }
+ 

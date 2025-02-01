@@ -1,9 +1,20 @@
-// frontend/src/styles/main.scss
+/**********************************************
+ * main.scss
+ * Imports all style partials using the new brand
+ **********************************************/
 
-@use './variables';
+/* 
+   COMMENTED OUT the legacy-variables import since we're refreshing 
+   with pure brand variables. If something breaks, reintroduce it for 
+   any leftover references, but ideally we've removed them below.
+*/
+// @use './legacy-variables';
+
+@use './brand' as brand;
 @use './base';
 @use './layout';
 @use './components';
 
-
-
+/* 
+  NOTE: The 'brand' partial is our new source of color & font variables.
+*/
