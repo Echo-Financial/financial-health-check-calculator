@@ -1,77 +1,68 @@
-/******************************************************
- * _layout.scss
- * Common layout classes, container widths, spacing,
- * plus new section classes (dark and light) for clear separation
- ******************************************************/
+@use './brand' as brand;
 
- @use './brand' as brand;
-
- /* Existing Container & Utility Classes */
- .container {
-   max-width: 1200px;
-   margin: 0 auto;
-   padding: brand.$spacing-base * 2;
- }
- 
- .text-center {
-   text-align: center;
- }
- 
- .text-danger {
-   color: #d9534f;
- }
- 
- .small-text {
-   font-size: 0.875rem;
- }
- 
- .mt-3 {
-   margin-top: brand.$spacing-base * 3;
- }
- 
- .mt-5 {
-   margin-top: brand.$spacing-base * 5;
- }
- 
- /* Responsive container */
- @media (max-width: 768px) {
-   .container {
-     padding: brand.$spacing-base;
-   }
- }
- 
- /* 
-   NEW SECTION CLASSES 
-   for a mostly dark layout + 1–2 light sections
- */
- 
- /* 
-   1. Base Section Class:
-   - Large top/bottom padding to clearly separate each section 
- */
- .section {
-   padding: brand.$spacing-base * 8 0; 
- }
- 
- /* 
-   2. Dark Section:
-   - Brand navy background (brand.$brand-primary), white text
-   - Ideal for the majority of sections
- */
- .dark-section {
-  /* Darken your brand navy by 20% for a deeper tone */
-  background-color: darken(brand.$brand-primary, 20%); 
-  color: brand.$brand-text-light;
-  width: 100%;
+/* Existing Container & Utility Classes */
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: brand.$spacing-base * 2;
 }
 
- 
- /* 
-   3. Light Section:
-   - A lighter background to create contrast in 1-2 sections
- */
- .light-section {
-   background-color: brand.$brand-bg-light;
-   color: brand.$brand-text-dark;
- }
- 
+.text-center {
+  text-align: center;
+}
+
+.text-danger {
+  color: #d9534f;
+}
+
+.small-text {
+  font-size: 0.875rem;
+}
+
+.mt-3 {
+  margin-top: brand.$spacing-base * 3;
+}
+
+.mt-5 {
+  margin-top: brand.$spacing-base * 5;
+}
+
+/* Responsive container */
+@media (max-width: 768px) {
+  .container {
+    padding: brand.$spacing-base;
+  }
+}
+
+/* 
+  NEW SECTION CLASSES 
+  for a mostly dark layout + 1–2 light sections
+*/
+
+/* 
+  1. Base Section Class:
+  - Large top/bottom padding to clearly separate each section 
+*/
+.section {
+  padding: brand.$spacing-base * 3 0;  // Reduced padding
+   margin: brand.$spacing-base * 2 0; // Reduced margin
+}
+
+/* 
+  2. Dark Section:
+  - Brand navy background (brand.$brand-primary), white text
+  - Ideal for the majority of sections
+*/
+.dark-section {
+ /* Darken your brand navy by 20% for a deeper tone */
+ color: brand.$brand-text-light;
+}
+
+
+/* 
+  3. Light Section:
+  - A lighter background to create contrast in 1-2 sections
+*/
+.light-section {
+  color: brand.$brand-text-dark;
+}

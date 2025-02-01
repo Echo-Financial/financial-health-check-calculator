@@ -44,20 +44,25 @@ const Charts = ({ scores }) => {
     'potentialForImprovementScore',
   ];
 
-  // Mapping of internal keys to user-friendly labels
-  const labelMapping = {
-    dtiScore: "Debt to Income Score",
-    savingsScore: "Savings Score",
-    emergencyFundScore: "Emergency Fund Score",
-    retirementScore: "Retirement Score",
-    growthOpportunityScore: "Growth Opportunity Score",
-    overallFinancialHealthScore: "Overall Financial Health Score",
-    potentialForImprovementScore: "Potential for Improvement Score",
+  const formatScoreLabel = (label) => {
+      const customLabels = {
+          dtiScore: 'Debt to Income Score',
+          savingsScore: 'Savings Score',
+          emergencyFundScore: 'Emergency Fund Score',
+          retirementScore: 'Retirement Score',
+          growthOpportunityScore: 'Growth Opportunity Score',
+          overallFinancialHealthScore: 'Overall Financial Health Score',
+          potentialForImprovementScore: 'Potential for Improvement Score',
+      };
+
+    return customLabels[label] || label
+      .replace(/([A-Z])/g, ' $1')
+      .replace(/^./, (str) => str.toUpperCase());
   };
 
   // Generate chart labels and values using the mapping
   const chartLabels = scores
-    ? orderedKeys.map((key) => labelMapping[key] || key)
+    ? orderedKeys.map((key) => formatScoreLabel(key))
     : [];
   const chartValues = scores
     ? orderedKeys.map((key) => scores[key])

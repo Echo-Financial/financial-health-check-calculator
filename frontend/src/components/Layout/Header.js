@@ -13,7 +13,7 @@ const StyledHeaderLink = styled(Button)(({ theme }) => ({
 }));
 
 const Header = () => (
-    <AppBar position="static" className="site-header" role="banner" color="transparent" elevation={0}>
+    <AppBar position="static" className="site-header" role="banner" color="transparent" elevation={0} sx={{padding: "10px 0"}}>
         <Toolbar  >
             <Container maxWidth={"lg"} sx={{display: "flex", justifyContent: "space-between", alignItems: "center"}}>
             <Link to="/" className="site-logo" aria-label="Home - Financial Health Check Calculator">

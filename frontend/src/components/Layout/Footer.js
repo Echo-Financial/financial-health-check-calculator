@@ -1,5 +1,4 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
 import { BottomNavigation, BottomNavigationAction, Box, Typography } from '@mui/material';
 import { styled } from '@mui/material';
 
@@ -9,7 +8,7 @@ const StyledFooterLink = styled(BottomNavigationAction)(({ theme }) => ({
     padding: '8px',
     '&:hover':{
      textDecoration: 'underline',
-    }
+    },
 }));
 
 const Footer = () => (
@@ -19,12 +18,12 @@ const Footer = () => (
        showLabels
         aria-label="Footer navigation"
       >
-          <StyledFooterLink label="Privacy Policy" to="/privacy" component={Link}/>
-         <StyledFooterLink label="Terms of Service" to="/terms" component={Link}/>
-          <StyledFooterLink label="About Us" to="/about" component={Link}/>
-         <StyledFooterLink label="Contact" to="/contact" component={Link}/>
+          <StyledFooterLink label="Privacy Policy" href="https://www.echo-financial-advisors.co.nz/echo-financial-advisors-privacy-statement" component="a" target="_blank" rel="noopener noreferrer"/>
+         <StyledFooterLink label="Terms of Service" href="https://www.echo-financial-advisors.co.nz/echo-financial-advisors-terms-conditions" component="a" target="_blank" rel="noopener noreferrer"/>
+          <StyledFooterLink label="About Us" href="https://www.echo-financial-advisors.co.nz/why-choose-echo-financial-advisors" component="a" target="_blank" rel="noopener noreferrer"/>
+         <StyledFooterLink label="Contact" href="https://echofinancialadvisors.trafft.com/" component="a" target="_blank" rel="noopener noreferrer"/>
       </BottomNavigation>
-        <Box sx={{marginTop: '10px', textAlign: 'center'}}><Typography variant="body2" >© {new Date().getFullYear()} Financial Health Check Calculator. All rights reserved.</Typography></Box>
+        <Box sx={{marginTop: '10px', textAlign: 'center'}}><Typography variant="body2" >© {new Date().getFullYear()} Echo Financial Advisors. All rights reserved.</Typography></Box>
     </Box>
   </Box>
 );

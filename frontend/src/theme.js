@@ -1,10 +1,12 @@
-// theme.js
 import { createTheme } from '@mui/material';
 
 // We can't import SASS variables directly, so let's mirror them here:
-const brandPrimary = '#1F3C78';   // Navy
-const brandSecondary = '#2CA58D'; // Teal
-// If you want an "accent" in MUI, you can define custom property or pass it in as 'warning', 'info', etc.
+const brandPrimary = '#101828';
+const brandAccent = '#c68922';
+const brandAccentHover = '#db9e2d';
+const brandLink = '#5dc8e8';
+const brandLinkHover = '#47a3c4';
+
 
 function colorFromScore(score) {
   const hue = (120 * (score / 100)).toFixed(2);
@@ -19,10 +21,10 @@ function borderColorFromScore(score) {
 const theme = createTheme({
   palette: {
     primary: {
-      main: brandPrimary, 
+      main: brandPrimary,
     },
     secondary: {
-      main: brandSecondary,
+      main: brandAccent, // Use brandAccent for secondary color
     },
     // Custom color functions
     colorFromScore,
@@ -37,22 +39,25 @@ const theme = createTheme({
       fontFamily: 'Merriweather, serif',
       fontWeight: 700,
       lineHeight: 1.2,
+      color: 'white',
     },
     h2: {
       fontFamily: 'Merriweather, serif',
       fontWeight: 700,
       lineHeight: 1.2,
+      color: brandAccent,
     },
     h3: {
       fontFamily: 'Merriweather, serif',
       fontWeight: 700,
       lineHeight: 1.2,
+      color: brandAccent,
     },
-    h4: {
-      fontWeight: 600,
+      h4: {
+          fontWeight: 600,
       // optionally also set the heading font:
-      fontFamily: 'Merriweather, serif',
-    },
+        fontFamily: 'Merriweather, serif',
+      },
   },
   spacing: 8,
   components: {
@@ -61,9 +66,20 @@ const theme = createTheme({
         root: {
           textTransform: 'none',
           margin: 0,
-        },
+              
+             },
       },
     },
+      MuiLink: {
+          styleOverrides: {
+             root: {
+                 color: brandLink,
+                 '&:hover': {
+                     color: brandLinkHover,
+                 },
+             },
+        },
+      },
   },
 });
 
