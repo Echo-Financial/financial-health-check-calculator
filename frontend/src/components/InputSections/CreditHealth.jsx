@@ -1,3 +1,5 @@
+// Purpose: This file contains the CreditHealth component which is the fourth step of the form.
+
 import React from 'react';
 import FormField from '../Forms/FormField.jsx';
 import { useFormikContext } from 'formik';
