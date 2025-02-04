@@ -1,3 +1,5 @@
+// Purpose: This file contains the form for the user to input their retirement planning information.
+
 import React from 'react';
 import { useFormikContext } from 'formik';
 import FormField from '../Forms/FormField.jsx';

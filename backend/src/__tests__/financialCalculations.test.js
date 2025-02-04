@@ -32,10 +32,10 @@ describe('calculateFinancialScores', () => {
             dtiScore: 33,
             savingsScore: 100,
             emergencyFundScore: 100,
-            retirementScore: 72,
-            growthOpportunityScore: 120,
-            potentialForImprovementScore: 15,
-            overallFinancialHealthScore: 73,
+            retirementScore: 0,
+            growthOpportunityScore: 100,
+            potentialForImprovementScore: 33,
+            overallFinancialHealthScore: 67,
         };
 
         const scores = calculateFinancialScores(userData);
@@ -74,10 +74,10 @@ describe('calculateFinancialScores', () => {
             dtiScore: 100,
             savingsScore: 100,
             emergencyFundScore: 100,
-             retirementScore: 48,
-            growthOpportunityScore: 119,
-            potentialForImprovementScore: 7,
-            overallFinancialHealthScore: 79,
+            retirementScore: 0,
+            growthOpportunityScore: 100,
+            potentialForImprovementScore: 20,
+            overallFinancialHealthScore: 80,
         };
 
         const scores = calculateFinancialScores(userData);
@@ -116,10 +116,10 @@ describe('calculateFinancialScores', () => {
             dtiScore: 33,
             savingsScore: 100,
             emergencyFundScore: 67,
-            retirementScore: 30,
+            retirementScore: 0,
             growthOpportunityScore: 100,
-            potentialForImprovementScore: 34,
-             overallFinancialHealthScore: 61,
+            potentialForImprovementScore: 40,
+            overallFinancialHealthScore: 60,
         };
 
         const scores = calculateFinancialScores(userData);

@@ -1,3 +1,5 @@
+// Purpose: This file contains the ContactDetails component which is used to display the contact details form in the multi-step form.
+
 import React from 'react';
 import FormField from '../Forms/FormField.jsx';
 import { useFormikContext } from 'formik';

@@ -1,3 +1,5 @@
+// Purpose: This file contains the PersonalDetails component which is responsible for rendering the personal details form fields in the form.
+
 import React from 'react';
 import { useFormikContext } from 'formik';
 import FormField from '../Forms/FormField.jsx';

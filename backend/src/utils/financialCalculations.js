@@ -1,63 +1,160 @@
+// financialCalculations.js
+
+/**
+ * Calculates multiple financial scores:
+ * 1. DTI Score
+ * 2. Savings Rate Score
+ * 3. Emergency Fund Score
+ * 4. Retirement Score (synergy approach: currentRetirementSavings + partial from savings/investments)
+ * 5. Growth Opportunity Score
+ * 6. Potential for Improvement Score (separate dimension)
+ * 7. Overall Financial Health Score (excludes potentialForImprovement so it doesn't lower a perfect score)
+ */
+
 const calculateFinancialScores = (userData) => {
-    const { personalDetails, expensesAssets, retirementPlanning } = userData;
+  const { personalDetails, expensesAssets, retirementPlanning } = userData;
 
-    // Debt-to-Income Ratio (DTI)
-    const debtToIncomeRatio = (expensesAssets.totalDebt / personalDetails.annualIncome) * 100;
-    const dtiScore = debtToIncomeRatio > 40 ? 20 : 100 - (debtToIncomeRatio / 40) * 80; // Scale from 20 to 100
+  // Extract relevant fields
+  const {
+    age,
+    annualIncome,
+    // optional: incomeFromInterest, incomeFromProperty, etc. if needed
+  } = personalDetails;
 
-    // Savings Rate
-    const savingsRate = ((expensesAssets.savings + expensesAssets.emergencyFunds) / personalDetails.annualIncome) * 100;
-    const savingsScore = savingsRate > 20 ? 100 : (savingsRate / 20) * 100; // Scale up to a maximum of 100
+  const {
+    monthlyExpenses,
+    emergencyFunds,
+    savings,
+    totalDebt,
+    totalInvestments,
+    // totalAssets if needed
+  } = expensesAssets;
 
-    // Emergency Fund Score
-    const emergencyFundScore = expensesAssets.emergencyFunds >= (expensesAssets.monthlyExpenses * 6)
-        ? 100
-        : (expensesAssets.emergencyFunds / (expensesAssets.monthlyExpenses * 6)) * 100;
+  const {
+    retirementAge,
+    targetRetirementSavings,
+    currentRetirementSavings,
+  } = retirementPlanning;
 
-    // Retirement Score
-    const currentRetirementSavings = expensesAssets.savings + expensesAssets.emergencyFunds + expensesAssets.totalInvestments;
-    const savingsGap = retirementPlanning.targetRetirementSavings - currentRetirementSavings;
-    const yearsToRetirement = retirementPlanning.retirementAge - personalDetails.age;
-    const debtCost = expensesAssets.totalDebt / 10; // an estimated cost of debt
-    const costOfLiving = personalDetails.annualIncome / 10; // an estimated cost of living, we may want to expand this later
-    const savingsRateForRetirement = ((personalDetails.annualIncome - expensesAssets.monthlyExpenses - debtCost - costOfLiving) / personalDetails.annualIncome) * 100;
-    let retirementScore = 0;
+  // -------------------------------------------
+  // 1. Debt-to-Income (DTI) Score
+  // -------------------------------------------
+  let debtToIncomeRatio = (totalDebt / annualIncome) * 100;
+  if (debtToIncomeRatio < 0) debtToIncomeRatio = 0;  // handle odd edge case
 
-    if (currentRetirementSavings >= retirementPlanning.targetRetirementSavings){
-        retirementScore = 100;
-    } else if (savingsRateForRetirement >= 10) {
-        retirementScore = (currentRetirementSavings / retirementPlanning.targetRetirementSavings) * 100;
-    } else if (savingsRateForRetirement <= 5) {
-        retirementScore = (savingsRateForRetirement / 5) * 50;
-    }
+  // Example approach: 0% DTI => 100, 50% => 0, clamp
+  let dtiScore = 100 - (debtToIncomeRatio * 2);
+  if (dtiScore < 0) dtiScore = 0;
+  if (dtiScore > 100) dtiScore = 100;
 
-    // Ensure score is not higher than 100
-    if (retirementScore > 100) {
-        retirementScore = 100;
-    }
-    if (retirementScore < 0) {
-        retirementScore = 0;
-    }
+  // -------------------------------------------
+  // 2. Savings Rate Score
+  // -------------------------------------------
+  // The user’s basic savings + emergency are treated as non-retirement short/mid-term
+  let savingsRate = ((savings + emergencyFunds) / annualIncome) * 100;
+  // Cap at 20% => 100 points, linear below that
+  let savingsScore = savingsRate >= 20 
+    ? 100
+    : (savingsRate / 20) * 100;
+  if (savingsScore < 0) savingsScore = 0;
+  if (savingsScore > 100) savingsScore = 100;
 
+  // -------------------------------------------
+  // 3. Emergency Fund Score
+  // -------------------------------------------
+  const sixMonthsExpenses = monthlyExpenses * 6;
+  let emergencyFundScore = (emergencyFunds / sixMonthsExpenses) * 100;
+  if (emergencyFundScore > 100) emergencyFundScore = 100;
+  if (emergencyFundScore < 0) emergencyFundScore = 0;
 
-    // Growth Opportunity Score (Dynamic based on savings, emergency funds and investments)
-    const growthOpportunityScore = ((expensesAssets.savings + expensesAssets.emergencyFunds + expensesAssets.totalInvestments) / personalDetails.annualIncome) * 100;
+  // -------------------------------------------
+  // 4. Retirement Score (Synergy Approach)
+  // -------------------------------------------
+  // We combine:
+  //  - 100% of currentRetirementSavings
+  //  - a portion of general savings
+  //  - a portion of totalInvestments
+  // and exclude emergencyFunds.
+  const portionOfSavingsAllocated = 0.5;       // 50% of user "savings" is assumed eventually for retirement
+  const portionOfInvestmentsAllocated = 0.7;   // 70% of totalInvestments is assumed for retirement
 
-    // Potential for Improvement Score (Considering all factors)
-    const potentialForImprovementScore = ((100 - dtiScore) + (100 - savingsScore) + (100 - emergencyFundScore) + (100 - retirementScore) + (100 - growthOpportunityScore)) / 5;
+  const userRetirementAssets =
+    currentRetirementSavings +
+    portionOfSavingsAllocated * savings +
+    portionOfInvestmentsAllocated * totalInvestments;
 
+  let retirementScore = 0;
+  const yearsToRetirement = retirementAge - age;
 
-    const overallFinancialHealthScore = (dtiScore + savingsScore + emergencyFundScore + retirementScore + growthOpportunityScore + potentialForImprovementScore) / 6;
+  if (userRetirementAssets >= targetRetirementSavings) {
+    retirementScore = 100;
+  } else if (yearsToRetirement > 0) {
+    // Estimate annual needed vs. annual saving
+    const gap = targetRetirementSavings - userRetirementAssets;
+    // For simplicity, assume user invests 10% of annualIncome each year for retirement
+    const assumedAnnualRetirementRate = 0.10;
+    const annualNeeded = gap / yearsToRetirement;
+    const annualSaving = annualIncome * assumedAnnualRetirementRate;
+    const ratio = annualNeeded > 0 ? (annualSaving / annualNeeded) : 0;
+    retirementScore = ratio * 100;
+  } else {
+    // Already at/past retirement age, just see how close
+    retirementScore = (userRetirementAssets / targetRetirementSavings) * 100;
+  }
+  if (retirementScore > 100) retirementScore = 100;
+  if (retirementScore < 0) retirementScore = 0;
 
-    return {
-        dtiScore: Math.round(dtiScore),
-        savingsScore: Math.round(savingsScore),
-        emergencyFundScore: Math.round(emergencyFundScore),
-        retirementScore: Math.round(retirementScore),
-        growthOpportunityScore: Math.round(growthOpportunityScore),
-        potentialForImprovementScore: Math.round(potentialForImprovementScore),
-        overallFinancialHealthScore: Math.round(overallFinancialHealthScore),
-    };
+  // -------------------------------------------
+  // 5. Growth Opportunity Score
+  // -------------------------------------------
+  // measures total assets vs. income, capping at 100
+  let growthOpportunityScore =
+    ((savings + emergencyFunds + totalInvestments) / annualIncome) * 100;
+  if (growthOpportunityScore > 100) growthOpportunityScore = 100;
+  if (growthOpportunityScore < 0) growthOpportunityScore = 0;
+
+  // -------------------------------------------
+  // 6. Potential for Improvement Score
+  // -------------------------------------------
+  let potentialForImprovementScore =
+    ((100 - dtiScore) +
+     (100 - savingsScore) +
+     (100 - emergencyFundScore) +
+     (100 - retirementScore) +
+     (100 - growthOpportunityScore)
+    ) / 5;
+
+  if (potentialForImprovementScore > 100) potentialForImprovementScore = 100;
+  if (potentialForImprovementScore < 0) potentialForImprovementScore = 0;
+
+  // -------------------------------------------
+  // 7. Overall Financial Health Score
+  // -------------------------------------------
+  // We exclude potentialForImprovementScore from the average 
+  // so a perfect user doesn't get penalized with an 0 in improvement.
+  let overallFinancialHealthScore = (
+    dtiScore +
+    savingsScore +
+    emergencyFundScore +
+    retirementScore +
+    growthOpportunityScore
+  ) / 5; // average of 5 main categories
+
+  if (overallFinancialHealthScore > 100) overallFinancialHealthScore = 100;
+  if (overallFinancialHealthScore < 0) overallFinancialHealthScore = 0;
+
+  // -------------------------------------------
+  // Return Final Scores
+  // -------------------------------------------
+  return {
+    dtiScore: Math.round(dtiScore),
+    savingsScore: Math.round(savingsScore),
+    emergencyFundScore: Math.round(emergencyFundScore),
+    retirementScore: Math.round(retirementScore),
+    growthOpportunityScore: Math.round(growthOpportunityScore),
+    potentialForImprovementScore: Math.round(potentialForImprovementScore),
+    overallFinancialHealthScore: Math.round(overallFinancialHealthScore),
+  };
 };
 
 module.exports = { calculateFinancialScores };

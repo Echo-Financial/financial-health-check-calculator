@@ -1,4 +1,4 @@
-@use './variables' as *;
+@use './brand' as brand;
 
 *,
 *::before,
@@ -7,41 +7,48 @@
 }
 
 html {
-  font-size: 16px;
+  font-size: 16px; 
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* Body defaults */
 body {
   margin: 0;
-  font-family: $font-stack; // Now correctly referenced
-  color: $dark-gray;
-  background-color: $light-gray;
+  background-color: brand.$brand-primary;
+  color: brand.$brand-text-light;
+  font-family: brand.$font-body;;
+  line-height: 1.6;
 }
 
+/* Headings: use the brand heading font */
 h1, h2, h3 {
-  margin-top: $spacing-unit * 2;
-  margin-bottom: $spacing-unit;
-  font-weight: 700;
-  line-height: 1.2;
+   margin-top: brand.$spacing-base * 2;
+   margin-bottom: brand.$spacing-base;
+   font-weight: 700;
+   line-height: 1.2;
+   font-family: brand.$font-heading;
+   color: brand.$brand-text-light; // Ensures headings are white
 }
 
+/* Paragraph spacing */
 p {
-  margin: $spacing-unit * 2 0;
-  line-height: 1.5;
+  margin: brand.$spacing-base * 2 0;
 }
 
+/* Links */
 a {
-  color: $primary-color;
+  color: brand.$brand-link;
   text-decoration: none;
 
   &:hover,
   &:focus {
+    color: brand.$brand-link-hover;
     text-decoration: underline;
   }
 }
 
-// Responsive font sizes for headings
+/* Responsive headings */
 @media (max-width: 768px) {
   h1 {
     font-size: 2rem;

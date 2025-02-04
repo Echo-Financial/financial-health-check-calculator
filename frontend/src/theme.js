@@ -1,47 +1,86 @@
 import { createTheme } from '@mui/material';
-import { colorFromScore, borderColorFromScore } from './styles/variables.scss';
 
+// We can't import SASS variables directly, so let's mirror them here:
+const brandPrimary = '#101828';
+const brandAccent = '#c68922';
+const brandAccentHover = '#db9e2d';
+const brandLink = '#5dc8e8';
+const brandLinkHover = '#47a3c4';
+
+
+function colorFromScore(score) {
+  const hue = (120 * (score / 100)).toFixed(2);
+  return `hsla(${hue}, 100%, 50%, 0.6)`;
+}
+
+function borderColorFromScore(score) {
+  const hue = (120 * (score / 100)).toFixed(2);
+  return `hsla(${hue}, 100%, 50%, 1)`;
+}
 
 const theme = createTheme({
-    palette: {
-        primary: {
-            main: '#00274D', // Navy, professional and trustworthy
-        },
-        secondary: {
-            main: '#3CB371', // Teal/Green, suggests growth and success
-        },
-         colorFromScore: (score) => `hsl(calc(120deg * (${score} / 100)), 100%, 50%, 0.6)`,
-        borderColorFromScore: (score) => `hsl(calc(120deg * (${score} / 100)), 100%, 50%, 1)`,
+  palette: {
+    primary: {
+      main: brandPrimary,
     },
-    typography: {
-        fontFamily: 'Nunito Sans, Arial, sans-serif',
-         h1: {
-           fontWeight: 700,
-           lineHeight: 1.2,
-         },
-         h2: {
-           fontWeight: 700,
-           lineHeight: 1.2,
-         },
-        h3: {
-            fontWeight: 700,
-            lineHeight: 1.2,
-        },
-        h4:{
+    secondary: {
+      main: brandAccent, // Use brandAccent for secondary color
+    },
+    // Custom color functions
+    colorFromScore,
+    borderColorFromScore,
+  },
+  typography: {
+    // Body text = Open Sans
+    fontFamily: 'Open Sans, Arial, sans-serif',
+
+    // Override specific headings to Merriweather if desired
+    h1: {
+      fontFamily: 'Merriweather, serif',
+      fontWeight: 700,
+      lineHeight: 1.2,
+      color: 'white',
+    },
+    h2: {
+      fontFamily: 'Merriweather, serif',
+      fontWeight: 700,
+      lineHeight: 1.2,
+      color: brandAccent,
+    },
+    h3: {
+      fontFamily: 'Merriweather, serif',
+      fontWeight: 700,
+      lineHeight: 1.2,
+      color: brandAccent,
+    },
+      h4: {
           fontWeight: 600,
-        }
-    },
-    spacing: 8,
-    components: {
+      // optionally also set the heading font:
+        fontFamily: 'Merriweather, serif',
+      },
+  },
+  spacing: 8,
+  components: {
     MuiButton: {
-        styleOverrides: {
-            root: {
-                textTransform: 'none',
-                margin: 0,
-            },
-        }
-    }
-}
+      styleOverrides: {
+        root: {
+          textTransform: 'none',
+          margin: 0,
+              
+             },
+      },
+    },
+      MuiLink: {
+          styleOverrides: {
+             root: {
+                 color: brandLink,
+                 '&:hover': {
+                     color: brandLinkHover,
+                 },
+             },
+        },
+      },
+  },
 });
 
 export default theme;

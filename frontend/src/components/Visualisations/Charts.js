@@ -17,42 +17,65 @@ ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend)
 const Charts = ({ scores }) => {
   const theme = useTheme();
 
-  // Single function to create red -> yellow -> green gradient
+  // Function to generate a vertical gradient for the bars
   const generateVerticalGradient = (context) => {
     const { chart } = context;
     const { ctx, chartArea } = chart || {};
     if (!chartArea) {
-      // chartArea might be undefined during initial render
-      return 'rgba(255,0,0,1)'; // fallback solid color
+      // Fallback in case chartArea is undefined during initial render
+      return 'rgba(255,0,0,1)';
     }
-
-    const { left, right, top, bottom } = chartArea;
-
-    // Create a vertical gradient (bottom -> top)
+    const { left, top, bottom } = chartArea;
     const gradient = ctx.createLinearGradient(left, bottom, left, top);
-
-    // Example stops: 0% (red), 50% (yellow), 100% (green)
     gradient.addColorStop(0, 'red');
     gradient.addColorStop(0.5, 'yellow');
     gradient.addColorStop(1, 'green');
-
     return gradient;
   };
 
-  // Prepare chart labels & data
-  const chartLabels = scores ? Object.keys(scores) : [];
-  const chartValues = scores ? Object.values(scores) : [];
+  // Define the fixed order for the internal score keys
+  const orderedKeys = [
+    'dtiScore',
+    'savingsScore',
+    'emergencyFundScore',
+    'retirementScore',
+    'growthOpportunityScore',
+    'overallFinancialHealthScore',
+    'potentialForImprovementScore',
+  ];
 
-  // Prepare dataset configuration
+  const formatScoreLabel = (label) => {
+      const customLabels = {
+          dtiScore: 'Debt to Income Score',
+          savingsScore: 'Savings Score',
+          emergencyFundScore: 'Emergency Fund Score',
+          retirementScore: 'Retirement Score',
+          growthOpportunityScore: 'Growth Opportunity Score',
+          overallFinancialHealthScore: 'Overall Financial Health Score',
+          potentialForImprovementScore: 'Potential for Improvement Score',
+      };
+
+    return customLabels[label] || label
+      .replace(/([A-Z])/g, ' $1')
+      .replace(/^./, (str) => str.toUpperCase());
+  };
+
+  // Generate chart labels and values using the mapping
+  const chartLabels = scores
+    ? orderedKeys.map((key) => formatScoreLabel(key))
+    : [];
+  const chartValues = scores
+    ? orderedKeys.map((key) => scores[key])
+    : [];
+
+  // Configure the chart data and options
   const chartData = {
     labels: chartLabels,
     datasets: [
       {
         label: 'Financial Scores',
         data: chartValues,
-        // Use a "scriptable" function that gets the correct 2D context
         backgroundColor: (context) => generateVerticalGradient(context),
-        // Optional: dynamic border color from the MUI theme
         borderColor: (context) => {
           const score = chartValues[context.dataIndex];
           return theme.palette.borderColorFromScore(score);
@@ -62,10 +85,9 @@ const Charts = ({ scores }) => {
     ],
   };
 
-  // Chart options
   const chartOptions = {
     responsive: true,
-    maintainAspectRatio: false, // optional, if you want to control height
+    maintainAspectRatio: false,
     plugins: {
       legend: { position: 'top' },
       title: { display: true, text: 'Your Financial Health Scores' },
