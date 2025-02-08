@@ -1,3 +1,4 @@
+// LeadCaptureForm.jsx
 import React, { useState } from 'react';
 import axios from 'axios';
 import { Formik, Form } from 'formik';
@@ -10,7 +11,7 @@ import RetirementPlanning from '../InputSections/RetirementPlanning.jsx';
 import CreditHealth from '../InputSections/CreditHealth.jsx';
 import ContactDetails from '../InputSections/ContactDetails.jsx';
 
-// Updated validationSchema to include all fields used in each step
+// Updated validationSchema to include adjustForInflation as an optional boolean.
 const validationSchema = Yup.object({
     age: Yup.number()
         .required('Age is required')
@@ -45,12 +46,14 @@ const validationSchema = Yup.object({
     currentRetirementSavings: Yup.number()
         .required('Current Retirement Savings is required')
         .min(0, 'Must be at least 0'),
-     targetRetirementSavings: Yup.number()
+    targetRetirementSavings: Yup.number()
         .required('Target Retirement Savings is required')
         .min(0, 'Must be at least 0'),
     retirementAge: Yup.number()
         .required('Retirement Age is required')
         .min(18, 'Must be at least 18'),
+    // New field for inflation adjustment
+    adjustForInflation: Yup.boolean().optional(),
     creditScore: Yup.number()
         .required('Credit Score is required')
         .min(300, 'Minimum is 300')
@@ -60,8 +63,7 @@ const validationSchema = Yup.object({
         .required('Email is required'),
     name: Yup.string()
         .required('Name is required'),
-    phone: Yup.string()
-        .optional(),
+    phone: Yup.string().optional(),
 });
 
 // Function to transform Formik values from strings to numbers
@@ -78,7 +80,7 @@ const transformValues = (values) => {
         'totalAssets',
         'totalInvestments',
         'currentRetirementSavings',
-          'targetRetirementSavings',
+        'targetRetirementSavings',
         'retirementAge',
         'creditScore',
     ];
@@ -122,24 +124,26 @@ const LeadCaptureForm = () => {
                 },
                 retirementPlanning: {
                     retirementAge: transformedValues.retirementAge,
-                     targetRetirementSavings: transformedValues.targetRetirementSavings,
-                     currentRetirementSavings: transformedValues.currentRetirementSavings, // <-- ADDED
+                    targetRetirementSavings: transformedValues.targetRetirementSavings,
+                    currentRetirementSavings: transformedValues.currentRetirementSavings, // <-- ADDED
+                    adjustForInflation: values.adjustForInflation || false, // Default to false if not provided
                 },
-               contactInfo: {
-                   email: transformedValues.email,
-                   name: transformedValues.name,
-                   phone: transformedValues.phone,
-               },
+                contactInfo: {
+                    email: transformedValues.email,
+                    name: transformedValues.name,
+                    phone: transformedValues.phone,
+                },
             };
+
             const response = await axios.post(`${API_URL}/api/submit`, payload);
             setScores(response.data.scores);
-          setShowModal(true);  // move inside try
+            setShowModal(true);  // move inside try
         } catch (err) {
-             let message = 'Submission failed. Please try again.';
-            if(err.response?.data?.message){
+            let message = 'Submission failed. Please try again.';
+            if (err.response?.data?.message) {
                 message = err.response.data.message;
             }
-           setError(message);
+            setError(message);
             setSubmitting(false);
         } finally {
             setIsLoading(false); // End loading
@@ -162,8 +166,8 @@ const LeadCaptureForm = () => {
 
     const handlePrevious = () => {
         setStep(step - 1);
-         setShowModal(false);  // close modal when navigating backwards
-    }
+        setShowModal(false);  // close modal when navigating backwards
+    };
 
     const getFieldsForStep = (step) => {
         switch (step) {
@@ -172,10 +176,10 @@ const LeadCaptureForm = () => {
             case 2:
                 return ['monthlyExpenses', 'totalDebt', 'savings', 'emergencyFunds', 'totalInvestments'];
             case 3:
-                return ['totalAssets', 'currentRetirementSavings', 'targetRetirementSavings', 'retirementAge'];
+                return ['totalAssets', 'currentRetirementSavings', 'targetRetirementSavings', 'retirementAge', 'adjustForInflation'];
             case 4:
                 return ['creditScore'];
-             case 5:
+            case 5:
                 return ['email', 'name', 'phone'];
             default:
                 return [];
@@ -197,7 +201,7 @@ const LeadCaptureForm = () => {
             case 2:
                 return <ExpensesAssets />;
             case 3:
-                return <RetirementPlanning />;
+                return <RetirementPlanning />;  // Ensure this component renders a checkbox for adjustForInflation if desired.
             case 4:
                 return <CreditHealth />;
             case 5:
@@ -207,7 +211,7 @@ const LeadCaptureForm = () => {
         }
     };
 
-   return (
+    return (
         <div className="lead-form-container" data-testid="lead-capture-form">
             <h2>Complete Your Financial Health Check</h2>
             <p>
@@ -229,8 +233,10 @@ const LeadCaptureForm = () => {
                     totalInvestments: '',
                     totalAssets: '',
                     currentRetirementSavings: '',
-                     targetRetirementSavings: '',
+                    targetRetirementSavings: '',
                     retirementAge: '',
+                    // New field for inflation adjustment (default is false)
+                    adjustForInflation: false,
                     creditScore: '',
                     email: '',
                     name: '',
@@ -278,11 +284,11 @@ const LeadCaptureForm = () => {
                         <div className="modal-body">
                             <p>Click below to continue and receive your financial health check results:</p>
                             <Button
-                                    onClick={() => {
-                                        navigate('/report', { state: { scores } });
-                                        setShowModal(false);
-                                    }}
-                                >
+                                onClick={() => {
+                                    navigate('/report', { state: { scores } });
+                                    setShowModal(false);
+                                }}
+                            >
                                 Continue
                             </Button>
                         </div>
