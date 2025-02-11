@@ -4,8 +4,8 @@
  * 2. Savings Rate Score (with a dynamic target based on age)
  * 3. Emergency Fund Score
  * 4. Retirement Score (enhanced with compound growth and inflation adjustment)
- * 5. Growth Opportunity Score (reflects the gap between current investments and a target of 20% of annual income; lower is better)
- * 6. Overall Financial Health Score (average of the five main scores)
+ * 5. Growth Opportunity Score (measures the gap between current investments and a dynamic target expressed as an investment multiple)
+ * 6. Overall Financial Health Score (average of the five main scores, with Growth Opportunity inverted)
  * 7. Potential for Improvement Score (100 minus the overall score)
  */
 
@@ -16,6 +16,16 @@ const targetSavingsRate = (age) => {
   if (age < 50) return 40;   // In their 40s: 40%
   if (age < 60) return 80;   // In their 50s: 80%
   return 100;                // 60 and above: 100%
+};
+
+// Dynamic target for investment multiple based on age.
+// This represents the ideal accumulation of investments as a multiple of annual income.
+const targetInvestmentMultiple = (age) => {
+  if (age < 30) return 0.5; // For users in their 20s, target is 0.5× annual income.
+  if (age < 40) return 1;   // For users in their 30s, target is 1× annual income.
+  if (age < 50) return 2;   // For users in their 40s, target is 2× annual income.
+  if (age < 60) return 3;   // For users in their 50s, target is 3× annual income.
+  return 5;                // For users 60 and above, target is 5× annual income.
 };
 
 const calculateFinancialScores = (userData) => {
@@ -40,8 +50,8 @@ const calculateFinancialScores = (userData) => {
   // 2. Savings Rate Score (Dynamic Benchmark)
   // -------------------------------------------
   let savingsRate = ((savings + emergencyFunds) / annualIncome) * 100;
-  const target = targetSavingsRate(age);
-  let savingsScore = savingsRate >= target ? 100 : (savingsRate / target) * 100;
+  const targetSavings = targetSavingsRate(age);
+  let savingsScore = savingsRate >= targetSavings ? 100 : (savingsRate / targetSavings) * 100;
   if (savingsScore < 0) savingsScore = 0;
   if (savingsScore > 100) savingsScore = 100;
 
@@ -86,27 +96,25 @@ const calculateFinancialScores = (userData) => {
   if (retirementScore < 0) retirementScore = 0;
 
   // -------------------------------------------
-  // 5. Growth Opportunity Score
+  // 5. Growth Opportunity Score (Dynamic Investment Multiple Approach)
   // -------------------------------------------
-  // Reflects the gap between current investments and a realistic target (20% of annual income).
-  // Lower values indicate better performance.
-  const targetInvestmentFraction = 0.2;
-  const targetInvestment = annualIncome * targetInvestmentFraction;
-  let growthOpportunityScore = ((targetInvestment - totalInvestments) / targetInvestment) * 100;
+  const targetMultiple = targetInvestmentMultiple(age);
+  const currentMultiple = totalInvestments / annualIncome;
+  let growthOpportunityScore = ((targetMultiple - currentMultiple) / targetMultiple) * 100;
   if (growthOpportunityScore < 0) growthOpportunityScore = 0;
   if (growthOpportunityScore > 100) growthOpportunityScore = 100;
 
   // -------------------------------------------
   // 6. Overall Financial Health Score
   // -------------------------------------------
+  // Invert the Growth Opportunity Score so that all metrics point in the same "higher is better" direction.
   let overallFinancialHealthScore = (
     dtiScore +
     savingsScore +
     emergencyFundScore +
     retirementScore +
-    growthOpportunityScore
+    (100 - growthOpportunityScore)
   ) / 5;
-  
   if (overallFinancialHealthScore > 100) overallFinancialHealthScore = 100;
   if (overallFinancialHealthScore < 0) overallFinancialHealthScore = 0;
 

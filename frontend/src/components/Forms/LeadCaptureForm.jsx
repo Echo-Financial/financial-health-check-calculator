@@ -77,8 +77,8 @@ const transformValues = (values) => {
         'totalDebt',
         'savings',
         'emergencyFunds',
-        'totalAssets',
         'totalInvestments',
+        'totalAssets',
         'currentRetirementSavings',
         'targetRetirementSavings',
         'retirementAge',
@@ -93,10 +93,11 @@ const transformValues = (values) => {
 };
 
 const LeadCaptureForm = () => {
+    // Set the initial step to 1 (steps 1–5)
+    const [step, setStep] = useState(1);
+    const totalSteps = 5;
     const [error, setError] = useState('');
     const navigate = useNavigate();
-    const [step, setStep] = useState(0);
-    const totalSteps = 5;
     const [showModal, setShowModal] = useState(false);
     const [scores, setScores] = useState(null);
     const [isLoading, setIsLoading] = useState(false); // added loading state
@@ -150,12 +151,26 @@ const LeadCaptureForm = () => {
         }
     };
 
+    // Modified handleNext: For non-final steps, mark current step fields as touched.
+    // When transitioning to the final step (step 5), explicitly reset touched for email, name, and phone.
     const handleNext = async (formik) => {
         const errors = await formik.validateForm();
         const currentStepErrors = getCurrentStepErrors(errors, step);
         if (Object.keys(currentStepErrors).length === 0) {
-            const stepFields = getFieldsForStep(step);
-            stepFields.forEach(field => formik.setFieldTouched(field, true));
+            // For steps before the final one, mark current fields as touched.
+            if (step < totalSteps - 1) {
+                const stepFields = getFieldsForStep(step);
+                stepFields.forEach(field => formik.setFieldTouched(field, true));
+            }
+            // When transitioning to the final step, reset touched for the final fields.
+            if (step === totalSteps - 1) {
+                formik.setTouched(prev => ({
+                    ...prev,
+                    email: false,
+                    name: false,
+                    phone: false,
+                }));
+            }
             setStep(step + 1);
         } else {
             Object.keys(currentStepErrors).forEach((field) =>
@@ -201,7 +216,7 @@ const LeadCaptureForm = () => {
             case 2:
                 return <ExpensesAssets />;
             case 3:
-                return <RetirementPlanning />;  // Ensure this component renders a checkbox for adjustForInflation if desired.
+                return <RetirementPlanning />;  // Renders a checkbox for adjustForInflation if desired.
             case 4:
                 return <CreditHealth />;
             case 5:
@@ -242,8 +257,30 @@ const LeadCaptureForm = () => {
                     name: '',
                     phone: '',
                 }}
+                // Ensure no fields are touched on mount.
+                initialTouched={{
+                    age: false,
+                    annualIncome: false,
+                    incomeFromInterest: false,
+                    incomeFromProperty: false,
+                    monthlyExpenses: false,
+                    totalDebt: false,
+                    savings: false,
+                    emergencyFunds: false,
+                    totalInvestments: false,
+                    totalAssets: false,
+                    currentRetirementSavings: false,
+                    targetRetirementSavings: false,
+                    retirementAge: false,
+                    adjustForInflation: false,
+                    creditScore: false,
+                    email: false,
+                    name: false,
+                    phone: false,
+                }}
                 validationSchema={validationSchema}
                 onSubmit={handleSubmit}
+                validateOnMount={false}
             >
                 {(formik) => (
                     <Form>
