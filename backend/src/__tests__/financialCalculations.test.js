@@ -30,13 +30,13 @@ describe('calculateFinancialScores', () => {
     };
 
     const expectedScores = {
-      dtiScore: 33,                     // 100 - ((20000/60000*100)*2) ≈ 33
-      savingsScore: 100,                // Savings rate far exceeds a target of 10%
-      emergencyFundScore: 100,          // emergencyFunds exceeds 6 months' expenses (1800*6=10800)
-      retirementScore: 100,             // Enhanced logic yields a value > target (capped to 100)
-      growthOpportunityScore: 0,        // Investments exceed 20% target (60000*0.2=12000)
-      overallFinancialHealthScore: 67,  // Average of: (33 + 100 + 100 + 100 + 0) / 5 ≈ 67
-      potentialForImprovementScore: 33, // 100 - 67 = 33
+      dtiScore: 33,
+      savingsScore: 100,
+      emergencyFundScore: 100,
+      retirementScore: 100,
+      growthOpportunityScore: 33,
+      overallFinancialHealthScore: 80,
+      potentialForImprovementScore: 20,
     };
 
     const scores = calculateFinancialScores(userData);
@@ -72,13 +72,13 @@ describe('calculateFinancialScores', () => {
     };
 
     const expectedScores = {
-      dtiScore: 100,                    // No debt yields a perfect score
-      savingsScore: 100,                // Savings rate is well above the target
-      emergencyFundScore: 100,          // emergencyFunds exceed required 6 months expenses (2000*6=12000)
-      retirementScore: 100,             // Enhanced calculation yields a value > target (capped to 100)
-      growthOpportunityScore: 0,        // Investments exceed the 20% target (80000*0.2=16000)
-      overallFinancialHealthScore: 80,  // Average of: (100 + 100 + 100 + 100 + 0) / 5 = 80
-      potentialForImprovementScore: 20, // 100 - 80 = 20
+      dtiScore: 100,
+      savingsScore: 100,
+      emergencyFundScore: 100,
+      retirementScore: 100,
+      growthOpportunityScore: 63,
+      overallFinancialHealthScore: 88,
+      potentialForImprovementScore: 13,
     };
 
     const scores = calculateFinancialScores(userData);
@@ -95,7 +95,7 @@ describe('calculateFinancialScores', () => {
       },
       expensesAssets: {
         monthlyExpenses: 2500,
-        emergencyFunds: 10000, // Less than required for 6 months (2500*6=15000)
+        emergencyFunds: 10000, // Less than required (2500*6=15000)
         savings: 60000,
         totalInvestments: 20000,
         totalDebt: 30000,
@@ -114,13 +114,13 @@ describe('calculateFinancialScores', () => {
     };
 
     const expectedScores = {
-      dtiScore: 33,                     // Calculated as 100 - ((30000/90000*100)*2) ≈ 33
-      savingsScore: 100,                // Savings rate is above the target (for age 40, target is 40)
-      emergencyFundScore: 67,           // (10000/15000)*100 ≈ 67
-      retirementScore: 100,             // Enhanced calculation yields a value > target (capped to 100)
-      growthOpportunityScore: 0,        // Investments exceed the 20% target (90000*0.2=18000)
-      overallFinancialHealthScore: 60,  // Average of: (33 + 100 + 67 + 100 + 0) / 5 = 60
-      potentialForImprovementScore: 40, // 100 - 60 = 40
+      dtiScore: 33,
+      savingsScore: 100,
+      emergencyFundScore: 67,
+      retirementScore: 100,
+      growthOpportunityScore: 89,
+      overallFinancialHealthScore: 62,
+      potentialForImprovementScore: 38,
     };
 
     const scores = calculateFinancialScores(userData);

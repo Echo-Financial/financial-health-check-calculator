@@ -229,11 +229,10 @@ const LeadCaptureForm = () => {
     return (
         <div className="lead-form-container" data-testid="lead-capture-form">
             <h2>Complete Your Financial Health Check</h2>
-            <p>
+            <p className="form-subtext">
                 Provide your essential details in just a few simple steps. Once you submit the form,
                 we'll generate your personalized financial report, which you can review immediately.
             </p>
-
             {error && <p className="text-danger">{error}</p>}
             <Formik
                 initialValues={{
@@ -285,9 +284,10 @@ const LeadCaptureForm = () => {
                 {(formik) => (
                     <Form>
                         <ProgressBar
-                            now={(step / totalSteps) * 100}
-                            label={`${Math.round((step / totalSteps) * 100)}%`}
+                            now={((step - 1) / (totalSteps - 1)) * 100}
+                            label={`${Math.round(((step - 1) / (totalSteps - 1)) * 100)}%`}
                         />
+
                         {renderStepFields()}
                         <div className="d-flex justify-content-between mt-4">
                             {step > 1 && (

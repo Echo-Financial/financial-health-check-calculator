@@ -1,11 +1,13 @@
 @use './brand' as brand;
 
-/* --- Existing: Lead Form Container --- */
+/* =====================================================
+   Lead Form Container
+   ===================================================== */
 .lead-form-container {
- background-color: brand.$brand-text-light; /* White (#FFFFFF) */
- color: brand.$brand-text-dark;            /* #333 or black */
+  background-color: brand.$brand-text-light; // White background
+  color: brand.$brand-text-dark;              // Dark text (#333)
   border-radius: brand.$border-radius-base;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
   padding: brand.$spacing-base * 4;
   max-width: 600px;
   margin: brand.$spacing-base * 5 auto;
@@ -16,20 +18,26 @@
   }
 }
 
+/* =====================================================
+   Form Headings and Subtext
+   ===================================================== */
 .form-heading {
   font-size: 1.75rem;
   margin-bottom: brand.$spacing-base;
   font-weight: 700;
-  color: brand.$brand-primary; 
+  color: brand.$brand-primary;
 }
 
 .form-subtext {
   margin-bottom: brand.$spacing-base * 4;
-  color: #555;
+  color: brand.$brand-text-dark !important;  // Forces dark text (typically #333333)
   line-height: 1.4;
 }
 
-/* --- Existing: Styled Form Groups, Checkboxes, Submit Button --- */
+
+/* =====================================================
+   Styled Form Groups, Checkboxes, and Submit Button
+   ===================================================== */
 .styled-form {
   .form-section-heading {
     margin-top: brand.$spacing-base * 4;
@@ -55,7 +63,6 @@
       border: 1px solid #ccc;
       border-radius: brand.$border-radius-base;
       font-size: 1rem;
-
       &:focus {
         border-color: brand.$brand-primary;
         outline: none;
@@ -72,7 +79,6 @@
   .checkbox-group {
     flex-direction: row;
     align-items: center;
-
     .checkbox-input {
       margin-right: brand.$spacing-base;
     }
@@ -90,11 +96,9 @@
     margin-top: brand.$spacing-base * 4;
     transition: background-color 0.3s ease;
     text-align: center;
-
     &:hover {
       background: brand.$brand-accent-hover;
     }
-
     &:disabled {
       opacity: 0.6;
       cursor: not-allowed;
@@ -102,13 +106,14 @@
   }
 }
 
-/* --- Existing: Progress Bar --- */
+/* =====================================================
+   Progress Bar
+   ===================================================== */
 .progress {
   margin-bottom: brand.$spacing-base * 3;
   background-color: brand.$brand-bg-light;
   border-radius: brand.$border-radius-base;
   overflow: hidden;
-  
   .progress-bar {
     background-color: brand.$brand-accent;
     color: brand.$brand-text-light;
@@ -117,64 +122,117 @@
   }
 }
 
-/* --- Feature Grid & Cards --- */
+/* =====================================================
+   Feature Grid & Cards
+   ===================================================== */
 .feature-intro {
-  /* Extra spacing below the intro text so it’s clearly separate from the cards */
-  margin-bottom: brand.$spacing-base * 5;
+  margin: brand.$spacing-base * 5 auto;
   max-width: 700px;
-
+  text-align: center; // Center the intro container
   p {
     margin: 0;
     line-height: 1.5;
-    color: brand.$brand-text-light; // or another brand color if you prefer
+    // Update the text color to match dark-section paragraphs (#ddd)
+    color: #ddd;
+    text-align: center;
   }
 }
 
 .feature-grid {
-  /* Provide even spacing around edges with space-evenly or space-around */
   display: flex;
   flex-wrap: wrap;
-  justify-content: space-evenly; 
+  justify-content: space-evenly;
   gap: 2rem;
-  /* Extra top margin so cards have space below the intro */
   margin-top: brand.$spacing-base * 2;
   margin-bottom: brand.$spacing-base * 2;
 }
 
 .feature-card {
-  background-color: brand.$brand-bg-light; 
+  background-color: brand.$brand-bg-light;
   color: brand.$brand-text-dark;
   border-radius: brand.$border-radius-base;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   padding: 1.5rem;
   flex: 1 1 250px;
   max-width: 300px;
   text-align: center;
-  margin: 0 auto; /* ensures card is centered if narrower than container */
-
+  margin: 0 auto;
   img {
     margin-bottom: 0.75rem;
   }
-
   h3 {
     margin-bottom: 0.5rem;
     color: brand.$brand-primary;
     font-weight: 600;
   }
-
   p {
     margin: 0;
     line-height: 1.4;
   }
 }
 
-/* --- Boxed FAQ --- */
+/* =====================================================
+   Boxed FAQ (Optional)
+   ===================================================== */
 .faq-box {
   background-color: brand.$brand-bg-light;
   color: brand.$brand-text-dark;
-  border: 1px solid #eee; 
+  border: 1px solid #eee;
   border-radius: brand.$border-radius-base;
   padding: 1.5rem;
   margin-bottom: 1rem;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+/* =====================================================
+   Unified FAQ Accordion Container & Items
+   ===================================================== */
+.faq-accordion {
+  border: 1px solid #eee;
+  border-radius: brand.$border-radius-base;
+  overflow: hidden;
+}
+
+.accordion-item {
+  border-bottom: 1px solid #eee;
+  margin: 0;
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+.accordion-title {
+  cursor: pointer;
+  padding: brand.$spacing-base;
+  font-weight: 600;
+  background-color: brand.$brand-bg-light;
+  color: brand.$brand-text-dark;
+  position: relative; // For arrow positioning
+  text-align: left !important; // Force left alignment for headings
+  &::after {
+    content: "\25BA"; // Right-pointing arrow
+    position: absolute;
+    right: brand.$spacing-base;
+    top: 50%;
+    transform: translateY(-50%);
+    transition: transform 0.35s ease;
+  }
+  &:hover {
+    background-color: lighten(brand.$brand-bg-light, 5%);
+  }
+}
+
+.accordion-item.open .accordion-title::after {
+  transform: translateY(-50%) rotate(90deg);
+}
+
+.accordion-content {
+  overflow: hidden;
+  transition: max-height 0.35s ease;
+  padding: 0 brand.$spacing-base brand.$spacing-base;
+  background-color: #fff; // White content background
+  text-align: left !important; // Force left alignment for content
+  p {
+    text-align: left !important;
+  }
 }
