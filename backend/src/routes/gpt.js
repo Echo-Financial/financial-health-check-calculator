@@ -1,3 +1,5 @@
+// backend/src/routes/gpt.js
+
 const express = require('express');
 const router = express.Router();
 const { OpenAI } = require('openai');
@@ -5,85 +7,119 @@ const logger = require('../logger');
 require('dotenv').config({ path: './.env' });
 console.log("process.env.OPENAI_API_KEY", process.env.OPENAI_API_KEY);
 
-// Initialize OpenAI with your API key
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
   organization: "org-o7BnJ50AOw4fqmu0UdbmTFbt",
   project: "proj_smoQRZKFchodKimx4S59JuND"
 });
 
-// Define the route for GPT-4o calls
+/**
+ * Generates feedback for metrics.
+ * For "Growth Opportunity" and "Potential for Improvement":
+ *   - Lower scores are good.
+ * For all other metrics:
+ *   - Higher scores are good.
+ */
+const generateFeedback = (metricName, score) => {
+  if (metricName === "Growth Opportunity" || metricName === "Potential for Improvement") {
+    if (score < 40) {
+      return `A score of ${score} for ${metricName} is outstanding. It indicates very little room for further improvement.`;
+    } else if (score >= 40 && score <= 70) {
+      return `A score of ${score} for ${metricName} suggests there is some room for improvement.`;
+    } else {
+      return `A score of ${score} for ${metricName} indicates a significant gap relative to the target—consider taking focused actions to boost your investment levels.`;
+    }
+  }
+  
+  if (score < 40) {
+    return `A score of ${score} for ${metricName} is concerning and indicates an urgent need for improvement. Immediate action is recommended.`;
+  } else if (score >= 40 && score <= 70) {
+    return `A score of ${score} for ${metricName} suggests there is potential for improvement. Consider incremental adjustments to strengthen this area.`;
+  } else {
+    return `A score of ${score} for ${metricName} is outstanding. Continue with your current strategy to maintain this excellent performance.`;
+  }
+};
+
+const buildDynamicPrompt = (data) => {
+  const dtiScore = data.dtiScore || data.dti;
+  const savingsScore = data.savingsScore || data.savingsRate;
+  const emergencyFundScore = data.emergencyFundScore || data.emergencyFund;
+  const retirementScore = data.retirementScore || data.retirement;
+  const growthOpportunityScore = data.growthOpportunityScore || data.growthOpportunity;
+  const potentialForImprovementScore = data.potentialForImprovementScore || data.potentialForImprovement;
+  const overallFinancialHealthScore = data.overallFinancialHealthScore || data.overallFinancialHealth;
+
+  const dtiFeedback = generateFeedback("Debt to Income Ratio", dtiScore);
+  const savingsFeedback = generateFeedback("Savings", savingsScore);
+  const emergencyFeedback = generateFeedback("Emergency Fund", emergencyFundScore);
+  const retirementFeedback = generateFeedback("Retirement Preparedness", retirementScore);
+  const growthFeedback = generateFeedback("Growth Opportunity", growthOpportunityScore);
+  const improvementFeedback = generateFeedback("Potential for Improvement", potentialForImprovementScore);
+
+  return `
+Disclaimer:
+-------------
+The following information is provided for general educational purposes only and does not constitute professional financial advice. It is not tailored to your specific circumstances. Please consult with a licensed financial advisor for personalised advice.
+
+Context:
+-------------
+Please note that Echo Financial Advisors is a solo operation business. When crafting your narrative, use singular references (e.g. "I" or "your solo advisor") rather than plural references like "our advisors."
+
+Financial Assessment Summary:
+------------------------------
+Based on your input, here are your personalised financial scores along with detailed feedback:
+
+• Debt to Income Ratio Score: ${dtiScore}
+  - ${dtiFeedback}
+
+• Savings Score: ${savingsScore}
+  - ${savingsFeedback}
+
+• Emergency Fund Score: ${emergencyFundScore}
+  - ${emergencyFeedback}
+
+• Retirement Preparedness Score: ${retirementScore}
+  - ${retirementFeedback}
+
+• Growth Opportunity Score: ${growthOpportunityScore}
+  - ${growthFeedback}
+
+• Potential for Improvement Score: ${potentialForImprovementScore}
+  - ${improvementFeedback}
+
+Overall Financial Health Score: ${overallFinancialHealthScore}
+
+Instructions:
+-------------
+Please craft a professional, authoritative narrative tailored for the New Zealand market (using UK English). Your narrative should include:
+
+1. **Analysis:**
+   - Provide a concise summary of the user's financial situation, utilising the Overall Financial Health Score.
+   - Highlight key strengths (e.g. a Debt to Income Ratio score of 100 is exceptional) and note that scores above 90 are outstanding, while scores below 20 require immediate attention.
+   - Clearly explain that a high Growth Opportunity Score indicates that the user's investment levels are significantly below the recommended target and represent a major area for improvement.
+
+2. **Actionable Insights:**
+   - For each metric with a low score (or, in the case of Growth Opportunity, a high score), provide 1-2 specific, actionable tips.
+   - For metrics with excellent scores, include a brief congratulatory note and advice to maintain that strength.
+
+3. **Recommendations:**
+   - Conclude with a clear call-to-action recommending that the user book a consultation with Echo Financial Advisors for personalised advice.
+   - **Important:** If the user's retirement score is very high (indicating strong retirement readiness) and the Growth Opportunity score is very low (indicating investments are well aligned with targets), suggest that the consultation is primarily for maintenance and optimisation. Conversely, if the retirement score is low or the Growth Opportunity score is high, emphasise the need for proactive, urgent advice.
+
+Output Format: The narrative must be in plain text using UK English, well-organised with clear headings (such as "Analysis", "Actionable Insights", and "Recommendations"), use bullet points where appropriate, and be under 250 words.
+`;
+};
+
 router.post('/gpt', async (req, res) => {
   try {
     logger.info('Received POST /api/gpt request');
-    const {
-      dti,
-      savingsRate,
-      emergencyFund,
-      retirement,
-      growthOpportunity,
-      potentialForImprovement,
-      overallFinancialHealth,
-      age,
-      annualIncome,
-      incomeFromInterest,
-      incomeFromProperty,
-      monthlyExpenses,
-      totalDebt,
-      savings,
-      emergencyFunds,
-      totalAssets,
-      totalInvestments,
-      currentRetirementSavings,
-      targetRetirementSavings,
-      retirementAge,
-      creditScore,
-      email,
-      name,
-      phone,
-    } = req.body;
+    const prompt = buildDynamicPrompt(req.body);
+    logger.info("Prompt built:", prompt);
 
-    // Build the enhanced prompt for GPT-4o
-    const prompt = `You are a professional and empathetic financial assistant from Echo Financial Advisors Ltd. Your role is to provide general educational insights based on the financial scores provided. You must not refer to a team of advisors, and should refer to the advisor in the singular.
-
-IMPORTANT REGULATORY NOTE (NZ):
-"The following information is general guidance and does not constitute individualized financial advice. Please consult a licensed advisor for advice specific to your situation."
-
-Instructions:
-1. Begin with the above disclaimer.
-2. Provide a brief summary of the user's financial scores, noting areas of strength and weakness, and use numerical values in your summarization.
-3. For each major area (Debt to Income, Savings, Emergency Fund, Retirement, Growth Opportunity, and Potential for Improvement), provide 1-3 clear and concise improvement tips.
-4. Ensure the entire response is professionally formatted with clear section headings and bullet lists.
-5. End with a complete, persuasive call-to-action (CTA) that encourages the user to schedule a consultation with the qualified advisor at Echo Financial Advisors Ltd.
-6.  Use the heading "Recommendations" before the call to action.
-7.  Ensure the language used in the "Recommendations" section is unique and does not duplicate the language used in the "Next Steps" section.
-8.  Do not use the phrase "our expert advisors" or any other language that suggests a team of advisors. Ensure the language used refers to a single advisor.
-9. Keep the final response under 250 words and ensure it does not end abruptly.
-
-User's Scores (out of 100, where 0 is the lowest and 100 is the highest):
-- Debt to Income Ratio Score: ${dti} (A low score indicates higher debt relative to income, and a high score indicates lower debt relative to income)
-- Savings Rate Score: ${savingsRate} (A low score indicates a low savings rate, and a high score indicates a high savings rate)
-- Emergency Fund Score: ${emergencyFund} (A low score indicates a small emergency fund relative to expenses, and a high score indicates a large emergency fund relative to expenses)
-- Retirement Score: ${retirement} (A low score indicates a low preparedness for retirement, and a high score indicates a high preparedness for retirement)
-- Growth Opportunity Score: ${growthOpportunity} (A low score indicates fewer assets available for growth, and a high score indicates more assets available for growth)
-- Potential for Improvement Score: ${potentialForImprovement} (A high score indicates a high potential for improvement across the other score areas, and a low score indicates less scope for improvement)
-- Overall Financial Health Score: ${overallFinancialHealth} (A low score indicates a lower overall financial health, and a high score indicates a high overall financial health)
-
-
-Please generate a complete, professionally formatted response that includes:
-- A brief summary of the financial assessment that focuses on the numerical values of each score.
-- Improvement tips for each major area in a numbered list that is relevant to the numerical values of the score.
-- Use the heading "Recommendations" before the call to action.
-- Ensure the language used in the "Recommendations" section is unique and does not duplicate the language used in the "Next Steps" section.
-- Do not use the phrase "our expert advisors" or any other language that suggests a team of advisors.
-- A persuasive and complete final sentence inviting the user to schedule a consultation with the qualified advisor.
-`;
-
-    // Make the request to OpenAI API with increased max_tokens
     const chatCompletion = await openai.chat.completions.create({
       model: 'gpt-4o',
       messages: [{ role: 'user', content: prompt }],
-      max_tokens: 500, // Increased token limit to avoid cutoff
+      max_tokens: 500,
       temperature: 0.7,
     });
 
@@ -91,10 +127,11 @@ Please generate a complete, professionally formatted response that includes:
     res.json({ response: chatCompletion.choices[0].message.content });
   } catch (error) {
     logger.error('Error calling OpenAI:', error);
-    console.error('Error calling OpenAI:', error);
-    console.error("Error Object:", error);
-    console.error('OpenAI Error Details:', error.message, error.stack);
-    res.status(500).json({ error: 'Failed to generate insights' });
+    if (error.response) {
+      logger.error('OpenAI response error:', error.response.status, error.response.data);
+    }
+    console.error('Error details:', error);
+    res.status(500).json({ error: 'Submission failed. Please try again.' });
   }
 });
 

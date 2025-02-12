@@ -1,3 +1,4 @@
+// LeadCaptureForm.jsx
 import React, { useState } from 'react';
 import axios from 'axios';
 import { Formik, Form } from 'formik';
@@ -10,7 +11,7 @@ import RetirementPlanning from '../InputSections/RetirementPlanning.jsx';
 import CreditHealth from '../InputSections/CreditHealth.jsx';
 import ContactDetails from '../InputSections/ContactDetails.jsx';
 
-// Updated validationSchema to include all fields used in each step
+// Updated validationSchema to include adjustForInflation as an optional boolean.
 const validationSchema = Yup.object({
     age: Yup.number()
         .required('Age is required')
@@ -45,12 +46,14 @@ const validationSchema = Yup.object({
     currentRetirementSavings: Yup.number()
         .required('Current Retirement Savings is required')
         .min(0, 'Must be at least 0'),
-     targetRetirementSavings: Yup.number()
+    targetRetirementSavings: Yup.number()
         .required('Target Retirement Savings is required')
         .min(0, 'Must be at least 0'),
     retirementAge: Yup.number()
         .required('Retirement Age is required')
         .min(18, 'Must be at least 18'),
+    // New field for inflation adjustment
+    adjustForInflation: Yup.boolean().optional(),
     creditScore: Yup.number()
         .required('Credit Score is required')
         .min(300, 'Minimum is 300')
@@ -60,8 +63,7 @@ const validationSchema = Yup.object({
         .required('Email is required'),
     name: Yup.string()
         .required('Name is required'),
-    phone: Yup.string()
-        .optional(),
+    phone: Yup.string().optional(),
 });
 
 // Function to transform Formik values from strings to numbers
@@ -75,10 +77,10 @@ const transformValues = (values) => {
         'totalDebt',
         'savings',
         'emergencyFunds',
-        'totalAssets',
         'totalInvestments',
+        'totalAssets',
         'currentRetirementSavings',
-          'targetRetirementSavings',
+        'targetRetirementSavings',
         'retirementAge',
         'creditScore',
     ];
@@ -91,10 +93,11 @@ const transformValues = (values) => {
 };
 
 const LeadCaptureForm = () => {
+    // Set the initial step to 1 (steps 1–5)
+    const [step, setStep] = useState(1);
+    const totalSteps = 5;
     const [error, setError] = useState('');
     const navigate = useNavigate();
-    const [step, setStep] = useState(0);
-    const totalSteps = 5;
     const [showModal, setShowModal] = useState(false);
     const [scores, setScores] = useState(null);
     const [isLoading, setIsLoading] = useState(false); // added loading state
@@ -122,36 +125,52 @@ const LeadCaptureForm = () => {
                 },
                 retirementPlanning: {
                     retirementAge: transformedValues.retirementAge,
-                     targetRetirementSavings: transformedValues.targetRetirementSavings,
-                     currentRetirementSavings: transformedValues.currentRetirementSavings, // <-- ADDED
+                    targetRetirementSavings: transformedValues.targetRetirementSavings,
+                    currentRetirementSavings: transformedValues.currentRetirementSavings, // <-- ADDED
+                    adjustForInflation: values.adjustForInflation || false, // Default to false if not provided
                 },
-               contactInfo: {
-                   email: transformedValues.email,
-                   name: transformedValues.name,
-                   phone: transformedValues.phone,
-               },
+                contactInfo: {
+                    email: transformedValues.email,
+                    name: transformedValues.name,
+                    phone: transformedValues.phone,
+                },
             };
+
             const response = await axios.post(`${API_URL}/api/submit`, payload);
             setScores(response.data.scores);
-          setShowModal(true);  // move inside try
+            setShowModal(true);  // move inside try
         } catch (err) {
-             let message = 'Submission failed. Please try again.';
-            if(err.response?.data?.message){
+            let message = 'Submission failed. Please try again.';
+            if (err.response?.data?.message) {
                 message = err.response.data.message;
             }
-           setError(message);
+            setError(message);
             setSubmitting(false);
         } finally {
             setIsLoading(false); // End loading
         }
     };
 
+    // Modified handleNext: For non-final steps, mark current step fields as touched.
+    // When transitioning to the final step (step 5), explicitly reset touched for email, name, and phone.
     const handleNext = async (formik) => {
         const errors = await formik.validateForm();
         const currentStepErrors = getCurrentStepErrors(errors, step);
         if (Object.keys(currentStepErrors).length === 0) {
-            const stepFields = getFieldsForStep(step);
-            stepFields.forEach(field => formik.setFieldTouched(field, true));
+            // For steps before the final one, mark current fields as touched.
+            if (step < totalSteps - 1) {
+                const stepFields = getFieldsForStep(step);
+                stepFields.forEach(field => formik.setFieldTouched(field, true));
+            }
+            // When transitioning to the final step, reset touched for the final fields.
+            if (step === totalSteps - 1) {
+                formik.setTouched(prev => ({
+                    ...prev,
+                    email: false,
+                    name: false,
+                    phone: false,
+                }));
+            }
             setStep(step + 1);
         } else {
             Object.keys(currentStepErrors).forEach((field) =>
@@ -162,8 +181,8 @@ const LeadCaptureForm = () => {
 
     const handlePrevious = () => {
         setStep(step - 1);
-         setShowModal(false);  // close modal when navigating backwards
-    }
+        setShowModal(false);  // close modal when navigating backwards
+    };
 
     const getFieldsForStep = (step) => {
         switch (step) {
@@ -172,10 +191,10 @@ const LeadCaptureForm = () => {
             case 2:
                 return ['monthlyExpenses', 'totalDebt', 'savings', 'emergencyFunds', 'totalInvestments'];
             case 3:
-                return ['totalAssets', 'currentRetirementSavings', 'targetRetirementSavings', 'retirementAge'];
+                return ['totalAssets', 'currentRetirementSavings', 'targetRetirementSavings', 'retirementAge', 'adjustForInflation'];
             case 4:
                 return ['creditScore'];
-             case 5:
+            case 5:
                 return ['email', 'name', 'phone'];
             default:
                 return [];
@@ -197,7 +216,7 @@ const LeadCaptureForm = () => {
             case 2:
                 return <ExpensesAssets />;
             case 3:
-                return <RetirementPlanning />;
+                return <RetirementPlanning />;  // Renders a checkbox for adjustForInflation if desired.
             case 4:
                 return <CreditHealth />;
             case 5:
@@ -207,14 +226,13 @@ const LeadCaptureForm = () => {
         }
     };
 
-   return (
+    return (
         <div className="lead-form-container" data-testid="lead-capture-form">
             <h2>Complete Your Financial Health Check</h2>
-            <p>
+            <p className="form-subtext">
                 Provide your essential details in just a few simple steps. Once you submit the form,
                 we'll generate your personalized financial report, which you can review immediately.
             </p>
-
             {error && <p className="text-danger">{error}</p>}
             <Formik
                 initialValues={{
@@ -229,22 +247,47 @@ const LeadCaptureForm = () => {
                     totalInvestments: '',
                     totalAssets: '',
                     currentRetirementSavings: '',
-                     targetRetirementSavings: '',
+                    targetRetirementSavings: '',
                     retirementAge: '',
+                    // New field for inflation adjustment (default is false)
+                    adjustForInflation: false,
                     creditScore: '',
                     email: '',
                     name: '',
                     phone: '',
                 }}
+                // Ensure no fields are touched on mount.
+                initialTouched={{
+                    age: false,
+                    annualIncome: false,
+                    incomeFromInterest: false,
+                    incomeFromProperty: false,
+                    monthlyExpenses: false,
+                    totalDebt: false,
+                    savings: false,
+                    emergencyFunds: false,
+                    totalInvestments: false,
+                    totalAssets: false,
+                    currentRetirementSavings: false,
+                    targetRetirementSavings: false,
+                    retirementAge: false,
+                    adjustForInflation: false,
+                    creditScore: false,
+                    email: false,
+                    name: false,
+                    phone: false,
+                }}
                 validationSchema={validationSchema}
                 onSubmit={handleSubmit}
+                validateOnMount={false}
             >
                 {(formik) => (
                     <Form>
                         <ProgressBar
-                            now={(step / totalSteps) * 100}
-                            label={`${Math.round((step / totalSteps) * 100)}%`}
+                            now={((step - 1) / (totalSteps - 1)) * 100}
+                            label={`${Math.round(((step - 1) / (totalSteps - 1)) * 100)}%`}
                         />
+
                         {renderStepFields()}
                         <div className="d-flex justify-content-between mt-4">
                             {step > 1 && (
@@ -278,11 +321,11 @@ const LeadCaptureForm = () => {
                         <div className="modal-body">
                             <p>Click below to continue and receive your financial health check results:</p>
                             <Button
-                                    onClick={() => {
-                                        navigate('/report', { state: { scores } });
-                                        setShowModal(false);
-                                    }}
-                                >
+                                onClick={() => {
+                                    navigate('/report', { state: { scores } });
+                                    setShowModal(false);
+                                }}
+                            >
                                 Continue
                             </Button>
                         </div>

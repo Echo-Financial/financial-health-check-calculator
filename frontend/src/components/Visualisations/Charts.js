@@ -17,23 +17,30 @@ ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend)
 const Charts = ({ scores }) => {
   const theme = useTheme();
 
-  // Function to generate a vertical gradient for the bars
-  const generateVerticalGradient = (context) => {
+  // Function to generate a vertical gradient for the bars.
+  // For "Growth Opportunity Score" and "Potential for Improvement Score",
+  // invert the gradient so that lower scores are green and higher scores are red.
+  const generateVerticalGradient = (context, label) => {
     const { chart } = context;
     const { ctx, chartArea } = chart || {};
     if (!chartArea) {
-      // Fallback in case chartArea is undefined during initial render
       return 'rgba(255,0,0,1)';
     }
     const { left, top, bottom } = chartArea;
     const gradient = ctx.createLinearGradient(left, bottom, left, top);
-    gradient.addColorStop(0, 'red');
-    gradient.addColorStop(0.5, 'yellow');
-    gradient.addColorStop(1, 'green');
+
+    if (label === 'Growth Opportunity Score' || label === 'Potential for Improvement Score') {
+      gradient.addColorStop(0, 'green');
+      gradient.addColorStop(0.5, 'yellow');
+      gradient.addColorStop(1, 'red');
+    } else {
+      gradient.addColorStop(0, 'red');
+      gradient.addColorStop(0.5, 'yellow');
+      gradient.addColorStop(1, 'green');
+    }
     return gradient;
   };
 
-  // Define the fixed order for the internal score keys
   const orderedKeys = [
     'dtiScore',
     'savingsScore',
@@ -45,37 +52,33 @@ const Charts = ({ scores }) => {
   ];
 
   const formatScoreLabel = (label) => {
-      const customLabels = {
-          dtiScore: 'Debt to Income Score',
-          savingsScore: 'Savings Score',
-          emergencyFundScore: 'Emergency Fund Score',
-          retirementScore: 'Retirement Score',
-          growthOpportunityScore: 'Growth Opportunity Score',
-          overallFinancialHealthScore: 'Overall Financial Health Score',
-          potentialForImprovementScore: 'Potential for Improvement Score',
-      };
-
+    const customLabels = {
+      dtiScore: 'Debt to Income Score',
+      savingsScore: 'Savings Score',
+      emergencyFundScore: 'Emergency Fund Score',
+      retirementScore: 'Retirement Score',
+      growthOpportunityScore: 'Growth Opportunity Score',
+      overallFinancialHealthScore: 'Overall Financial Health Score',
+      potentialForImprovementScore: 'Potential for Improvement Score',
+    };
     return customLabels[label] || label
       .replace(/([A-Z])/g, ' $1')
       .replace(/^./, (str) => str.toUpperCase());
   };
 
-  // Generate chart labels and values using the mapping
-  const chartLabels = scores
-    ? orderedKeys.map((key) => formatScoreLabel(key))
-    : [];
-  const chartValues = scores
-    ? orderedKeys.map((key) => scores[key])
-    : [];
+  const chartLabels = scores ? orderedKeys.map((key) => formatScoreLabel(key)) : [];
+  const chartValues = scores ? orderedKeys.map((key) => scores[key]) : [];
 
-  // Configure the chart data and options
   const chartData = {
     labels: chartLabels,
     datasets: [
       {
         label: 'Financial Scores',
         data: chartValues,
-        backgroundColor: (context) => generateVerticalGradient(context),
+        backgroundColor: (context) => {
+          const label = context.chart.data.labels[context.dataIndex];
+          return generateVerticalGradient(context, label);
+        },
         borderColor: (context) => {
           const score = chartValues[context.dataIndex];
           return theme.palette.borderColorFromScore(score);
