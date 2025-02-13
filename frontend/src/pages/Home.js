@@ -13,14 +13,14 @@ const Home = () => {
   return (
     <main id="main-content" role="main">
       {/* Hero Section (Dark) */}
-      <section 
+      <section
         className="section dark-section hero"
         aria-labelledby="hero-heading"
       >
         <div className="container text-center">
           <h1 id="hero-heading">Take Control of Your Financial Future</h1>
           <p>
-            Get personalised financial insights and recommendations tailored to your goals. 
+            Get personalised financial insights and recommendations tailored to your goals.
             Start your free assessment now.
           </p>
           <LeadCaptureForm />
@@ -43,7 +43,7 @@ const Home = () => {
             <article>
               <h3>2. Get Your Personalised Report</h3>
               <p>
-                Receive a customised financial health score and tailored recommendations within minutes.
+                Receive a customised financial health score and tailored recommendations within seconds.
               </p>
             </article>
             <article>
@@ -68,7 +68,7 @@ const Home = () => {
           {/* Intro paragraph to give context */}
           <div className="feature-intro">
             <p>
-              Below are some of the key benefits you'll gain from our Financial Health Check. Each feature is designed to empower you with valuable insights and guidance on your financial journey.
+            Discover how our comprehensive Financial Health Check empowers you to take control of your financial future. Our professional-grade assessment tools deliver actionable insights tailored to your unique situation.
             </p>
           </div>
 
@@ -80,7 +80,7 @@ const Home = () => {
                 style={{ width: '50px', marginBottom: '8px' }}
               />
               <h3>In-Depth Insights</h3>
-              <p>Understand your spending, saving, and investment habits.</p>
+              <p>Gain deep visibility into your financial behaviors with sophisticated metrics that evaluate your spending patterns, saving capabilities, and investment strategies.</p>
             </article>
 
             <article className="feature-card">
@@ -90,7 +90,7 @@ const Home = () => {
                 style={{ width: '50px', marginBottom: '8px' }}
               />
               <h3>Expert Guidance</h3>
-              <p>Receive professional advice and action plans from licensed advisors.</p>
+              <p>Receive clear, actionable strategies aligned with your specific goals and circumstances. Transform insights into meaningful progress with step-by-step guidance.</p>
             </article>
 
             <article className="feature-card">
@@ -100,7 +100,7 @@ const Home = () => {
                 style={{ width: '50px', marginBottom: '8px' }}
               />
               <h3>Secure & Confidential</h3>
-              <p>We use advanced encryption to keep your data safe and private.</p>
+              <p>Rest assured knowing your sensitive information is protected. We maintain the highest standards of data privacy and confidentiality throughout your assessment.</p>
             </article>
 
             <article className="feature-card">
@@ -110,7 +110,7 @@ const Home = () => {
                 style={{ width: '50px', marginBottom: '8px' }}
               />
               <h3>Interactive Tools</h3>
-              <p>Visualize your progress with charts, gauges, and scenario analyses.</p>
+              <p>Our advanced analytical tools help you explore different scenarios and track your progress with precision. Make informed decisions with clear, real-time visual feedback.</p>
             </article>
           </div>
         </div>
@@ -124,48 +124,40 @@ const Home = () => {
       >
         <div className="container text-center">
           <h2 id="testimonials-heading">What Our Users Say</h2>
-          <ul className="testimonial-list">
-            <li>
               <blockquote>
                 <p>
-                  "This tool helped me understand where I stand financially. 
+                  "This tool helped me understand where I stand financially.
                   I’ve already made changes that saved me thousands!"
                 </p>
                 <footer>– Alex T., Entrepreneur</footer>
               </blockquote>
-            </li>
-            <li>
               <blockquote>
                 <p>
-                  "The personalized recommendations were spot-on. I feel more confident about my future."
+                  "The personalised recommendations were spot-on. I feel more confident about my future."
                 </p>
                 <footer>– Maria S., Marketing Manager</footer>
               </blockquote>
-            </li>
-            <li>
               <blockquote>
                 <p>
                   "Easy to use and incredibly insightful. I highly recommend it to anyone looking to get serious about their finances."
                 </p>
                 <footer>– David K., Freelancer</footer>
               </blockquote>
-            </li>
-          </ul>
-          <a href="#hero-heading" className="btn btn-secondary">
+          <a href="#hero-heading" className="btn btn-secondary brand-link-button"> {/* Added brand-link-button class */}
             Start Your Free Assessment
           </a>
         </div>
       </section>
 
       {/* FAQ Section (Light) */}
-      <section 
+      <section
         id="faq"
         className="section light-section faq-section"
         aria-labelledby="faq-heading"
       >
         <div className="container">
           <h2 id="faq-heading">Frequently Asked Questions</h2>
-          
+
           {/* Wrap all accordion items in a unified container */}
           <div className="faq-accordion">
             <AccordionItem
@@ -182,7 +174,7 @@ const Home = () => {
             />
             <AccordionItem
               question="Can I talk to a financial advisor directly?"
-              answer="Yes. We offer optional consultations with licensed experts for more in-depth guidance."
+              answer="Yes. We offer optional consultations with a licensed expert for more in-depth guidance."
             />
           </div>
         </div>
@@ -203,43 +195,43 @@ const Home = () => {
             <article className="score-card">
               <h3>Debt-to-Income Score</h3>
               <p>
-                Indicates how well you manage debt relative to your income. A higher score means you carry less debt compared to your earnings, providing more financial flexibility.
+              Measures the relationship between your monthly debt obligations and income. A higher score indicates a healthier debt balance, offering greater financial flexibility and borrowing capacity.
               </p>
             </article>
             <article className="score-card">
               <h3>Savings Score</h3>
               <p>
-                Reflects the percentage of your annual income saved in liquid assets against an age-adjusted target. A higher score shows you’re saving at or above the recommended rate.
+              Evaluates your liquid assets as a percentage of annual income, measured against age-based benchmarks. A higher score indicates strong saving habits that align with or exceed recommended guidelines.
               </p>
             </article>
             <article className="score-card">
               <h3>Emergency Fund Score</h3>
               <p>
-                Measures whether your emergency funds cover approximately six months of living expenses. A higher score means you’re better prepared to handle unexpected financial challenges.
+              Assesses your financial resilience by comparing available emergency funds against six months of essential expenses. A higher score demonstrates stronger preparation for unexpected financial circumstances.
               </p>
             </article>
             <article className="score-card">
               <h3>Retirement Score</h3>
               <p>
-                Assesses your retirement readiness by projecting your current savings forward compared to your target. A higher score indicates you’re on track for a secure retirement.
+              Evaluates retirement preparedness by analysing current savings trajectory against projected retirement needs. A higher score indicates better alignment with long-term retirement objectives.
               </p>
             </article>
             <article className="score-card">
               <h3>Growth Opportunity Score</h3>
               <p>
-                Evaluates the gap between your current investments and a dynamic, age-appropriate target. In this metric, a lower score is ideal; a higher score reveals greater room for improvement.
+              Measures the variance between current investment allocation and recommended age-based investment targets. A lower score indicates closer alignment with optimal investment strategies.
               </p>
             </article>
             <article className="score-card">
               <h3>Overall Financial Health Score</h3>
               <p>
-                Provides a high-level snapshot by averaging your performance across key areas (with the Growth Opportunity Score inverted). A higher overall score signifies a healthier financial position.
+              Synthesises performance across all financial metrics (with adjusted Growth Opportunity weighting) to provide a comprehensive wellness assessment. A higher score reflects stronger overall financial health.
               </p>
             </article>
             <article className="score-card">
               <h3>Potential for Improvement Score</h3>
               <p>
-                Indicates how much room you have to enhance your financial health. Calculated as 100 minus your Overall Score, a higher number means there is significant opportunity to improve.
+                Represents the differential between your current financial health and optimal financial wellness benchmarks. A higher score indicates greater opportunities for strengthening your financial position through targeted improvements.
               </p>
             </article>
           </div>
@@ -254,9 +246,9 @@ const Home = () => {
         <div className="container text-center">
           <h2 id="cta-heading">Ready to Secure Your Financial Future?</h2>
           <p>
-            Join thousands of satisfied users who have taken the first step toward financial security.
+            Join Kiwi's from across the country who have taken the first step toward financial security.
           </p>
-          <a href="#hero-heading" className="btn btn-primary">
+          <a href="#hero-heading" className="btn btn-primary brand-link-button"> {/* Added brand-link-button class */}
             Get Started Now
           </a>
         </div>

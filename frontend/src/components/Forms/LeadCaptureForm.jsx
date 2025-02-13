@@ -231,7 +231,7 @@ const LeadCaptureForm = () => {
             <h2>Complete Your Financial Health Check</h2>
             <p className="form-subtext">
                 Provide your essential details in just a few simple steps. Once you submit the form,
-                we'll generate your personalized financial report, which you can review immediately.
+                we'll generate your personalised financial report, which you can review immediately.
             </p>
             {error && <p className="text-danger">{error}</p>}
             <Formik

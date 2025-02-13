@@ -187,52 +187,42 @@
 /* =====================================================
    Unified FAQ Accordion Container & Items
    ===================================================== */
-.faq-accordion {
-  border: 1px solid #eee;
-  border-radius: brand.$border-radius-base;
-  overflow: hidden;
-}
-
-.accordion-item {
-  border-bottom: 1px solid #eee;
-  margin: 0;
-  &:last-child {
-    border-bottom: none;
-  }
-}
-
-.accordion-title {
-  cursor: pointer;
-  padding: brand.$spacing-base;
-  font-weight: 600;
-  background-color: brand.$brand-bg-light;
-  color: brand.$brand-text-dark;
-  position: relative; // For arrow positioning
-  text-align: left !important; // Force left alignment for headings
-  &::after {
-    content: "\25BA"; // Right-pointing arrow
-    position: absolute;
-    right: brand.$spacing-base;
-    top: 50%;
-    transform: translateY(-50%);
-    transition: transform 0.35s ease;
-  }
-  &:hover {
-    background-color: lighten(brand.$brand-bg-light, 5%);
-  }
-}
-
-.accordion-item.open .accordion-title::after {
-  transform: translateY(-50%) rotate(90deg);
-}
-
-.accordion-content {
-  overflow: hidden;
-  transition: max-height 0.35s ease;
-  padding: 0 brand.$spacing-base brand.$spacing-base;
-  background-color: #fff; // White content background
-  text-align: left !important; // Force left alignment for content
-  p {
+   .accordion-title {
+    cursor: pointer;
+    padding: brand.$spacing-base;
+    font-weight: 600;
+    background-color: brand.$brand-bg-light;
+    color: brand.$brand-text-dark;
+    position: relative;
     text-align: left !important;
+    border-radius: brand.$border-radius-base;
+    background-clip: padding-box; /* ADD THIS LINE: background-clip: padding-box */
+    &::after {
+      content: "\25BA";
+      position: absolute;
+      right: brand.$spacing-base;
+      top: 50%;
+      transform: translateY(-50%);
+      transition: transform 0.35s ease;
+    }
+    &:hover {
+      background-color: lighten(brand.$brand-bg-light, 5%);
+    }
   }
-}
+  
+  .accordion-item.open .accordion-title::after {
+    transform: translateY(-50%) rotate(90deg);
+  }
+  
+  .accordion-content {
+    overflow: hidden;
+    transition: max-height 0.35s ease;
+    padding: 0 brand.$spacing-base brand.$spacing-base;
+    background-color: transparent;
+    color: brand.$brand-text-dark;
+    text-align: left !important;
+    p {
+      color: brand.$brand-accent;
+      text-align: left !important;
+    }
+  }

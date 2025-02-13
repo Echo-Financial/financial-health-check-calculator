@@ -3,7 +3,6 @@ import { createTheme } from '@mui/material';
 // We can't import SASS variables directly, so let's mirror them here:
 const brandPrimary = '#101828';
 const brandAccent = '#c68922';
-const brandAccentHover = '#db9e2d';
 const brandLink = '#5dc8e8';
 const brandLinkHover = '#47a3c4';
 

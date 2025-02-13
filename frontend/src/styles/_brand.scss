@@ -13,3 +13,25 @@ $font-body: 'Open Sans', sans-serif;
 
 $spacing-base: 8px;
 $border-radius-base: 4px;
+
+// ... your existing styles ...
+
+.brand-link-button {
+  display: inline-block;
+  background-color: $brand-accent;      // Use brand-accent for background (inverted!)
+  color: $brand-primary;         // Use brand-primary for text (inverted!)
+  padding: $spacing-base * 1.5 $spacing-base * 3;
+  border-radius: $border-radius-base;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background-color 0.3s ease, color 0.3s ease;
+
+  &:hover,
+  &:focus {
+    background-color: $brand-accent-hover; // Use brand-accent-hover for hover background
+    color: $brand-primary;         // Keep brand-primary for text on hover
+    text-decoration: none;
+    // Optional: Slightly darken the text on hover for more feedback
+    // color: darken($brand-primary, 10%);
+  }
+}
