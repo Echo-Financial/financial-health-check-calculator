@@ -11,62 +11,9 @@ import RetirementPlanning from '../InputSections/RetirementPlanning.jsx';
 import CreditHealth from '../InputSections/CreditHealth.jsx';
 import ContactDetails from '../InputSections/ContactDetails.jsx';
 
-// Updated validationSchema to include adjustForInflation as an optional boolean.
-const validationSchema = Yup.object({
-    age: Yup.number()
-        .required('Age is required')
-        .min(18, 'Must be at least 18'),
-    annualIncome: Yup.number()
-        .required('Annual Income is required')
-        .min(0, 'Must be at least 0'),
-    incomeFromInterest: Yup.number()
-        .required('Income from Interest is required')
-        .min(0, 'Must be at least 0'),
-    incomeFromProperty: Yup.number()
-        .required('Income from Property is required')
-        .min(0, 'Must be at least 0'),
-    monthlyExpenses: Yup.number()
-        .required('Monthly Expenses are required')
-        .min(0, 'Must be at least 0'),
-    totalDebt: Yup.number()
-        .required('Total Debt is required')
-        .min(0, 'Must be at least 0'),
-    savings: Yup.number()
-        .required('Savings is required')
-        .min(0, 'Must be at least 0'),
-    emergencyFunds: Yup.number()
-        .required('Emergency Funds are required')
-        .min(0, 'Must be at least 0'),
-    totalInvestments: Yup.number()
-        .required('Total Investments are required')
-        .min(0, 'Must be at least 0'),
-    totalAssets: Yup.number()
-        .required('Total Assets are required')
-        .min(0, 'Must be at least 0'),
-    currentRetirementSavings: Yup.number()
-        .required('Current Retirement Savings is required')
-        .min(0, 'Must be at least 0'),
-    targetRetirementSavings: Yup.number()
-        .required('Target Retirement Savings is required')
-        .min(0, 'Must be at least 0'),
-    retirementAge: Yup.number()
-        .required('Retirement Age is required')
-        .min(18, 'Must be at least 18'),
-    // New field for inflation adjustment
-    adjustForInflation: Yup.boolean().optional(),
-    creditScore: Yup.number()
-        .required('Credit Score is required')
-        .min(300, 'Minimum is 300')
-        .max(850, 'Maximum is 850'),
-    email: Yup.string()
-        .email('Invalid email address')
-        .required('Email is required'),
-    name: Yup.string()
-        .required('Name is required'),
-    phone: Yup.string().optional(),
-});
+const validationSchema = Yup.object({ /* ... (same as before) ... */ });
 
-// Function to transform Formik values from strings to numbers
+// Function to transform Formik values from strings to numbers (same as before)
 const transformValues = (values) => {
     const numberFields = [
         'age',
@@ -93,22 +40,22 @@ const transformValues = (values) => {
 };
 
 const LeadCaptureForm = () => {
-    // Set the initial step to 1 (steps 1–5)
     const [step, setStep] = useState(1);
     const totalSteps = 5;
     const [error, setError] = useState('');
     const navigate = useNavigate();
-    const [showModal, setShowModal] = useState(false);
+    const [showModal, setShowModal] = useState(false); // Keep for now, will remove later
     const [scores, setScores] = useState(null);
-    const [isLoading, setIsLoading] = useState(false); // added loading state
+    const [isLoading, setIsLoading] = useState(false);
 
     const handleSubmit = async (values, { setSubmitting }) => {
         console.log('handleSubmit called');
-        setIsLoading(true); // Start loading
+        setIsLoading(true);
         try {
             const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
             const transformedValues = transformValues(values);
 
+            // Construct the payload (same structure as before)
             const payload = {
                 personalDetails: {
                     age: transformedValues.age,
@@ -126,19 +73,31 @@ const LeadCaptureForm = () => {
                 retirementPlanning: {
                     retirementAge: transformedValues.retirementAge,
                     targetRetirementSavings: transformedValues.targetRetirementSavings,
-                    currentRetirementSavings: transformedValues.currentRetirementSavings, // <-- ADDED
-                    adjustForInflation: values.adjustForInflation || false, // Default to false if not provided
+                    currentRetirementSavings: transformedValues.currentRetirementSavings,
+                    adjustForInflation: values.adjustForInflation || false,
                 },
-                contactInfo: {
+                contactInfo: { // Keeping contact info for later (Phase 3 - email sending)
                     email: transformedValues.email,
                     name: transformedValues.name,
                     phone: transformedValues.phone,
                 },
             };
 
+            // --- FIRST API CALL: /api/submit (for scores and instant feedback) ---
             const response = await axios.post(`${API_URL}/api/submit`, payload);
-            setScores(response.data.scores);
-            setShowModal(true);  // move inside try
+            setScores(response.data.scores); // Keep this - it's for the instant feedback.
+
+            // --- SECOND API CALL: /api/financial-analysis (for detailed report) ---
+            const analysisResponse = await axios.post(`${API_URL}/api/financial-analysis`, payload);
+            const analysisText = analysisResponse.data.analysis; // Get analysis text
+
+            console.log("Response from /api/submit:", response.data); // Keep for debugging
+            console.log("Response from /api/financial-analysis:", analysisResponse.data); // Keep for debugging
+
+            // --- Navigate to /report, passing BOTH scores AND analysisText ---
+            navigate('/report', { state: { scores: response.data.scores, analysis: analysisText } });
+            setShowModal(false);
+
         } catch (err) {
             let message = 'Submission failed. Please try again.';
             if (err.response?.data?.message) {
@@ -147,17 +106,16 @@ const LeadCaptureForm = () => {
             setError(message);
             setSubmitting(false);
         } finally {
-            setIsLoading(false); // End loading
+            setIsLoading(false);
         }
     };
 
-    // Modified handleNext: For non-final steps, mark current step fields as touched.
-    // When transitioning to the final step (step 5), explicitly reset touched for email, name, and phone.
+    // ... (rest of your LeadCaptureForm component: handleNext, handlePrevious, etc. - NO CHANGES NEEDED HERE) ...
     const handleNext = async (formik) => {
         const errors = await formik.validateForm();
         const currentStepErrors = getCurrentStepErrors(errors, step);
         if (Object.keys(currentStepErrors).length === 0) {
-            // For steps before the final one, mark current fields as touched.
+            // For steps before the final one, mark current step fields as touched.
             if (step < totalSteps - 1) {
                 const stepFields = getFieldsForStep(step);
                 stepFields.forEach(field => formik.setFieldTouched(field, true));

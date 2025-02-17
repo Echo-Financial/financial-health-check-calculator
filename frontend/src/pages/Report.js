@@ -10,15 +10,17 @@ import './../styles/Report.scss';
 const Report = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { scores } = location.state || {};
+  // Destructure BOTH scores AND analysis from location.state:
+  const { scores, analysis } = location.state || {};
   const [insights, setInsights] = useState('');
   const [loading, setLoading] = useState(false);
 
+  // Keep fetchInsights as is (for original instant feedback):
   const fetchInsights = useCallback(async () => {
     setLoading(true);
     try {
       const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
-      // Use the keys returned by financialCalculations.js
+      // Use the keys returned by financialCalculations.js - THIS IS YOUR ORIGINAL INSTANT FEEDBACK
       const response = await axios.post(`${API_URL}/api/gpt`, {
         dti: scores.dtiScore,
         savingsRate: scores.savingsScore,
@@ -48,9 +50,13 @@ const Report = () => {
   }, [scores, fetchInsights]);
 
   if (!scores) {
-    navigate('/');
+    navigate('/'); // Redirect if no scores (shouldn't happen, but good practice)
     return null;
   }
+
+    const handleBookingClick = () => {
+        window.open('https://echofinancialadvisors.trafft.com/', '_blank'); // Replace with your actual booking link
+    };
 
   const formatScoreLabel = (label) => {
     const customLabels = {
@@ -62,22 +68,15 @@ const Report = () => {
       overallFinancialHealthScore: 'Overall Financial Health Score',
       potentialForImprovementScore: 'Potential for Improvement Score',
     };
-
-    return (
-      customLabels[label] ||
-      label.replace(/([A-Z])/g, ' $1').replace(/^./, (str) => str.toUpperCase())
-    );
+    return customLabels[label] || label.replace(/([A-Z])/g, ' $1').replace(/^./, (str) => str.toUpperCase());
   };
 
   const overallScore = scores.overallFinancialHealthScore || 0;
 
-  const handleBookingClick = () => {
-    window.open('https://echofinancialadvisors.trafft.com/', '_blank');
-  };
-
   return (
     <div className="report-container">
       <main className="report-content">
+        {/* Existing Sections (Scores, Gauge, Charts) - Keep these as they are */}
         <section className="score-summary section">
           <div className="container">
             <h3>Financial Health Scores</h3>
@@ -116,6 +115,22 @@ const Report = () => {
           </div>
         </section>
 
+        {/* Display Analysis Text (from state) */}
+        <section className="analysis-section section">
+          <div className="container">
+            <h3>Detailed Financial Analysis (for Testing):</h3>
+            {analysis ? (
+              <div className="analysis-text">
+                {/* Use ReactMarkdown for the analysis as well */}
+                <ReactMarkdown remarkPlugins={[remarkGfm]}>{analysis}</ReactMarkdown>
+              </div>
+            ) : (
+              <p>Loading analysis...</p>
+            )}
+          </div>
+        </section>
+
+        {/* Hardcoded CTA Section */}
         <section className="cta-section section">
           <div className="container">
             <h3>Next Steps</h3>

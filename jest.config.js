@@ -3,5 +3,6 @@ export default {
   transformIgnorePatterns: [
     "/node_modules/(?!(axios)/)"
   ],
-  // Other Jest configurations
+  setupFiles: ["<rootDir>/jest.setup.js"],
+  testEnvironment: "node"
 };

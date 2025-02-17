@@ -1,4 +1,4 @@
-// src/_tests_/LeadCaptureForm.test.js
+// frontend/src/_tests_/LeadCaptureForm.test.js
 
 // Increase the global timeout to 20 seconds for these tests.
 jest.setTimeout(20000);
@@ -13,7 +13,7 @@ import axios from 'axios';
 
 jest.mock('axios');
 
-const renderWithFormik = (component) => {
+const renderWithRouter = (component) => {
   return render(
     <BrowserRouter>
       {component}
@@ -27,50 +27,36 @@ describe('LeadCaptureForm Component', () => {
   });
 
   test('renders without crashing and displays the first step', async () => {
-    renderWithFormik(<LeadCaptureForm />);
+    renderWithRouter(<LeadCaptureForm />);
     const formElement = screen.getByTestId('lead-capture-form');
     expect(formElement).toBeInTheDocument();
 
-    // Advance from step 0 to step 1.
-    await act(async () => {
-      await userEvent.click(screen.getByRole('button', { name: /Next/i }));
-    });
-
-    // Wait for the "age" input from PersonalDetails to appear.
+    // Since Step 1 is rendered by default, the "age" input should be immediately available.
     await waitFor(() =>
       expect(screen.getByTestId('age-input')).toBeInTheDocument()
     );
   });
 
   test('navigates through steps correctly and persists data', async () => {
-    renderWithFormik(<LeadCaptureForm />);
+    renderWithRouter(<LeadCaptureForm />);
 
-    // Advance to Step 1 (PersonalDetails).
-    await waitFor(() =>
-      expect(screen.getByTestId('lead-capture-form')).toBeInTheDocument()
-    );
-    await act(async () => {
-      await userEvent.click(screen.getByRole('button', { name: /Next/i }));
-    });
-
-    // Fill required fields for Step 1.
-    await waitFor(() =>
-      expect(screen.getByTestId('age-input')).toBeInTheDocument()
-    );
+    // Step 1 (PersonalDetails) should be visible immediately.
+    await waitFor(() => expect(screen.getByTestId('age-input')).toBeInTheDocument());
+    
+    // Fill in PersonalDetails.
     await userEvent.type(screen.getByTestId('age-input'), '30');
     await userEvent.type(screen.getByTestId('annual-income-input'), '50000');
     await userEvent.type(screen.getByTestId('income-from-interest-input'), '1000');
     await userEvent.type(screen.getByTestId('income-from-property-input'), '2000');
-
-    // Advance to Step 2 (ExpensesAssets).
+    
+    // Move to Step 2 (ExpensesAssets).
     await act(async () => {
       await userEvent.click(screen.getByRole('button', { name: /Next/i }));
     });
     await waitFor(() =>
       expect(screen.getByTestId('monthly-expenses-input')).toBeInTheDocument()
     );
-    await userEvent.type(screen.getByTestId('monthly-expenses-input'), '2000');
-
+    
     // Navigate back to Step 1 using the Previous button.
     await act(async () => {
       await userEvent.click(screen.getByRole('button', { name: /Previous/i }));
@@ -78,29 +64,28 @@ describe('LeadCaptureForm Component', () => {
     await waitFor(() =>
       expect(screen.getByTestId('age-input')).toBeInTheDocument()
     );
-
+    
     // Verify that data persists in Step 1.
-    // Note: If the input value is stored as a number, compare as a number.
     expect(screen.getByTestId('age-input')).toHaveValue(30);
     expect(screen.getByTestId('annual-income-input')).toHaveValue(50000);
   });
 
   test('handles submission with valid data', async () => {
-    axios.post.mockResolvedValue({ data: { scores: { financialHealthScore: 75 } } });
-    renderWithFormik(<LeadCaptureForm />);
+    // Expect two API calls now (one for /api/submit and one for /api/financial-analysis)
+    axios.post.mockResolvedValueOnce({ data: { scores: { financialHealthScore: 75 } } });
+    axios.post.mockResolvedValueOnce({ data: { analysis: 'Test analysis response' } });
+    
+    renderWithRouter(<LeadCaptureForm />);
 
-    // Step 1: PersonalDetails.
+    // Step 1: PersonalDetails (rendered by default).
     await waitFor(() => expect(screen.getByTestId('lead-capture-form')).toBeInTheDocument());
-    await act(async () => {
-      await userEvent.click(screen.getByRole('button', { name: /Next/i }));
-    });
     await waitFor(() => expect(screen.getByTestId('age-input')).toBeInTheDocument());
     await userEvent.type(screen.getByTestId('age-input'), '30');
     await userEvent.type(screen.getByTestId('annual-income-input'), '50000');
     await userEvent.type(screen.getByTestId('income-from-interest-input'), '1000');
     await userEvent.type(screen.getByTestId('income-from-property-input'), '2000');
 
-    // Step 2: ExpensesAssets.
+    // Move to Step 2: ExpensesAssets.
     await act(async () => {
       await userEvent.click(screen.getByRole('button', { name: /Next/i }));
     });
@@ -111,7 +96,7 @@ describe('LeadCaptureForm Component', () => {
     await userEvent.type(screen.getByTestId('emergency-funds-input'), '10000');
     await userEvent.type(screen.getByTestId('total-investments-input'), '2000');
 
-    // Step 3: RetirementPlanning.
+    // Move to Step 3: RetirementPlanning.
     await act(async () => {
       await userEvent.click(screen.getByRole('button', { name: /Next/i }));
     });
@@ -121,7 +106,7 @@ describe('LeadCaptureForm Component', () => {
     await userEvent.type(screen.getByTestId('target-retirement-savings-input'), '25000');
     await userEvent.type(screen.getByTestId('retirement-age-input'), '60');
 
-    // Advance to Step 4: CreditHealth.
+    // Move to Step 4: CreditHealth.
     await act(async () => {
       await userEvent.click(screen.getByRole('button', { name: /Next/i }));
     });
@@ -130,7 +115,7 @@ describe('LeadCaptureForm Component', () => {
     await waitFor(() => expect(screen.getByTestId('credit-score-field')).toBeInTheDocument(), { timeout: 6000 });
     await userEvent.type(screen.getByTestId('credit-score-field'), '750');
 
-    // Step 5: ContactDetails.
+    // Move to Step 5: ContactDetails.
     await act(async () => {
       await userEvent.click(screen.getByRole('button', { name: /Next/i }));
     });
@@ -143,11 +128,41 @@ describe('LeadCaptureForm Component', () => {
       await userEvent.click(screen.getByRole('button', { name: /Submit/i }));
     });
 
-    // Verify API submission.
-    await waitFor(() => expect(axios.post).toHaveBeenCalledTimes(1));
+    // Verify that two API calls were made.
+    await waitFor(() => expect(axios.post).toHaveBeenCalledTimes(2));
     expect(axios.post).toHaveBeenCalledWith(
       expect.stringContaining('/api/submit'),
       expect.any(Object)
     );
+    expect(axios.post).toHaveBeenCalledWith(
+      expect.stringContaining('/api/financial-analysis'),
+      expect.any(Object)
+    );
+  });
+  
+  test('persists data across all steps including enhancements', async () => {
+    renderWithRouter(<LeadCaptureForm />);
+    
+    // Step 1 should be visible initially.
+    await waitFor(() => expect(screen.getByTestId('lead-capture-form')).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByTestId('age-input')).toBeInTheDocument());
+    
+    // Fill in PersonalDetails.
+    await userEvent.type(screen.getByTestId('age-input'), '30');
+    await userEvent.type(screen.getByTestId('annual-income-input'), '50000');
+    
+    // Move to Step 2.
+    await act(async () => {
+      await userEvent.click(screen.getByRole('button', { name: /Next/i }));
+    });
+    await waitFor(() => expect(screen.getByTestId('monthly-expenses-input')).toBeInTheDocument());
+    await userEvent.type(screen.getByTestId('monthly-expenses-input'), '2000');
+    
+    // Go back to Step 1.
+    await act(async () => {
+      await userEvent.click(screen.getByRole('button', { name: /Previous/i }));
+    });
+    expect(screen.getByTestId('age-input')).toHaveValue(30);
+    expect(screen.getByTestId('annual-income-input')).toHaveValue(50000);
   });
 });
