@@ -136,56 +136,51 @@ const Report = () => {
             <h3>Next Steps</h3>
             <div className="cta-content">
               <h4>
-                Ready to Transform Your Financial Future? Let's Do It Together.
+              Ready to Transform Your Financial Future? Let’s Get Started.
               </h4>
               <p>
-                Hey there! I'm from Echo Financial Advisors, and we do things
-                differently. Instead of pushing a one-size-fits-all solution, we
-                start with your story and build from there.
+                I'm Kevin from Echo Financial Advisors, and at Echo we do things
+                differently. Instead of pushing a one-size-fits-all solution, we build your financial strategy around your unique story.
               </p>
               <h5>Here's What Makes Us Special:</h5>
               <ul>
                 <li>
-                  We combine cutting-edge AI technology with a personal touch
+                Cutting-Edge Analysis: We leverage the latest AI technology to decode complex financial data.
                 </li>
-                <li>Your goals and dreams drive everything we do</li>
+                <li>Expert Oversight: Every insight is rigorously reviewed by a dedicated advisor committed to your success.</li>
                 <li>
-                  You get strategies that actually make sense for{' '}
-                  <strong>YOUR</strong> life
+                Tailored Strategies: We deliver clear, actionable steps designed specifically for your financial journey.
                 </li>
               </ul>
               <h5>What This Means for You:</h5>
               <ul>
-                <li>✓ Smart, AI-powered analysis that cuts through the complexity</li>
+                <li>✓ AI-powered analysis that cuts through the complexity</li>
                 <li>✓ A dedicated advisor (that's me!) focused on your success</li>
                 <li>✓ Clear, actionable steps toward your financial goals</li>
               </ul>
               <p>
-                <strong>Don't Just Take My Word For It:</strong>
+                <strong>Trusted by New Zealanders:</strong>
                 <br />
-                Join New Zealanders just like you, from across the country, who
-                have started their journey with us. They're already seeing their
-                financial dreams take shape.
+                Join clients nationwide who are already realising the benefits of a financial plan that integrates innovative technology with expert human insight.
               </p>
               <h5>Want to Know What's Possible for You?</h5>
               <ul>
                 <li>
-                  Your custom financial roadmap, powered by AI, with personalised
-                  human oversight
+                A custom financial plan that blends state-of-the-art AI with hands-on advisory oversight.
                 </li>
-                <li>Real strategies that fit your life and goals</li>
+                <li>Data-driven insights paired with personalised strategy.</li>
                 <li>
-                  A genuine conversation about your future (no sales pitch, promise!)
+                A genuine, no-pressure conversation about your financial future.
                 </li>
               </ul>
-              <h5>Ready to Take the First Step?</h5>
-              <p>Click Below to Schedule Your Free Consultation →</p>
+              <h5>Take the First Step Today:</h5>
+              <p>Click below to schedule your free consultation and begin your journey towards financial transformation →</p>
               <div className="text-center">
                 <button
                   onClick={handleBookingClick}
                   className="btn btn-primary btn-submit"
                 >
-                  Let's Talk About Your Future
+                  Let’s Shape Your Future
                 </button>
               </div>
               <div style={{ marginTop: '60px' }}>

@@ -54,9 +54,9 @@ const LeadCaptureForm = () => {
         try {
             const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
             const transformedValues = transformValues(values);
-
-            // Construct the payload (same structure as before)
-            const payload = {
+    
+            // Build originalData payload
+            const originalData = {
                 personalDetails: {
                     age: transformedValues.age,
                     annualIncome: transformedValues.annualIncome,
@@ -76,28 +76,35 @@ const LeadCaptureForm = () => {
                     currentRetirementSavings: transformedValues.currentRetirementSavings,
                     adjustForInflation: values.adjustForInflation || false,
                 },
-                contactInfo: { // Keeping contact info for later (Phase 3 - email sending)
+                contactInfo: {
                     email: transformedValues.email,
                     name: transformedValues.name,
                     phone: transformedValues.phone,
                 },
             };
-
+    
             // --- FIRST API CALL: /api/submit (for scores and instant feedback) ---
-            const response = await axios.post(`${API_URL}/api/submit`, payload);
-            setScores(response.data.scores); // Keep this - it's for the instant feedback.
-
+            const submitResponse = await axios.post(`${API_URL}/api/submit`, originalData);
+            const scores = submitResponse.data.scores;
+            setScores(scores); // Use these scores for instant feedback.
+    
+            // --- Construct payload for /api/financial-analysis ---
+            const analysisPayload = {
+                originalData,          // the original user data
+                calculatedMetrics: scores, // scores returned from /api/submit
+            };
+    
             // --- SECOND API CALL: /api/financial-analysis (for detailed report) ---
-            const analysisResponse = await axios.post(`${API_URL}/api/financial-analysis`, payload);
+            const analysisResponse = await axios.post(`${API_URL}/api/financial-analysis`, analysisPayload);
             const analysisText = analysisResponse.data.analysis; // Get analysis text
-
-            console.log("Response from /api/submit:", response.data); // Keep for debugging
-            console.log("Response from /api/financial-analysis:", analysisResponse.data); // Keep for debugging
-
+    
+            console.log("Response from /api/submit:", submitResponse.data); // Debug
+            console.log("Response from /api/financial-analysis:", analysisResponse.data); // Debug
+    
             // --- Navigate to /report, passing BOTH scores AND analysisText ---
-            navigate('/report', { state: { scores: response.data.scores, analysis: analysisText } });
+            navigate('/report', { state: { scores, analysis: analysisText } });
             setShowModal(false);
-
+    
         } catch (err) {
             let message = 'Submission failed. Please try again.';
             if (err.response?.data?.message) {
@@ -108,7 +115,7 @@ const LeadCaptureForm = () => {
         } finally {
             setIsLoading(false);
         }
-    };
+    }; 
 
     // ... (rest of your LeadCaptureForm component: handleNext, handlePrevious, etc. - NO CHANGES NEEDED HERE) ...
     const handleNext = async (formik) => {

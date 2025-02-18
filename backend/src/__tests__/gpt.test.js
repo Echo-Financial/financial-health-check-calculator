@@ -29,13 +29,7 @@ jest.mock('openai', () => {
 const { OpenAI } = require('openai');
 
 describe('GPT API Endpoint Integration', () => {
-  let server;
-  beforeAll(() => {
-    server = app.listen(3001);
-  });
-  afterAll(() => {
-    server.close();
-  });
+  // Removed explicit server binding. Supertest can work directly with 'app'.
   beforeEach(() => {
     mockedCreate.mockClear();
   });
@@ -55,8 +49,7 @@ describe('GPT API Endpoint Integration', () => {
     };
 
     const response = await request(app)
-    .post('/api/gpt/gpt')
-
+      .post('/api/gpt/gpt')
       .send(userData);
 
     expect(response.statusCode).toBe(200);
@@ -76,7 +69,8 @@ describe('GPT API Endpoint Integration', () => {
       overallFinancialHealth: 33,
     };
 
-    const response = await request(app).post('/api/gpt/gpt')
+    const response = await request(app)
+      .post('/api/gpt/gpt')
       .send(userData);
 
     expect(response.statusCode).toBe(500);
@@ -98,7 +92,9 @@ describe('GPT API Endpoint Integration', () => {
       overallFinancialHealth: 33,
     };
 
-    await request(app).post('/api/gpt/gpt').send(userData);
+    await request(app)
+      .post('/api/gpt/gpt')
+      .send(userData);
 
     // Instead of matching the entire prompt, check for expected substrings.
     expect(mockedCreate).toHaveBeenCalledWith(

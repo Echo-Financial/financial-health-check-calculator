@@ -66,8 +66,9 @@ describe('Financial Analysis API Endpoint Integration', () => {
     await request(app)
       .post('/api/financial-analysis')
       .send(invalidData)
-      .expect(500);
+      .expect(400); // Expect 400 since required keys are missing
 
-    expect(callOpenAIForAnalysis).toHaveBeenCalledTimes(1);
+    // Since the payload is invalid, callOpenAIForAnalysis should not be called.
+    expect(callOpenAIForAnalysis).toHaveBeenCalledTimes(0);
   });
 });

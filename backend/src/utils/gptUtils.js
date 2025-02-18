@@ -1,6 +1,4 @@
-// backend/src/utils/gptUtils.js
-
-const openaiClient = require('./openaiClient'); // Ensure this is correctly set up
+const openaiClient = require('./openaiClient');
 const logger = require('../logger');
 
 /**
@@ -12,7 +10,7 @@ async function callOpenAIForAnalysis(analysisData, analysisPrompt) {
     const formattedAnalysisData = JSON.stringify(analysisData, null, 2);
     const messageContent = `${analysisPrompt}\n\n${formattedAnalysisData}`;
     const chatCompletion = await openaiClient.chat.completions.create({
-      model: 'gpt-4o',
+      model: 'gpt-4o', // Ensure the model name is up-to-date
       messages: [{ role: 'user', content: messageContent }],
       max_tokens: 700,
       temperature: 0.7,
@@ -29,11 +27,8 @@ async function callOpenAIForAnalysis(analysisData, analysisPrompt) {
  */
 function prepareMarketingPrompt(analysisData, analysisText) {
   const { personalDetails, calculatedMetrics } = analysisData;
-  const { age, annualIncome, name } = personalDetails;
-  const { retirementScore, investmentGap } = calculatedMetrics;
-  
-  // Use the provided name if it's non-empty; otherwise default to "there"
-  const clientName = name && name.trim() ? name.trim() : "there";
+  // Use provided name if available; otherwise default.
+  const clientName = personalDetails.name && personalDetails.name.trim() ? personalDetails.name.trim() : "there";
 
   const prompt = `
 You are an expert marketing copywriter for Echo Financial Advisors, an independent financial advisory service based in New Zealand.
@@ -42,10 +37,10 @@ A client has just completed our Financial Health Check, and here is their detail
 
 Based on the client's financial data:
 - Name: ${clientName}
-- Age: ${age}
-- Annual Income: ${annualIncome}
-- Retirement Score: ${retirementScore}
-- Investment Gap: ${investmentGap}
+- Age: ${personalDetails.age}
+- Annual Income: ${personalDetails.annualIncome}
+- Retirement Score: ${calculatedMetrics.retirementScore}
+- Investment Gap: ${calculatedMetrics.investmentGap}
 
 Using this information, craft a personalized marketing email that sounds genuinely written by a human advisor. Avoid generic openings like "I hope this message finds you well." Instead, begin with a personalized greeting using the client's name (for example, "Hi ${clientName},"). The email should aim to convert the client and must follow this JSON structure exactly (return only a JSON object with no additional text):
 
@@ -59,6 +54,7 @@ Ensure the tone is professional, empathetic, and encouraging.
   `;
   return prompt.trim();
 }
+
 /**
  * Calls the OpenAI API to generate personalized marketing content using the provided prompt.
  */
@@ -72,7 +68,7 @@ async function callOpenAIForMarketing(prompt) {
     });
 
     let responseText = chatCompletion.choices[0].message.content;
-    console.log("Raw OpenAI Response:", responseText);
+    logger.debug("Raw OpenAI Response for marketing:", responseText);
 
     // Attempt to extract valid JSON from the response.
     const jsonStart = responseText.indexOf('{');
@@ -89,9 +85,6 @@ async function callOpenAIForMarketing(prompt) {
     throw new Error('Failed to generate marketing content from OpenAI.');
   }
 }
-
-
-
 
 module.exports = {
   callOpenAIForAnalysis,

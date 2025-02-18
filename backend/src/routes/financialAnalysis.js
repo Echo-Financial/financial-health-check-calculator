@@ -1,11 +1,10 @@
-// backend/src/routes/financialAnalysis.js
 const express = require('express');
 const router = express.Router();
-const { callOpenAIForAnalysis } = require('../utils/gptUtils'); // Import the analysis function
+const { callOpenAIForAnalysis } = require('../utils/gptUtils');
 const logger = require('../logger');
 
-// DEFINE YOUR Draft 8 PROMPT HERE:
-const analysisPromptDraft4 = `
+// Use a consistent prompt version naming (update version if needed)
+const analysisPromptDraft9 = `
 You are an expert financial analyst working for Echo Financial Advisors, a solo financial advisory business in New Zealand. Your task is to analyze the financial data provided by a user of our Financial Health Check Calculator and produce a detailed, personalized financial health report. This report is for educational purposes only and does NOT constitute professional financial advice.
 
 **Constraints and Guidelines:**
@@ -86,19 +85,28 @@ Generate a detailed financial health report with the following sections:
    - Follow this with a bullet-point list summarizing the key actionable recommendations (e.g., "Increase savings rate to 15–20%", "Enhance retirement contributions", "Reassess investment strategy for diversification").
 
 **Begin!**
+`;
 
-`; // <-- Your ENTIRE prompt goes here.
+router.post('/', async (req, res) => {
+  // Basic validation: ensure required keys exist
+  if (
+    !req.body ||
+    !req.body.originalData ||
+    !req.body.calculatedMetrics
+  ) {
+    logger.error('Invalid request payload for financial analysis');
+    return res.status(400).json({ error: 'Invalid request payload. Missing required data.' });
+  }
 
-router.post('/', async (req, res) => { // POST request to /api/financial-analysis
   try {
     logger.info('Received POST /api/financial-analysis request');
-    console.log('Received user data:', req.body);
+    // Avoid logging full user data in production; log summary info instead.
+    logger.debug(`Request payload keys: ${Object.keys(req.body)}`);
 
     const financialData = req.body;
-    const analysisText = await callOpenAIForAnalysis(financialData, analysisPromptDraft4);
-        console.log("Prompt being used:", analysisPromptDraft4) // Add to check prompt
-    res.json({ analysis: analysisText }); // Send back the analysis text
-
+    const analysisText = await callOpenAIForAnalysis(financialData, analysisPromptDraft9);
+    logger.debug("Prompt used for analysis:", analysisPromptDraft9);
+    res.json({ analysis: analysisText });
   } catch (error) {
     logger.error('Error during report generation:', error);
     res.status(500).json({ error: 'Failed to generate financial analysis report.' });

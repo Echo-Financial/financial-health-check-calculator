@@ -1,4 +1,4 @@
-// frontend/src/__tests__/generateMarketing.test.js
+// backend/src/__tests__/generateMarketing.test.js
 
 require('openai/shims/node'); // Ensure Request and fetch are defined
 
