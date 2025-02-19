@@ -10,6 +10,7 @@ const healthRoute = require('./routes/health');
 const gptRoute = require('./routes/gpt');
 const financialAnalysisRoute = require('./routes/financialAnalysis');
 const generateMarketingRouter = require('./routes/generate-marketing');
+const sendMarketingEmailRouter = require('./routes/sendMarketingEmail');
 
 const errorHandler = require('./middleware/errorHandler');
 
@@ -25,6 +26,7 @@ app.use('/api/health', healthRoute);
 app.use('/api', gptRoute);
 app.use('/api/financial-analysis', financialAnalysisRoute);
 app.use('/api/generate-marketing', generateMarketingRouter);
+app.use('/api/send-marketing-email', sendMarketingEmailRouter);
 
 app.use(errorHandler);
 
