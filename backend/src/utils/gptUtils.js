@@ -47,10 +47,12 @@ Using this information, craft a personalized marketing email that sounds genuine
 {
   "subject": "A compelling subject line that highlights a key benefit (e.g., 'Unlock a Stronger Retirement Strategy Today')",
   "body": "An engaging email body that includes a personalized greeting, a brief introduction referencing their Financial Health Check, a personalized section highlighting key insights from the analysis report, and an explanation of how I, as an independent financial advisor, can help enhance their financial future. Include a local touch such as 'Join Kiwis from across New Zealand who have taken control of their financial destiny.'",
-  "cta": "A clear call-to-action, such as 'Book a Free Consultation Now'"
+  "cta": "A clear call-to-action, such as 'Click below to schedule a free consultation and take the first step towards securing your financial future.'"
 }
 
 Ensure the tone is professional, empathetic, and encouraging.
+
+Ensure spelling and grammar are correctly using UK English, and the email is well-structured and engaging.
   `;
   return prompt.trim();
 }

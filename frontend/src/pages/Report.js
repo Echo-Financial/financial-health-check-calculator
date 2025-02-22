@@ -5,22 +5,24 @@ import Gauge from '../components/Visualisations/Gauge.js';
 import axios from 'axios';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import { sendMarketingEmail } from '../services/api.js';
 import './../styles/Report.scss';
 
 const Report = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  // Destructure BOTH scores AND analysis from location.state:
-  const { scores, analysis } = location.state || {};
+  // Destructure scores, analysis, and contactInfo from location.state:
+  const { scores, analysis, contactInfo } = location.state || {};
   const [insights, setInsights] = useState('');
   const [loading, setLoading] = useState(false);
+  const [emailSending, setEmailSending] = useState(false);
+  const [emailResponse, setEmailResponse] = useState('');
 
-  // Keep fetchInsights as is (for original instant feedback):
+  // Fetch insights (original instant feedback)
   const fetchInsights = useCallback(async () => {
     setLoading(true);
     try {
       const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
-      // Use the keys returned by financialCalculations.js - THIS IS YOUR ORIGINAL INSTANT FEEDBACK
       const response = await axios.post(`${API_URL}/api/gpt`, {
         dti: scores.dtiScore,
         savingsRate: scores.savingsScore,
@@ -54,9 +56,9 @@ const Report = () => {
     return null;
   }
 
-    const handleBookingClick = () => {
-        window.open('https://echofinancialadvisors.trafft.com/', '_blank'); // Replace with your actual booking link
-    };
+  const handleBookingClick = () => {
+    window.open('https://echofinancialadvisors.trafft.com/', '_blank');
+  };
 
   const formatScoreLabel = (label) => {
     const customLabels = {
@@ -73,10 +75,34 @@ const Report = () => {
 
   const overallScore = scores.overallFinancialHealthScore || 0;
 
+  // Function to handle sending the marketing email
+  const handleSendMarketingEmail = async () => {
+    if (!contactInfo || !contactInfo.email) {
+      setEmailResponse('No contact information available.');
+      return;
+    }
+    setEmailSending(true);
+    try {
+      const payload = {
+        email: contactInfo.email,
+        name: contactInfo.name,
+        // Optionally, include more fields if needed.
+      };
+      const response = await sendMarketingEmail(payload);
+      setEmailResponse('Marketing email sent successfully.');
+      console.log('Marketing email response:', response.data);
+    } catch (error) {
+      console.error('Error sending marketing email:', error);
+      setEmailResponse('Failed to send marketing email. Please try again.');
+    } finally {
+      setEmailSending(false);
+    }
+  };
+
   return (
     <div className="report-container">
       <main className="report-content">
-        {/* Existing Sections (Scores, Gauge, Charts) - Keep these as they are */}
+        {/* Score Summary */}
         <section className="score-summary section">
           <div className="container">
             <h3>Financial Health Scores</h3>
@@ -90,6 +116,7 @@ const Report = () => {
           </div>
         </section>
 
+        {/* Visual Overview */}
         <section className="visual-overview section">
           <div className="container">
             <h3 className="text-center">Overall Financial Health</h3>
@@ -101,6 +128,7 @@ const Report = () => {
           </div>
         </section>
 
+        {/* Instant Feedback Insights */}
         <section className="insights-section section">
           <div className="container">
             <h3>Financial Assessment Summary</h3>
@@ -115,13 +143,12 @@ const Report = () => {
           </div>
         </section>
 
-        {/* Display Analysis Text (from state) */}
+        {/* Detailed Analysis */}
         <section className="analysis-section section">
           <div className="container">
             <h3>Detailed Financial Analysis (for Testing):</h3>
             {analysis ? (
               <div className="analysis-text">
-                {/* Use ReactMarkdown for the analysis as well */}
                 <ReactMarkdown remarkPlugins={[remarkGfm]}>{analysis}</ReactMarkdown>
               </div>
             ) : (
@@ -130,27 +157,21 @@ const Report = () => {
           </div>
         </section>
 
-        {/* Hardcoded CTA Section */}
+        {/* Call-to-Action Section */}
         <section className="cta-section section">
           <div className="container">
             <h3>Next Steps</h3>
             <div className="cta-content">
-              <h4>
-              Ready to Transform Your Financial Future? Let’s Get Started.
-              </h4>
+              <h4>Ready to Transform Your Financial Future? Let’s Get Started.</h4>
               <p>
                 I'm Kevin from Echo Financial Advisors, and at Echo we do things
                 differently. Instead of pushing a one-size-fits-all solution, we build your financial strategy around your unique story.
               </p>
               <h5>Here's What Makes Us Special:</h5>
               <ul>
-                <li>
-                Cutting-Edge Analysis: We leverage the latest AI technology to decode complex financial data.
-                </li>
+                <li>Cutting-Edge Analysis: We leverage the latest AI technology to decode complex financial data.</li>
                 <li>Expert Oversight: Every insight is rigorously reviewed by a dedicated advisor committed to your success.</li>
-                <li>
-                Tailored Strategies: We deliver clear, actionable steps designed specifically for your financial journey.
-                </li>
+                <li>Tailored Strategies: We deliver clear, actionable steps designed specifically for your financial journey.</li>
               </ul>
               <h5>What This Means for You:</h5>
               <ul>
@@ -165,35 +186,28 @@ const Report = () => {
               </p>
               <h5>Want to Know What's Possible for You?</h5>
               <ul>
-                <li>
-                A custom financial plan that blends state-of-the-art AI with hands-on advisory oversight.
-                </li>
+                <li>A custom financial plan that blends state-of-the-art AI with hands-on advisory oversight.</li>
                 <li>Data-driven insights paired with personalised strategy.</li>
-                <li>
-                A genuine, no-pressure conversation about your financial future.
-                </li>
+                <li>A genuine, no-pressure conversation about your financial future.</li>
               </ul>
               <h5>Take the First Step Today:</h5>
-              <p>Click below to schedule your free consultation and begin your journey towards financial transformation →</p>
+              <p>
+                Click below to schedule your free consultation and begin your journey towards financial transformation →
+              </p>
               <div className="text-center">
-                <button
-                  onClick={handleBookingClick}
-                  className="btn btn-primary btn-submit"
-                >
+                <button onClick={handleBookingClick} className="btn btn-primary btn-submit">
                   Let’s Shape Your Future
                 </button>
               </div>
               <div style={{ marginTop: '60px' }}>
                 <p>
-                  <em>
-                    P.S. Spots fill up quickly, so don't wait too long to secure yours!
-                  </em>
+                  <em>P.S. Spots fill up quickly, so don't wait too long to secure yours!</em>
                 </p>
               </div>
             </div>
           </div>
         </section>
-      </main>
+        </main>
     </div>
   );
 };

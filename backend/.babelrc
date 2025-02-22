@@ -1,0 +1,6 @@
+//backend/.babelrc
+
+{
+  "presets": ["@babel/preset-env"]
+}
+

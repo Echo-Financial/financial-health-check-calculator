@@ -1,11 +1,11 @@
-// jest.config.js
+//backend/jest.config.js
+
 module.exports = {
   transform: {
     '^.+\\.js$': 'babel-jest',
   },
   transformIgnorePatterns: [
-    '/node_modules/(?!(axios|@sendgrid)/)',
+    '/node_modules/(?!(axios|@sendgrid)/)', // Transform axios and @sendgrid modules
   ],
-  setupFiles: ['<rootDir>/jest.setup.js'],
   testEnvironment: 'node',
 };

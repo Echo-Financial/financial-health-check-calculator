@@ -71,9 +71,12 @@ describe('LeadCaptureForm Component', () => {
   });
 
   test('handles submission with valid data', async () => {
-    // Expect two API calls now (one for /api/submit and one for /api/financial-analysis)
-    axios.post.mockResolvedValueOnce({ data: { scores: { financialHealthScore: 75 } } });
-    axios.post.mockResolvedValueOnce({ data: { analysis: 'Test analysis response' } });
+    // Expect three API calls:
+    // 1. /api/submit, 2. /api/financial-analysis, 3. /api/send-marketing-email (since marketing consent is checked)
+    axios.post
+      .mockResolvedValueOnce({ data: { scores: { financialHealthScore: 75, retirementScore: 80 } } }) // /api/submit
+      .mockResolvedValueOnce({ data: { analysis: 'Test analysis response' } }) // /api/financial-analysis
+      .mockResolvedValueOnce({ data: { result: 'Email sent' } }); // /api/send-marketing-email
     
     renderWithRouter(<LeadCaptureForm />);
 
@@ -122,20 +125,29 @@ describe('LeadCaptureForm Component', () => {
     await waitFor(() => expect(screen.getByTestId('email-input')).toBeInTheDocument());
     await userEvent.type(screen.getByTestId('email-input'), 'test@test.com');
     await userEvent.type(screen.getByTestId('name-input'), 'test');
+    
+    // Check the marketing consent checkbox.
+    await act(async () => {
+      await userEvent.click(screen.getByRole('checkbox', { name: /I agree to receive marketing materials/i }));
+    });
 
     // Submit the form.
     await act(async () => {
       await userEvent.click(screen.getByRole('button', { name: /Submit/i }));
     });
 
-    // Verify that two API calls were made.
-    await waitFor(() => expect(axios.post).toHaveBeenCalledTimes(2));
+    // Verify that three API calls were made.
+    await waitFor(() => expect(axios.post).toHaveBeenCalledTimes(3));
     expect(axios.post).toHaveBeenCalledWith(
       expect.stringContaining('/api/submit'),
       expect.any(Object)
     );
     expect(axios.post).toHaveBeenCalledWith(
       expect.stringContaining('/api/financial-analysis'),
+      expect.any(Object)
+    );
+    expect(axios.post).toHaveBeenCalledWith(
+      expect.stringContaining('/api/send-marketing-email'),
       expect.any(Object)
     );
   });

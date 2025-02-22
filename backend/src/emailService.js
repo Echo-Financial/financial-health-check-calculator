@@ -1,66 +1,52 @@
-// backend/src/emailService.js
-
-const axios = require('axios');
-const querystring = require('querystring'); // For URL encoding
+const sgMail = require('@sendgrid/mail');
 const logger = require('./logger');
 
+// Set your SendGrid API key from environment variables.
+sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+
 /**
- * Sends a marketing email campaign via VBOUT API.
+ * Sends a personalized marketing email via SendGrid.
  * @param {Object} emailData - Contains campaign details.
- * @param {string} emailData.name - The campaign name.
+ * @param {string} emailData.to - Recipient's email address.
  * @param {string} emailData.subject - The email subject line.
- * @param {string} emailData.fromemail - The sender’s email address.
- * @param {string} emailData.from_name - The sender’s name.
- * @param {string} emailData.reply_to - The reply-to email address.
- * @param {string} emailData.body - The email body content.
- * @param {string} emailData.type - The campaign type (e.g., "standard").
- * @param {boolean} emailData.isscheduled - Whether the campaign should be scheduled.
- * @param {boolean} emailData.isdraft - Whether the campaign is saved as a draft.
- * @param {string} [emailData.scheduled_datetime] - The scheduled date and time (if isscheduled is true).
- * @returns {Promise<Object>} - The response from the VBOUT API.
+ * @param {string} emailData.body - The email body content (HTML).
+ * @param {string} [emailData.fromemail] - The sender’s email address.
+ * @param {string} [emailData.from_name] - The sender’s name.
+ * @param {string} [emailData.reply_to] - The reply-to email address.
+ * @returns {Promise<Object>} - The response from SendGrid.
  */
 async function sendMarketingEmail(emailData) {
-  const vboutApiKey = process.env.VBOUT_API_KEY;
-  
-  if (!vboutApiKey) {
-    throw new Error("VBOUT_API_KEY is not defined in your environment variables.");
+  if (!emailData.to) {
+    throw new Error("Recipient email (to) is missing.");
   }
   
-  // Use the VBOUT endpoint for adding campaigns, with the API key in the query string.
-  const url = `https://api.vbout.com/1/emailmarketing/addcampaign.json?key=${vboutApiKey}`;
+  // Create a plain text version by stripping out HTML tags (optional).
+  const plainText = emailData.body.replace(/<[^>]+>/g, ' ').trim();
   
-  // Build the payload with all required parameters.
-  const payload = {
-    name: emailData.name || "Test Campaign",
+  // Build the message object with both text and html fields.
+  const msg = {
+    to: emailData.to,
+    from: {
+      email: emailData.fromemail || "kevin.morgan@echo-financial-advisors.co.nz",
+      name: emailData.from_name || "Kevin Morgan",
+    },
     subject: emailData.subject,
-    fromemail: emailData.fromemail || "info@example.com",
-    from_name: emailData.from_name || "Your Advisor Name",
-    reply_to: emailData.reply_to || "reply@example.com",
-    body: emailData.body,
-    type: emailData.type || "standard",
-    isscheduled: emailData.isscheduled !== undefined ? emailData.isscheduled : false,
-    isdraft: emailData.isdraft !== undefined ? emailData.isdraft : false,
-    // Include scheduled_datetime if the campaign is scheduled
-    ...(emailData.isscheduled && emailData.scheduled_datetime ? { scheduled_datetime: emailData.scheduled_datetime } : {})
-    // Optionally include audiences or lists if required by your campaign settings.
+    text: plainText,  // Fallback plain text version.
+    html: emailData.body,  // This should render the HTML correctly.
+    replyTo: emailData.reply_to || "kevin.morgan@echo-financial-advisors.co.nz",
   };
 
-  // Convert the payload to URL-encoded format.
-  const data = querystring.stringify(payload);
-
   try {
-    const response = await axios.post(url, data, {
-      headers: { "Content-Type": "application/x-www-form-urlencoded" }
-    });
-    logger.info("VBOUT API Response:", response.data);
-    return response.data;
+    const response = await sgMail.send(msg);
+    logger.info("SendGrid API Response:", response);
+    return response;
   } catch (error) {
     if (error.response) {
-      logger.error("Detailed Error from VBOUT API:", error.response.data);
+      logger.error("Detailed Error from SendGrid API:", error.response.body);
     } else {
       logger.error("Error sending email:", error.message);
     }
-    throw new Error("Failed to send marketing email via VBOUT.");
+    throw new Error("Failed to send marketing email via SendGrid.");
   }
 }
 
