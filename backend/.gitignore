@@ -2,12 +2,13 @@
 node_modules/
 
 # Logs
-logs
+logs/
 *.log
 npm-debug.log*
 
 # Environment variables
 .env
+sendgrid.env
 
 # OS-specific files
 .DS_Store
@@ -16,4 +17,5 @@ Thumbs.db
 # IDE files
 .vscode/
 
-echo "sendgrid.env" >> .gitignore
+# (Optional) Coverage folder from tests
+coverage/

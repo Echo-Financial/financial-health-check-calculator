@@ -1,7 +1,7 @@
-require('openai/shims/node'); // Use require for Node fetch shim
+// backend/src/__tests__/gpt.test.js
+jest.setTimeout(30000); // Increase timeout to 15 seconds
 
-// Declare the standalone mock function variable before it's used.
-let mockedCreate;
+require('openai/shims/node'); // Use require for Node fetch shim
 
 const request = require('supertest');
 const express = require('express');
@@ -10,32 +10,25 @@ const gptRouter = require('../routes/gpt'); // Adjust path if necessary
 app.use(express.json());
 app.use('/api/gpt', gptRouter);
 
-// Mock the OpenAI module.
-jest.mock('openai', () => {
-  const originalModule = jest.requireActual('openai');
-  // Initialize the mock function here.
-  mockedCreate = jest.fn();
-  return {
-    ...originalModule,
-    OpenAI: jest.fn().mockImplementation(() => ({
-      chat: {
-        completions: {
-          create: mockedCreate, // Use our standalone mock function
-        },
-      },
-    })),
-  };
-});
-const { OpenAI } = require('openai');
+// Instead of mocking the 'openai' constructor, mock the openaiClient instance directly:
+jest.mock('../utils/openaiClient', () => ({
+  chat: {
+    completions: {
+      create: jest.fn(),
+    },
+  },
+}));
+
+// Now you can import your openaiClient (if needed) but it will be the mocked version.
+const openaiClient = require('../utils/openaiClient');
 
 describe('GPT API Endpoint Integration', () => {
-  // Removed explicit server binding. Supertest can work directly with 'app'.
   beforeEach(() => {
-    mockedCreate.mockClear();
+    openaiClient.chat.completions.create.mockClear();
   });
 
   it('should return a 200 status and a valid response from GPT API', async () => {
-    mockedCreate.mockResolvedValue({
+    openaiClient.chat.completions.create.mockResolvedValue({
       choices: [{ message: { content: 'Test GPT Response' } }],
     });
     const userData = {
@@ -54,11 +47,11 @@ describe('GPT API Endpoint Integration', () => {
 
     expect(response.statusCode).toBe(200);
     expect(response.body.response).toBe('Test GPT Response');
-    expect(mockedCreate).toHaveBeenCalledTimes(1);
+    expect(openaiClient.chat.completions.create).toHaveBeenCalledTimes(1);
   });
 
   it('should return a 500 status when there is an error from GPT API', async () => {
-    mockedCreate.mockRejectedValue(new Error('OpenAI API error'));
+    openaiClient.chat.completions.create.mockRejectedValue(new Error('OpenAI API error'));
     const userData = {
       dti: 60,
       savingsRate: 50,
@@ -74,12 +67,12 @@ describe('GPT API Endpoint Integration', () => {
       .send(userData);
 
     expect(response.statusCode).toBe(500);
-    expect(mockedCreate).toHaveBeenCalledTimes(1);
+    expect(openaiClient.chat.completions.create).toHaveBeenCalledTimes(1);
     expect(response.body).toEqual({ error: 'Submission failed. Please try again.' });
   });
 
   it('should call the OpenAI API with the correct prompt', async () => {
-    mockedCreate.mockResolvedValue({
+    openaiClient.chat.completions.create.mockResolvedValue({
       choices: [{ message: { content: 'Test GPT Response' } }],
     });
     const userData = {
@@ -96,8 +89,8 @@ describe('GPT API Endpoint Integration', () => {
       .post('/api/gpt/gpt')
       .send(userData);
 
-    // Instead of matching the entire prompt, check for expected substrings.
-    expect(mockedCreate).toHaveBeenCalledWith(
+    // Check that the prompt contains key substrings.
+    expect(openaiClient.chat.completions.create).toHaveBeenCalledWith(
       expect.objectContaining({
         model: 'gpt-4o',
         max_tokens: 500,

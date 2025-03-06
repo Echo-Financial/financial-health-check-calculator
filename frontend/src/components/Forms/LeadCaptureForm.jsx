@@ -15,7 +15,7 @@ const validationSchema = Yup.object({
   // ... other field validations ...
   agreeMarketing: Yup.boolean().oneOf(
     [true],
-    'Please agree to receive personalized offers and exclusive insights to view your report.'
+    'Please agree to receive personalised offers and exclusive insights to view your report.'
   ),
 });
 
@@ -54,7 +54,7 @@ const LeadCaptureForm = () => {
   const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = async (values, { setSubmitting }) => {
-    console.log('handleSubmit called');
+    //console.log('handleSubmit called');
     setIsLoading(true);
     try {
       const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
@@ -114,6 +114,7 @@ const LeadCaptureForm = () => {
             name: transformedValues.name,
             analysisText, // dynamic analysis text from backend
             personalDetails: originalData.personalDetails,  // client's personal details
+            contactInfo: originalData.contactInfo,          // include contactInfo containing the name
             calculatedMetrics: scores, // scores used as calculatedMetrics
           });
           console.log("SendGrid campaign generated: ", campaignResponse.data);
@@ -215,7 +216,7 @@ const LeadCaptureForm = () => {
               <label style={{ display: 'flex', alignItems: 'center' }}>
                 <Field type="checkbox" name="agreeMarketing" />
                 <span style={{ marginLeft: '10px' }}>
-                  I agree to receive marketing materials and personalized offers.
+                  I agree to receive marketing materials and personalised offers.
                 </span>
               </label>
               {(formik.touched.agreeMarketing || formik.submitCount > 0) &&
@@ -235,7 +236,7 @@ const LeadCaptureForm = () => {
       <h2>Complete Your Financial Health Check</h2>
       <p className="form-subtext">
         Provide your essential details in just a few simple steps. Once you submit the form,
-        we'll generate your personalized financial report, which you can review immediately.
+        we'll generate your personalised financial report, which you can review immediately.
       </p>
       {error && <p className="text-danger">{error}</p>}
       <Formik

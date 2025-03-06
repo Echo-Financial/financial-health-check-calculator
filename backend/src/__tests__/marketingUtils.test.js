@@ -20,12 +20,17 @@ describe('Marketing Utilities', () => {
         calculatedMetrics: { retirementScore: 50, investmentGap: 10000 }
       };
       const analysisText = "This is a sample analysis report.";
-      const prompt = prepareMarketingPrompt(analysisData, analysisText);
+      // Pass a dynamic monthly contribution value (for example: "$200.45")
+      const prompt = prepareMarketingPrompt(analysisData, analysisText, "$200.45");
 
+      // Verify key details are present with expected formatting:
       expect(prompt).toContain("30");
-      expect(prompt).toContain("50000");
-      expect(prompt).toContain("50");
-      expect(prompt).toContain("10000");
+      expect(prompt).toContain("$50,000"); // now expects formatted annual income
+      expect(prompt).toContain("50");      // retirement score
+      // Instead of "10000", check for the retirement planning section header
+      expect(prompt).toContain("Retirement Planning Recommendation:");
+      // Ensure the dynamic monthly contribution is included
+      expect(prompt).toContain("$200.45");
       expect(prompt).toContain("This is a sample analysis report");
     });
   });
@@ -49,3 +54,4 @@ describe('Marketing Utilities', () => {
     });
   });
 });
+

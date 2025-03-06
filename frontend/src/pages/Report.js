@@ -146,7 +146,7 @@ const Report = () => {
         {/* Detailed Analysis */}
         <section className="analysis-section section">
           <div className="container">
-            <h3>Detailed Financial Analysis (for Testing):</h3>
+            <h3>Detailed Financial Analysis:</h3>
             {analysis ? (
               <div className="analysis-text">
                 <ReactMarkdown remarkPlugins={[remarkGfm]}>{analysis}</ReactMarkdown>

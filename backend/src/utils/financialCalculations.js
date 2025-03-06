@@ -11,11 +11,11 @@
 
 // Dynamic target for savings rate based on age.
 const targetSavingsRate = (age) => {
-  if (age < 30) return 10;   // Younger individuals: 10%
-  if (age < 40) return 20;   // In their 30s: 20%
-  if (age < 50) return 40;   // In their 40s: 40%
-  if (age < 60) return 80;   // In their 50s: 80%
-  return 100;                // 60 and above: 100%
+  if (age < 30) return 10;   // Unchanged: reasonable for young savers
+  if (age < 40) return 15;   // Reduced from 20% to more achievable 15%
+  if (age < 50) return 20;   // Reduced from 40% to realistic 20%
+  if (age < 60) return 25;   // Reduced from 80% to achievable 25%
+  return 30;                 // Reduced from 100% to realistic 30%
 };
 
 // Dynamic target for investment multiple based on age.
@@ -28,9 +28,19 @@ const targetInvestmentMultiple = (age) => {
   return 5;                // For users 60 and above, target is 5× annual income.
 };
 
+// More nuanced scoring curve:
+const calculateDTIScore = (debtToIncomeRatio) => {
+  if (debtToIncomeRatio <= 0) return 100; // 0% debt = 100 points
+  if (debtToIncomeRatio <= 15) return 90 + ((15 - debtToIncomeRatio) / 15) * 10; // 15% debt = 90 points
+  if (debtToIncomeRatio <= 28) return 80 + ((28 - debtToIncomeRatio) / 13) * 10; // 28% debt = 80 points (standard mortgage qualification threshold)
+  if (debtToIncomeRatio <= 36) return 70 + ((36 - debtToIncomeRatio) / 8) * 10; // 36% debt = 70 points (upper acceptable limit per financial advisors)
+  if (debtToIncomeRatio <= 43) return 50 + ((43 - debtToIncomeRatio) / 7) * 20; // 43% debt = 50 points (maximum for qualified mortgages)
+  if (debtToIncomeRatio <= 50) return ((50 - debtToIncomeRatio) / 7) * 50; // 50%+ debt = 0 points
+  return 0;
+};
+
 const calculateFinancialScores = (userData) => {
   const { personalDetails, expensesAssets, retirementPlanning } = userData;
-
   // Extract relevant fields
   const { age, annualIncome } = personalDetails;
   const { monthlyExpenses, emergencyFunds, savings, totalDebt, totalInvestments } = expensesAssets;
@@ -136,4 +146,31 @@ const calculateFinancialScores = (userData) => {
   };
 };
 
-module.exports = { calculateFinancialScores };
+/**
+ * Calculates the required periodic contribution (PMT) to achieve a target future value (FV)
+ * given the present value (PV), number of years (N), and a fixed annual interest rate (r).
+ *
+ * Formula:
+ *   PMT = ((FV - PV * (1 + r)^N) * r) / ((1 + r)^N - 1)
+ *
+ * @param {number} PV - Present Value (current savings)
+ * @param {number} FV - Future Value (target retirement savings)
+ * @param {number} N - Number of years until retirement (retirement age - current age)
+ * @param {number} r - Annual interest rate (default 0.05 for 5%)
+ * @returns {number} - The required annual contribution (PMT). Divide by 12 for monthly.
+ */
+function calculateRequiredContribution(PV, FV, N, r = 0.05) {
+  const compoundFactor = Math.pow(1 + r, N);
+  // If current savings already exceed or meet the target, no additional contributions are required.
+  if (PV * compoundFactor >= FV) {
+    return 0;
+  }
+  const numerator = (FV - PV * compoundFactor) * r;
+  const denominator = compoundFactor - 1;
+  return numerator / denominator;
+}
+
+module.exports = {
+  calculateFinancialScores,
+  calculateRequiredContribution,
+};
