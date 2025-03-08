@@ -1,6 +1,6 @@
 // backend/src/utils/gptUtils.js
 const openaiClient = require('./openaiClient');
-const { calculateRequiredContribution } = require('../utils/financialCalculations');
+const { calculateRequiredContribution, calculateCompleteFinancialProfile } = require('../utils/financialCalculations');
 const logger = require('../logger');
 
 /**
@@ -97,58 +97,89 @@ async function callOpenAIForAnalysis(analysisData, analysisPrompt) {
 
 /**
  * Constructs a prompt for generating personalized marketing email content.
- * This prompt now distinguishes between investment growth and retirement planning,
- * and it uses a dynamic calculated required monthly contribution.
+ * Uses centralized calculated values for consistency when available, with fallback to legacy approach.
  *
- * @param {Object} analysisData - The raw financial data.
- * @param {string} analysisText - The detailed financial analysis report.
- * @param {string} dynamicMonthlyContribution - The computed required monthly retirement contribution (e.g., "$200.45").
- * @returns {string} - The complete prompt to be sent to OpenAI.
+ * @param {Object} analysisData - The raw financial data including financialProfile or originalData
+ * @param {string} analysisText - The detailed financial analysis report
+ * @param {string} [dynamicMonthlyContribution] - Optional: Monthly contribution amount (legacy parameter)
+ * @returns {string} - The complete prompt to be sent to OpenAI
  */
 function prepareMarketingPrompt(analysisData, analysisText, dynamicMonthlyContribution) {
-  // Standardise data to ensure consistency
-  const standardizedData = standardizeFinancialData(analysisData);
-  const { personalDetails, calculatedMetrics } = standardizedData;
+  // Try to use the financialProfile if available, otherwise calculate it
+  const financialProfile = analysisData.financialProfile || 
+    (analysisData.originalData ? calculateCompleteFinancialProfile(analysisData.originalData) : null);
   
-  // Use only the first name for personalization
-  const clientName = extractClientName(standardizedData) || "Client";
+  let formattedValues = {};
+  let scores = {};
+  let projections = {};
+  let recommendations = {};
   
-  // Extract detailed financial metrics
+  // If we have financial profile, use its formatted values and scores
+  if (financialProfile) {
+    formattedValues = financialProfile.formatted;
+    scores = financialProfile.scores;
+    projections = financialProfile.projections;
+    recommendations = financialProfile.recommendations;
+    logger.info('Using centralized financial profile data for marketing prompt');
+  } else {
+    // Legacy approach - use standardizedData
+    logger.info('Using legacy data standardization for marketing prompt');
+    const standardizedData = standardizeFinancialData(analysisData);
+    scores = standardizedData.calculatedMetrics;
+    
+    // For backward compatibility - use the provided dynamicMonthlyContribution
+    if (dynamicMonthlyContribution === undefined) {
+      dynamicMonthlyContribution = "a recommended amount";
+    }
+    
+    // Create minimal formatted values from standardized data
+    const retirementTarget = scores.retirementTarget;
+    formattedValues = {
+      monthlyRetirementContribution: dynamicMonthlyContribution,
+      retirementTarget: retirementTarget !== undefined 
+        ? `$${Number(retirementTarget).toLocaleString()}`
+        : "your retirement savings goal",
+      monthlyInvestment: "$500", // Default value
+      tenYearInvestmentGrowth: "$80,000", // Default approximation
+      annualReturnPercent: "5%" // Standard assumption
+    };
+  }
+  
+  // Extract client name
+  const clientName = extractClientName(analysisData) || "Client";
+  
+  // Extract personal details for age-based messaging
+  const personalDetails = analysisData.originalData?.personalDetails || 
+                        analysisData.personalDetails || {};
   const age = personalDetails.age || 35;
-  const annualIncome = personalDetails.annualIncome 
-    ? `$${Number(personalDetails.annualIncome).toLocaleString()}`
-    : "your current income";
   const retirementAge = personalDetails.retirementAge || 65;
-  const yearsToRetirement = calculatedMetrics.yearsToRetirement || (retirementAge - age);
   
-  // FIX: Use dynamic retirement target from data with a text fallback instead of numeric fallback
-  const retirementTarget = calculatedMetrics.retirementTarget;
-  const formattedRetirementTarget = retirementTarget !== undefined 
-    ? `$${Number(retirementTarget).toLocaleString()}`
-    : "your retirement savings goal";
+  // Determine career stage based on age
+  let careerStage = "";
+  if (age < 35) careerStage = "early career";
+  else if (age < 50) careerStage = "mid career";
+  else careerStage = "late career";
   
-  // Compute a standard suggested monthly investment (fallback for general investments)
-  const suggestedMonthlyInvestment = personalDetails.annualIncome 
-    ? Math.round((personalDetails.annualIncome * 0.15) / 12)
-    : 500;
-  const formattedMonthlyInvestment = `$${Number(suggestedMonthlyInvestment).toLocaleString()}`;
+  // Extract financial scores for situational assessment
+  const dtiScore = scores.dtiScore || scores.dti || 50;
+  const retirementScore = scores.retirementScore || scores.retirement || 50;
+  const growthOpportunityScore = scores.growthOpportunityScore || scores.growthOpportunity || 50;
+  const emergencyFundScore = scores.emergencyFundScore || scores.emergencyFund || 50;
+  const overallScore = scores.overallFinancialHealthScore || scores.overallFinancialHealth || 50;
   
-  // Determine overall financial situation, retirement urgency, and investment focus
+  // Determine financial situation based on scores
   let financialSituation = "moderate";
-  const dtiScore = calculatedMetrics.dtiScore || calculatedMetrics.dti || 50;
-  const retirementScore = calculatedMetrics.retirementScore || calculatedMetrics.retirement || 50;
-  const growthOpportunityScore = calculatedMetrics.growthOpportunityScore || calculatedMetrics.growthOpportunity || 50;
-  const emergencyFundScore = calculatedMetrics.emergencyFundScore || calculatedMetrics.emergencyFund || 50;
-  const overallScore = calculatedMetrics.overallFinancialHealthScore || calculatedMetrics.overallFinancialHealth || 50;
-  
   if ((retirementScore < 40 && emergencyFundScore < 40) || dtiScore < 30 || overallScore < 40 || growthOpportunityScore > 70) {
     financialSituation = "critical";
   } else if ((retirementScore > 70 && emergencyFundScore > 70 && dtiScore > 70 && overallScore > 70) && (growthOpportunityScore < 30)) {
     financialSituation = "strong";
   }
   
+  // Determine retirement urgency
+  const yearsToRetirement = projections.retirement?.yearsToRetirement || (retirementAge - age);
   const retirementUrgency = yearsToRetirement < 15 ? "high" : (yearsToRetirement < 30 ? "medium" : "low");
   
+  // Determine investment focus
   let investmentFocus = "balanced";
   if (growthOpportunityScore > 70) {
     investmentFocus = "significant-opportunity";
@@ -158,37 +189,34 @@ function prepareMarketingPrompt(analysisData, analysisText, dynamicMonthlyContri
     investmentFocus = "optimisation";
   }
   
-  let careerStage = "";
-  if (age < 35) careerStage = "early career";
-  else if (age < 50) careerStage = "mid career";
-  else careerStage = "late career";
-  
-  // Additional persuasion guidance with a clear distinction:
+  // Additional financial context for the prompt
   const additionalPersuasion = `
 Retirement Planning Recommendation:
-Based on your current savings, target, and the time remaining until retirement, our calculations suggest that you should increase your monthly retirement contributions by approximately ${dynamicMonthlyContribution} to meet your retirement goal.
+Based on your current savings, target, and the time remaining until retirement, our calculations suggest that you should increase your monthly retirement contributions by ${formattedValues.monthlyRetirementContribution} to meet your retirement goal.
 
 Investment Strategy Recommendation:
-Additionally, your current investment portfolio is below the benchmark for your age group. We recommend evaluating your investment allocations to potentially increase your overall investments, ensuring they align with your long-term growth objectives.
+Additionally, your current investment portfolio is below the benchmark for your age group. We recommend increasing your investments by ${formattedValues.monthlyInvestment} per month, ensuring they align with your long-term growth objectives.
 
 Remember: Making incremental changes can prevent significant future losses. Many Kiwis have already secured a better financial future by taking these steps.
 `;
   
   const prompt = `
 You are an expert marketing copywriter for Echo Financial Advisors, an independent financial advisory service in New Zealand specialising in investment strategies and retirement planning.
+
+**IMPORTANT DISCLOSURE TO INCLUDE:** The personalised insights provided are generated based on the information you've supplied and should be used for guidance only. While this tool offers valuable direction, it cannot replace the comprehensive advice of a financial professional who can consider your complete financial circumstances. We recommend discussing these results with an advisor before implementation.
+
 A client has just completed our Financial Health Check, and here is their detailed analysis report:
 "${analysisText}"
 
 Based on the client's financial data:
 - Client's first name: "${clientName}" (use only the first name for a personal touch)
 - Age: ${age} (${careerStage})
-- Annual Income: ${annualIncome}
 - Retirement Age Goal: ${retirementAge}
 - Years until retirement: ${yearsToRetirement}
-- Retirement savings target: ${formattedRetirementTarget}
-- Retirement Score: ${retirementScore} (HIGHER is BETTER)
 - Growth Opportunity Score: ${growthOpportunityScore} (HIGHER indicates MORE room for improvement)
-- Suggested monthly investment for general growth (standard): ${formattedMonthlyInvestment}
+- Retirement Score: ${retirementScore} (HIGHER is BETTER)
+- Emergency Fund Score: ${emergencyFundScore} (HIGHER is BETTER)
+- Overall Financial Health Score: ${overallScore}
 
 The client's overall financial situation appears to be: ${financialSituation}
 Their retirement urgency is: ${retirementUrgency}
@@ -208,8 +236,10 @@ Using this information, craft a personalized marketing email that sounds genuine
 }
 
 To make this email truly persuasive and personalised:
-1. Include a SPECIFIC DOLLAR AMOUNT calculation showing potential growth:
-   - For example: "Based on your current situation, increasing your monthly retirement contributions by just ${dynamicMonthlyContribution} could potentially grow your portfolio significantly by your retirement age of ${retirementAge}."
+1. Include THESE EXACT FINANCIAL RECOMMENDATIONS with specific dollar amounts:
+   - Investment recommendation: "With a monthly investment of ${formattedValues.monthlyInvestment} and a ${formattedValues.annualReturnPercent} annual return, your portfolio could grow to approximately ${formattedValues.tenYearInvestmentGrowth} in 10 years."
+   - Retirement recommendation: "By contributing ${formattedValues.monthlyRetirementContribution} monthly, you could reach your retirement target of ${formattedValues.retirementTarget} in ${yearsToRetirement} years."
+   - DO NOT replace these specific dollar amounts with vague phrases like 'a recommended amount' or 'increasing your contributions'.
 2. Include an EARLY/MID/LATE CAREER context based on their age.
 3. Create ONE SPECIFIC "AHA" INSIGHT about their situation, comparing their investment rate to peers or highlighting a unique imbalance in their profile.
 
@@ -219,21 +249,16 @@ IMPORTANT MESSAGING GUIDELINES:
    - Highlight that proper investment strategies are essential for a secure retirement.
    - Mention Echo's expertise in crafting personalised investment portfolios aligned with retirement goals.
 2. Adapt your messaging based on the client's retirement timeline:
-   - High urgency: Emphasise phrases like "crucial adjustment period" and "strategic shifts needed now."
-   - Medium urgency: Use phrases like "significant growth opportunity" and "time to build momentum."
-   - Low urgency: Highlight "the extraordinary potential of compounding" and "early advantages."
-3. Tailor investment messaging based on their Growth Opportunity score:
-   - If Score > 70: "Your investment portfolio has substantial room for strategic enhancement..."
-   - If Score between 40 and 70: "With some strategic adjustments, you could strengthen your position..."
-   - If Score < 40: "Fine-tuning your already solid investment foundation could maximise returns..."
-4. Select the appropriate CTA based on their financial health:
-   - Critical: "Schedule your urgent investment & retirement strategy review"
-   - Improvement needed: "Book your personalised investment portfolio analysis"
-   - Strong position: "Explore retirement optimisation strategies with a complimentary consultation"
-5. The subject line must directly address investment potential or retirement readiness and include the client's first name.
+   - High urgency: Emphasise phrases like "crucial adjustment period," "strategic shifts needed now," and "each month of delay could cost thousands in potential retirement savings."
+   - Medium urgency: Use phrases like "significant growth opportunity," "time to build momentum," and "the sooner you act, the greater the potential benefit."
+   - Low urgency: Highlight "the extraordinary potential of compounding," "early advantages," and "setting the foundation now can yield significant results later."
+3. UNIQUE VALUE PROPOSITION:
+   - Emphasize that Echo Financial Advisors offers "AI-powered insights with licensed professional expertise"
+   - Mention the benefit of receiving "sophisticated financial analysis with personalized implementation guidance"
+4. The subject line must directly address investment potential or retirement readiness and include the client's first name.
 
 Ensure the tone is professional, empathetic, and encouraging. Craft a personalized marketing email that feels genuinely written by a human advisor, focused on Echo's specialities in investments and retirement planning. Do NOT include generic statements such as "I hope this email finds you well."
-  `;
+`;
   return prompt.trim();
 }
 

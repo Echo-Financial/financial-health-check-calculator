@@ -4,6 +4,7 @@ const express = require('express');
 const router = express.Router();
 const { OpenAI } = require('openai');
 const logger = require('../logger');
+const { calculateCompleteFinancialProfile } = require('../utils/financialCalculations');
 require('dotenv').config({ path: './.env' });
 
 const openai = new OpenAI({
@@ -53,13 +54,21 @@ const generateFeedback = (metricName, score) => {
 };
 
 const buildDynamicPrompt = (data) => {
-  const dtiScore = data.dtiScore || data.dti;
-  const savingsScore = data.savingsScore || data.savingsRate;
-  const emergencyFundScore = data.emergencyFundScore || data.emergencyFund;
-  const retirementScore = data.retirementScore || data.retirement;
-  const growthOpportunityScore = data.growthOpportunityScore || data.growthOpportunity;
-  const potentialForImprovementScore = data.potentialForImprovementScore || data.potentialForImprovement;
-  const overallFinancialHealthScore = data.overallFinancialHealthScore || data.overallFinancialHealth;
+  // If financialProfile is available, use it directly
+  const financialProfile = data.financialProfile || 
+    (data.originalData ? calculateCompleteFinancialProfile(data.originalData) : null);
+  
+  // If we have the financial profile, use its scores
+  const scores = financialProfile ? financialProfile.scores : data;
+  
+  // Extract scores either from financialProfile or directly from data
+  const dtiScore = scores.dtiScore || scores.dti;
+  const savingsScore = scores.savingsScore || scores.savingsRate;
+  const emergencyFundScore = scores.emergencyFundScore || scores.emergencyFund;
+  const retirementScore = scores.retirementScore || scores.retirement;
+  const growthOpportunityScore = scores.growthOpportunityScore || scores.growthOpportunity;
+  const potentialForImprovementScore = scores.potentialForImprovementScore || scores.potentialForImprovement;
+  const overallFinancialHealthScore = scores.overallFinancialHealthScore || scores.overallFinancialHealth;
 
   // Get personalised feedback for each metric
   const dtiFeedback = generateFeedback("Debt to Income Ratio", dtiScore);
@@ -101,9 +110,7 @@ const buildDynamicPrompt = (data) => {
   const clientName = extractClientName(data);
 
   return `  
-Disclaimer: This is a general financial assessment based on the information provided. For personalised advice, please consult with a licensed financial advisor.
--------------
-The following information is provided for general educational purposes only and does not constitute professional financial advice. Please consult with a licensed financial advisor for personalised advice.
+**IMPORTANT DISCLOSURE:** The personalised insights provided are generated based on the information you've supplied and should be used for guidance only. While this tool offers valuable direction, it cannot replace the comprehensive advice of a financial professional who can consider your complete financial circumstances. We recommend discussing these results with an advisor before implementation.
 
 Context:
 -------------
@@ -137,7 +144,8 @@ Client Name: ${clientName || "(Not provided)"}
 
 IMPORTANT SCORE INTERPRETATION:
 - For Retirement Score, Emergency Fund Score, and most metrics: HIGHER scores (closer to 100) are BETTER
-- For Growth Opportunity Score and Potential for Improvement Score: HIGHER scores are WORSE (indicate MORE room for improvement)
+- For Growth Opportunity Score: HIGHER scores are WORSE (indicate MORE room for improvement)
+- Potential for Improvement Score: This is derived from your overall financial health and directly relates to Growth Opportunity - LOWER scores here are BETTER
 - Debt-to-Income Score: This is a SCORE, not a percentage. Higher scores are better (73 is good, not 73%)
 
 Key Strengths: ${strengths.join(', ') || 'None identified'}
@@ -191,6 +199,7 @@ Create a FINANCIAL REPORT (not an email) with these exact section headings:
    - Suggest a consultation focused on investment and retirement strategies
    - Use encouraging language emphasizing opportunity rather than urgency
    - Frame this as a partnership opportunity
+   - End with a natural transition to the next step such as: "The logical next step would be to discuss how these strategies can be implemented for your specific situation."
    - DO NOT include any advisor signature, name, or contact information
 
 FORMAT REQUIREMENTS:
@@ -209,6 +218,13 @@ Ensure the tone is professional, empathetic, and encouraging while maintaining c
 router.post('/gpt', async (req, res) => {
   try {
     logger.info('Received POST /api/gpt request');
+    
+    // Check if financial profile needs to be calculated
+    if (!req.body.financialProfile && req.body.originalData) {
+      logger.info('Calculating financial profile for GPT analysis');
+      req.body.financialProfile = calculateCompleteFinancialProfile(req.body.originalData);
+    }
+    
     const prompt = buildDynamicPrompt(req.body);
     // Log only the prompt length to avoid exposing full content
     logger.info(`Prompt built with length: ${prompt.length} characters`);
@@ -221,7 +237,18 @@ router.post('/gpt', async (req, res) => {
     });
 
     logger.info('Successfully fetched GPT Insights');
-    res.json({ response: chatCompletion.choices[0].message.content });
+    
+    // Return both the GPT response and the financial profile if calculated
+    const response = { 
+      response: chatCompletion.choices[0].message.content
+    };
+    
+    // Include financial profile if we calculated it
+    if (req.body.financialProfile) {
+      response.financialProfile = req.body.financialProfile;
+    }
+    
+    res.json(response);
   } catch (error) {
     logger.error('Error calling OpenAI:', error);
     if (error.response) {
