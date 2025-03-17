@@ -12,7 +12,7 @@ import toolsIcon from '../assets/images/tools-icon.svg';
 const Home = () => {
   return (
     <main id="main-content" role="main">
-      {/* Hero Section (Dark) */}
+      {/* Hero Section (Dark) - Form removed */}
       <section
         className="section dark-section hero"
         aria-labelledby="hero-heading"
@@ -23,7 +23,9 @@ const Home = () => {
             Get personalised financial insights and recommendations tailored to your goals.
             Start your free assessment now.
           </p>
-          <LeadCaptureForm />
+          <a href="#assessment-form" className="btn btn-primary brand-link-button">
+            Start Your Free Assessment
+          </a>
         </div>
       </section>
 
@@ -116,71 +118,7 @@ const Home = () => {
         </div>
       </section>
 
-      {/* Testimonials Section (Dark) */}
-      <section
-        id="testimonials"
-        className="section dark-section testimonials"
-        aria-labelledby="testimonials-heading"
-      >
-        <div className="container text-center">
-          <h2 id="testimonials-heading">What Our Users Say</h2>
-              <blockquote>
-                <p>
-                  "This tool helped me understand where I stand financially.
-                  I’ve already made changes that saved me thousands!"
-                </p>
-                <footer>– Alex T., Entrepreneur</footer>
-              </blockquote>
-              <blockquote>
-                <p>
-                  "The personalised recommendations were spot-on. I feel more confident about my future."
-                </p>
-                <footer>– Maria S., Marketing Manager</footer>
-              </blockquote>
-              <blockquote>
-                <p>
-                  "Easy to use and incredibly insightful. I highly recommend it to anyone looking to get serious about their finances."
-                </p>
-                <footer>– David K., Freelancer</footer>
-              </blockquote>
-          <a href="#hero-heading" className="btn btn-secondary brand-link-button"> {/* Added brand-link-button class */}
-            Start Your Free Assessment
-          </a>
-        </div>
-      </section>
-
-      {/* FAQ Section (Light) */}
-      <section
-        id="faq"
-        className="section light-section faq-section"
-        aria-labelledby="faq-heading"
-      >
-        <div className="container">
-          <h2 id="faq-heading">Frequently Asked Questions</h2>
-
-          {/* Wrap all accordion items in a unified container */}
-          <div className="faq-accordion">
-            <AccordionItem
-              question="Is this service really free?"
-              answer="Yes. Your initial financial assessment and insights are at no cost."
-            />
-            <AccordionItem
-              question="Will my information remain private?"
-              answer="Absolutely. We never share your personal data without consent."
-            />
-            <AccordionItem
-              question="How long does it take to get my results?"
-              answer="Just a few seconds. Once you submit your details, we’ll generate a personalised report quickly."
-            />
-            <AccordionItem
-              question="Can I talk to a financial advisor directly?"
-              answer="Yes. We offer optional consultations with a licensed expert for more in-depth guidance."
-            />
-          </div>
-        </div>
-      </section>
-
-      {/* Score Breakdown Section (Light) */}
+            {/* Score Breakdown Section (Light) */}
       <section
         id="score-breakdown"
         className="section light-section score-breakdown-section"
@@ -189,7 +127,7 @@ const Home = () => {
         <div className="container">
           <h2 id="score-breakdown-heading">Understand Your Financial Scores</h2>
           <p>
-            Our assessment generates multiple scores to provide a comprehensive snapshot of your financial health. Here’s what each score means:
+            Our assessment generates multiple scores to provide a comprehensive snapshot of your financial health. Here's what each score means:
           </p>
           <div className="score-grid">
             <article className="score-card">
@@ -238,19 +176,79 @@ const Home = () => {
         </div>
       </section>
 
-      {/* Additional CTA Section (Dark) */}
+      {/* Testimonials Section (Dark) */}
       <section
-        className="section dark-section cta-section"
-        aria-labelledby="cta-heading"
+        id="testimonials"
+        className="section dark-section testimonials"
+        aria-labelledby="testimonials-heading"
       >
         <div className="container text-center">
-          <h2 id="cta-heading">Ready to Secure Your Financial Future?</h2>
+          <h2 id="testimonials-heading">What Our Users Say</h2>
+              <blockquote>
+                <p>
+                  "This tool helped me understand where I stand financially.
+                  I've already made changes that saved me thousands!"
+                </p>
+                <footer>– Alex T., Entrepreneur</footer>
+              </blockquote>
+              <blockquote>
+                <p>
+                  "The personalised recommendations were spot-on. I feel more confident about my future."
+                </p>
+                <footer>– Maria S., Marketing Manager</footer>
+              </blockquote>
+              <blockquote>
+                <p>
+                  "Easy to use and incredibly insightful. I highly recommend it to anyone looking to get serious about their finances."
+                </p>
+                <footer>– David K., Freelancer</footer>
+              </blockquote>
+        </div>
+      </section>
+
+      {/* Assessment Form Section (NEW) */}
+      <section
+        id="assessment-form"
+        className="section dark-section assessment-form-section"
+        aria-labelledby="assessment-form-heading"
+      >
+        <div className="container text-center">
+          <h2 id="assessment-form-heading">Start Your Financial Health Check</h2>
           <p>
-            Join Kiwi's from across the country who have taken the first step toward financial security.
+            Fill out the form below to receive your personalised financial analysis and recommendations.
           </p>
-          <a href="#hero-heading" className="btn btn-primary brand-link-button"> {/* Added brand-link-button class */}
-            Get Started Now
-          </a>
+          <LeadCaptureForm />
+        </div>
+      </section>
+
+      {/* FAQ Section (Light) */}
+      <section
+        id="faq"
+        className="section light-section faq-section"
+        aria-labelledby="faq-heading"
+      >
+        <div className="container">
+          <h2 id="faq-heading">Frequently Asked Questions</h2>
+
+          {/* Wrap all accordion items in a unified container */}
+          <div className="faq-accordion">
+            <AccordionItem
+              question="Is this service really free?"
+              answer="Yes. Your initial financial assessment and insights are at no cost."
+            />
+            <AccordionItem
+              question="Will my information remain private?"
+              answer="Absolutely. We never share your personal data without consent."
+            />
+            <AccordionItem
+              question="How long does it take to get my results?"
+              answer="Just a few seconds. Once you submit your details, we'll generate a personalised report quickly."
+            />
+            <AccordionItem
+              question="Can I talk to a financial advisor directly?"
+              answer="Yes. We offer optional consultations with a licensed expert for more in-depth guidance."
+            />
+          </div>
         </div>
       </section>
     </main>

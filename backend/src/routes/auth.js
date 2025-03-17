@@ -1,8 +1,9 @@
+// backend/src/routes/auth.js
 const express = require('express');
 const router = express.Router();
-// const { registerUser } = require('../controllers/authController'); // Removed the import
+const { adminLogin } = require('../controllers/adminAuthController');
 
-// POST /api/auth/register
-//router.post('/register', registerUser); // Removed the route
+// POST /api/auth/login for admin authentication
+router.post('/login', adminLogin);
 
 module.exports = router;

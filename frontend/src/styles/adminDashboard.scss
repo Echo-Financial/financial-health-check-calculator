@@ -1,0 +1,48 @@
+// frontend/src/styles/adminDashboard.scss
+@use './_brand.scss' as brand;  // If your build supports it; otherwise, use literal values
+
+.admin-review-item {
+  margin-bottom: 16px;
+  padding: 16px;
+  background-color: #333333; // you can adjust if needed
+  border-radius: 4px;
+}
+
+.view-details-button {
+  margin-top: 8px;
+  color: brand.$brand-text-light; // Use brand text light color, if available
+  border: 1px solid brand.$brand-text-light;
+}
+
+.admin-modal {
+  // Ensure this class applies to the modal Box for additional overrides if needed
+  z-index: 1300;
+}
+
+.admin-modal-header {
+  color: #101828; // $brand-primary
+  font-size: 1.5rem;
+  font-weight: bold;
+  margin-bottom: 16px;
+}
+
+.admin-text-block {
+  background-color: #f4f7fa; // $brand-bg-light
+  color: #101828;           // $brand-primary
+  padding: 16px;
+  border-radius: 4px;
+  white-space: normal;
+  word-wrap: break-word;
+  margin-bottom: 16px;
+}
+
+.admin-modal-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 16px;
+}
+
+.modal-section {
+  margin-top: 16px;
+}

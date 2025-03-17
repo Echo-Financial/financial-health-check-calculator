@@ -1,3 +1,4 @@
+// frontend/src/components/Forms/LeadCaptureForm.jsx
 import React, { useState } from 'react';
 import axios from 'axios';
 import { Formik, Form, Field, ErrorMessage } from 'formik';
@@ -11,12 +12,26 @@ import RetirementPlanning from '../InputSections/RetirementPlanning.jsx';
 import CreditHealth from '../InputSections/CreditHealth.jsx';
 import ContactDetails from '../InputSections/ContactDetails.jsx';
 
+// Modify validation schema - remove agreeMarketing
 const validationSchema = Yup.object({
-  // ... other field validations ...
-  agreeMarketing: Yup.boolean().oneOf(
-    [true],
-    'Please agree to receive personalised offers and exclusive insights to view your report.'
-  ),
+  age: Yup.number().required('Age is required').min(18, 'Must be at least 18 years old'),
+  annualIncome: Yup.number().required('Annual income is required').min(0, 'Must be at least 0'),
+  incomeFromInterest: Yup.number().min(0, 'Must be at least 0'),
+  incomeFromProperty: Yup.number().min(0, 'Must be at least 0'),
+  monthlyExpenses: Yup.number().required('Monthly expenses are required').min(0, 'Must be at least 0'),
+  totalDebt: Yup.number().required('Total debt is required').min(0, 'Must be at least 0'),
+  savings: Yup.number().required('Savings are required').min(0, 'Must be at least 0'),
+  emergencyFunds: Yup.number().required('Emergency funds are required').min(0, 'Must be at least 0'),
+  totalInvestments: Yup.number().required('Total investments are required').min(0, 'Must be at least 0'),
+  totalAssets: Yup.number().required('Total assets are required').min(0, 'Must be at least 0'),
+  currentRetirementSavings: Yup.number().required('Current retirement savings are required').min(0, 'Must be at least 0'),
+  targetRetirementSavings: Yup.number().required('Target retirement savings are required').min(0, 'Must be at least 0'),
+  retirementAge: Yup.number().required('Retirement age is required').min(18, 'Must be at least 18'),
+  creditScore: Yup.number().min(300, 'Credit score must be at least 300').max(850, 'Credit score must be at most 850'),
+  email: Yup.string().email('Invalid email address').required('Email is required'),
+  name: Yup.string().required('Name is required'),
+  phone: Yup.string(),
+  // agreeMarketing removed from validation
 });
 
 const transformValues = (values) => {
@@ -52,13 +67,32 @@ const LeadCaptureForm = () => {
   const [showModal, setShowModal] = useState(false);
   const [scores, setScores] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
+  
+  // New state for marketing consent outside of Formik
+  const [marketingConsent, setMarketingConsent] = useState(false);
+  const [showConsentError, setShowConsentError] = useState(false);
 
   const handleSubmit = async (values, { setSubmitting }) => {
-    //console.log('handleSubmit called');
+    // Check marketing consent separately from Formik
+    if (!marketingConsent) {
+      setShowConsentError(true);
+      setSubmitting(false);
+      return;
+    }
+    
+    // Reset error state
+    setShowConsentError(false);
     setIsLoading(true);
+    
     try {
+      // Add marketing consent to the values object manually
+      const submissionValues = {
+        ...values,
+        agreeMarketing: marketingConsent
+      };
+      
       const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
-      const transformedValues = transformValues(values);
+      const transformedValues = transformValues(submissionValues);
 
       // Build originalData payload
       const originalData = {
@@ -106,8 +140,8 @@ const LeadCaptureForm = () => {
       console.log("Response from /api/submit:", submitResponse.data);
       console.log("Response from /api/financial-analysis:", analysisResponse.data);
 
-      // If the user agreed to marketing, trigger VBOUT campaign
-      if (transformedValues.agreeMarketing) {
+      // If the user agreed to marketing, trigger marketing email
+      if (marketingConsent) {
         try {
           const campaignResponse = await sendMarketingEmail({
             to: transformedValues.email,
@@ -145,6 +179,9 @@ const LeadCaptureForm = () => {
   };
 
   const handleNext = async (formik) => {
+    // Clear consent error when changing steps
+    setShowConsentError(false);
+    
     const errors = await formik.validateForm();
     const currentStepErrors = getCurrentStepErrors(errors, step);
     if (Object.keys(currentStepErrors).length === 0) {
@@ -169,6 +206,8 @@ const LeadCaptureForm = () => {
   };
 
   const handlePrevious = () => {
+    // Clear consent error when going back
+    setShowConsentError(false);
     setStep(step - 1);
     setShowModal(false);
   };
@@ -184,7 +223,7 @@ const LeadCaptureForm = () => {
       case 4:
         return ['creditScore'];
       case 5:
-        return ['email', 'name', 'phone', 'agreeMarketing'];
+        return ['email', 'name', 'phone']; // agreeMarketing removed from Formik validation
       default:
         return [];
     }
@@ -212,16 +251,27 @@ const LeadCaptureForm = () => {
         return (
           <>
             <ContactDetails />
+            {/* Custom checkbox implementation outside of Formik */}
             <div className="form-group mt-3">
               <label style={{ display: 'flex', alignItems: 'center' }}>
-                <Field type="checkbox" name="agreeMarketing" />
-                <span style={{ marginLeft: '10px' }}>
+                <input 
+                  type="checkbox" 
+                  checked={marketingConsent}
+                  onChange={(e) => {
+                    setMarketingConsent(e.target.checked);
+                    if (e.target.checked) setShowConsentError(false);
+                  }}
+                  style={{ marginRight: '10px' }}
+                />
+                <span style={{ marginLeft: '0px' }}>
                   I agree to receive marketing materials and personalised offers.
                 </span>
               </label>
-              {(formik.touched.agreeMarketing || formik.submitCount > 0) &&
-                formik.errors.agreeMarketing && (
-                  <div className="text-danger">{formik.errors.agreeMarketing}</div>
+              {/* Show error only when appropriate */}
+              {showConsentError && (
+                <div className="text-danger">
+                  Please agree to receive personalised offers and exclusive insights to view your report.
+                </div>
               )}
             </div>
           </>
@@ -259,7 +309,7 @@ const LeadCaptureForm = () => {
           email: '',
           name: '',
           phone: '',
-          agreeMarketing: false,
+          // agreeMarketing removed from Formik (we use our own state now)
         }}
         initialTouched={{
           age: false,
@@ -280,7 +330,6 @@ const LeadCaptureForm = () => {
           email: false,
           name: false,
           phone: false,
-          agreeMarketing: false,
         }}
         validationSchema={validationSchema}
         onSubmit={handleSubmit}

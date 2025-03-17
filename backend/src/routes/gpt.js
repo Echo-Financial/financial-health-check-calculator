@@ -1,10 +1,10 @@
 // backend/src/routes/gpt.js
-
 const express = require('express');
 const router = express.Router();
 const { OpenAI } = require('openai');
 const logger = require('../logger');
 const { calculateCompleteFinancialProfile } = require('../utils/financialCalculations');
+const { logAdviceGeneration, requiresManualReview } = require('../utils/complianceUtils');
 require('dotenv').config({ path: './.env' });
 
 const openai = new OpenAI({
@@ -174,20 +174,20 @@ Instructions:
 -------------
 Create a FINANCIAL REPORT (not an email) with these exact section headings:
 
-1. **SECTION HEADING: "Personalised Financial Assessment"**
+1. **"Personalised Financial Assessment"**
    - If client name is available, start with "${clientName}, your Overall Financial Health Score..."
    - If no client name is available, simply start with "Your Overall Financial Health Score..."
    - DO NOT use any email-style greetings like "Hi" or "Hello" or "I hope this finds you well"
    - DO NOT include any signature, sign-off, or contact information at the end
    - This is a REPORT PAGE, not an email message
 
-2. **SECTION HEADING: "Analysis"**
+2. **"Analysis"**
    - Provide a balanced analysis of the financial situation using a supportive tone
    - IMPORTANT: When mentioning the Debt-to-Income ratio, remember that a score of 73 is GOOD (it does NOT mean the client has 73% debt-to-income)
    - Clearly explain what the scores mean, particularly for Growth Opportunity where higher is worse
    - Highlight the relationship between different financial metrics
 
-3. **SECTION HEADING: "Actionable Insights"**
+3. **"Actionable Insights"**
    - Provide specific, concrete recommendations but use percentage-based examples rather than actual dollar amounts
    - For example: "Establish an emergency fund covering 3-6 months of expenses" (without specifying dollar figures)
    - For savings recommendations, use the age-based percentages: "If you are 40-50, aim to save 20% of your income"
@@ -195,7 +195,7 @@ Create a FINANCIAL REPORT (not an email) with these exact section headings:
    - Focus on investment and retirement planning strategies
    - Present these as bullet points for clarity
    
-4. **SECTION HEADING: "Recommendations"**
+4. **"Recommendations"**
    - Suggest a consultation focused on investment and retirement strategies
    - Use encouraging language emphasizing opportunity rather than urgency
    - Frame this as a partnership opportunity
@@ -215,6 +215,9 @@ Ensure the tone is professional, empathetic, and encouraging while maintaining c
 `;
 };
 
+// backend/src/routes/gpt.js
+// Update just the route handler portion
+
 router.post('/gpt', async (req, res) => {
   try {
     logger.info('Received POST /api/gpt request');
@@ -222,11 +225,15 @@ router.post('/gpt', async (req, res) => {
     // Check if financial profile needs to be calculated
     if (!req.body.financialProfile && req.body.originalData) {
       logger.info('Calculating financial profile for GPT analysis');
-      req.body.financialProfile = calculateCompleteFinancialProfile(req.body.originalData);
+      try {
+        req.body.financialProfile = calculateCompleteFinancialProfile(req.body.originalData);
+      } catch (calcError) {
+        logger.error('Error calculating financial profile:', calcError);
+        req.body.financialProfile = null; // Ensure it's null if calculation fails
+      }
     }
     
     const prompt = buildDynamicPrompt(req.body);
-    // Log only the prompt length to avoid exposing full content
     logger.info(`Prompt built with length: ${prompt.length} characters`);
 
     const chatCompletion = await openai.chat.completions.create({
@@ -236,16 +243,55 @@ router.post('/gpt', async (req, res) => {
       temperature: 0.7,
     });
 
+    // Get the generated text response
+    const gptResponse = chatCompletion.choices[0].message.content;
     logger.info('Successfully fetched GPT Insights');
     
-    // Return both the GPT response and the financial profile if calculated
+    // Prepare response object
     const response = { 
-      response: chatCompletion.choices[0].message.content
+      response: gptResponse,
+      financialProfile: req.body.financialProfile
     };
     
-    // Include financial profile if we calculated it
+    // Only attempt compliance logging if we have the required data
     if (req.body.financialProfile) {
-      response.financialProfile = req.body.financialProfile;
+      try {
+        // Extract key financial metrics for compliance logging
+        const recommendations = {
+          overallHealthScore: req.body.financialProfile.scores.overallFinancialHealthScore,
+          retirementScore: req.body.financialProfile.scores.retirementScore,
+          emergencyFundScore: req.body.financialProfile.scores.emergencyFundScore,
+          growthOpportunityScore: req.body.financialProfile.scores.growthOpportunityScore,
+          adviceType: 'summary'
+        };
+        
+        // Log for compliance purposes - don't wait for this to complete
+        logAdviceGeneration('summary', req.body, recommendations, gptResponse)
+          .then(() => {
+            logger.info('Compliance logging completed successfully');
+          })
+          .catch(logError => {
+            logger.error('Non-blocking error in compliance logging:', logError);
+          });
+        
+        // Check if this needs review - don't wait for this
+        requiresManualReview(req.body, recommendations, gptResponse, 'summary')
+          .then(needsReview => {
+            logger.info(`Advice review status: ${needsReview ? 'Needs review' : 'No review needed'}`);
+          })
+          .catch(reviewError => {
+            logger.error('Non-blocking error in review check:', reviewError);
+          });
+        
+        // Add compliance metadata placeholder
+        response._compliance = {
+          adviceLogged: true,
+          adviceType: 'summary'
+        };
+      } catch (complianceError) {
+        logger.error('Error in compliance processing:', complianceError);
+        // Continue with response even if compliance processing fails
+      }
     }
     
     res.json(response);

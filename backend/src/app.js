@@ -11,7 +11,7 @@ const gptRoute = require('./routes/gpt');
 const financialAnalysisRoute = require('./routes/financialAnalysis');
 const generateMarketingRouter = require('./routes/generate-marketing');
 const sendMarketingEmailRouter = require('./routes/sendMarketingEmail');
-
+const reviewRouter = require('./routes/review');
 const errorHandler = require('./middleware/errorHandler');
 
 const app = express();
@@ -27,7 +27,7 @@ app.use('/api', gptRoute);
 app.use('/api/financial-analysis', financialAnalysisRoute);
 app.use('/api/generate-marketing', generateMarketingRouter);
 app.use('/api/send-marketing-email', sendMarketingEmailRouter);
-
+app.use('/api/reviews', reviewRouter);
 app.use(errorHandler);
 
 module.exports = app;

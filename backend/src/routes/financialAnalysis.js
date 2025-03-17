@@ -2,18 +2,18 @@
 const express = require('express');
 const router = express.Router();
 const { callOpenAIForAnalysis } = require('../utils/gptUtils');
-const { 
-  calculateCompleteFinancialProfile 
-} = require('../utils/financialCalculations');
+const { calculateCompleteFinancialProfile } = require('../utils/financialCalculations');
 const { logAdviceGeneration, requiresManualReview } = require('../utils/complianceUtils');
 const logger = require('../logger');
 
-// Update the analysisPromptDraft9 function to use the financial profile
+// Analysis prompt function remains the same
 const analysisPromptDraft9 = (financialProfile) => {
   const { formatted, recommendations, projections } = financialProfile;
   
   return `
 You are an expert financial analyst working for Echo Financial Advisors, a solo financial advisory business in New Zealand that SPECIALISES IN INVESTMENT STRATEGIES AND RETIREMENT PLANNING. Your task is to analyze the financial data provided by a user of our Financial Health Check Calculator and produce a detailed, personalised financial health report.
+
+**IMPORTANT DISCLOSURE:** This analysis constitutes personalized financial recommendations provided under a Class 1 Financial Advice Provider license, with assistance from AI technology. This combination offers you the benefit of sophisticated analysis with professional oversight.
 
 **GROWTH PROJECTIONS TO INCLUDE IN YOUR ANALYSIS:**
 
@@ -93,20 +93,30 @@ router.post('/', async (req, res) => {
     // Extract key recommendations for compliance logging
     const recommendations = {
       monthlyContribution: financialProfile.recommendations.monthlyRetirementContribution,
-      monthlyInvestment: financialProfile.recommendations.monthlyInvestment
+      monthlyInvestment: financialProfile.recommendations.monthlyInvestment,
+      adviceType: 'detailed-analysis'
     };
     
-    // Log for compliance purposes
-    logAdviceGeneration('detailed-analysis', financialData, recommendations);
+    // Log for compliance purposes with advice content
+    await logAdviceGeneration('analysis', financialData, recommendations, analysisText);
     
     // Check if this needs review based on recommendation thresholds
-    const needsReview = requiresManualReview(financialData, recommendations);
+    const needsReview = await requiresManualReview(
+      financialData, 
+      recommendations,
+      analysisText,
+      'detailed-analysis'
+    );
     
     // Return the analysis, financial profile, and compliance metadata
     res.json({
       analysis: analysisText,
       financialProfile: financialProfile,
-      _compliance: { needsReview }
+      _compliance: { 
+        needsReview,
+        adviceLogged: true,
+        adviceType: 'detailed-analysis'
+      }
     });
   } catch (error) {
     logger.error('Error during report generation:', error);
