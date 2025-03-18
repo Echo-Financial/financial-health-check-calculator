@@ -14,7 +14,7 @@ const modalStyle = {
   backgroundColor: '#fff',
   padding: '2rem',
   borderRadius: '4px',
-  maxWidth: '600px',  // revert to previous width
+  maxWidth: '600px',
   width: '90%',
   maxHeight: '80vh',
   overflowY: 'auto',
@@ -81,7 +81,7 @@ const AdminDashboard = () => {
   };
 
   return (
-    <div style={{ padding: '2rem', backgroundColor: '#222', color: '#fff', minHeight: '100vh' }}>
+    <div style={{ padding: '2rem', backgroundColor: '#101828', color: '#fff', minHeight: '100vh' }}>
       <Typography variant="h4" gutterBottom>Admin Dashboard</Typography>
       <Button variant="contained" color="secondary" onClick={handleLogout} style={{ marginBottom: '1rem' }}>
         Logout
@@ -96,12 +96,14 @@ const AdminDashboard = () => {
               <strong>{review.clientEmail}</strong> - {review.adviceType} - Status: {review.status}
             </Typography>
             <Button 
-              variant="outlined" 
+              variant="contained" 
               onClick={() => handleOpenDetails(review)} 
               className="view-details-button"
+              style={{ backgroundColor: '#c68922', color: '#f4f7fa' }} // Brand accent for background, brand primary for text
             >
               View Details
             </Button>
+
           </li>
         ))}
       </ul>

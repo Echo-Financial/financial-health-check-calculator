@@ -1,34 +1,43 @@
-// frontend/src/styles/adminDashboard.scss
-@use './_brand.scss' as brand;  // If your build supports it; otherwise, use literal values
+/* frontend/src/styles/adminDashboard.scss */
+@use './_brand.scss' as brand;
 
 .admin-review-item {
   margin-bottom: 16px;
   padding: 16px;
-  background-color: #333333; // you can adjust if needed
+  background-color: #101828; // Brand primary
   border-radius: 4px;
 }
 
 .view-details-button {
   margin-top: 8px;
-  color: brand.$brand-text-light; // Use brand text light color, if available
-  border: 1px solid brand.$brand-text-light;
+  color: brand.$brand-primary;          // Dark text (brand primary) for contrast
+  background-color: brand.$brand-accent; // Brand accent (orange)
+  border: 1px solid brand.$brand-accent-hover;
+  padding: 8px 16px;
+  font-weight: bold;
+  transition: background-color 0.3s ease, border-color 0.3s ease;
+  cursor: pointer;
+  
+  &:hover {
+    background-color: brand.$brand-accent-hover;
+    border-color: brand.$brand-accent-hover;
+  }
 }
 
 .admin-modal {
-  // Ensure this class applies to the modal Box for additional overrides if needed
-  z-index: 1300;
+  z-index: 1300; /* Ensure modal is on top */
 }
 
 .admin-modal-header {
-  color: #101828; // $brand-primary
+  color: #101828; /* Brand primary */
   font-size: 1.5rem;
   font-weight: bold;
   margin-bottom: 16px;
 }
 
 .admin-text-block {
-  background-color: #f4f7fa; // $brand-bg-light
-  color: #101828;           // $brand-primary
+  background-color: #f4f7fa; /* Brand background light */
+  color: #101828;           /* Brand primary */
   padding: 16px;
   border-radius: 4px;
   white-space: normal;
