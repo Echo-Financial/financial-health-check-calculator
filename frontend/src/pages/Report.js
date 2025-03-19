@@ -155,16 +155,15 @@ const Report = () => {
           <div className="container">
             <h3>Next Steps</h3>
             <div className="cta-content">
-              <h4>Ready to Transform Your Financial Future? Let’s Get Started.</h4>
+              <h4>Ready to Transform Your Financial Future? Let’s Get Started today.</h4>
               <p>
-                I'm Kevin from Echo Financial Advisors, and at Echo we do things differently.
-                Instead of pushing a one-size-fits-all solution, we build your financial strategy around your unique story.
+              I'm Kevin from Echo Financial Advisors. At Echo, we reject cookie-cutter solutions. Instead, we craft financial strategies tailored to your unique circumstances—ensuring every piece of advice is as individual as you are.
               </p>
               <h5>What This Means for You:</h5>
               <ul>
-                <li>✓ AI-powered analysis that cuts through the complexity</li>
-                <li>✓ A dedicated advisor focused on your success</li>
-                <li>✓ Clear, actionable steps toward your financial goals</li>
+                <li>✓ Advanced AI Analysis: Leverage cutting-edge technology combined with expert human insight to cut through financial complexity.</li>
+                <li>✓ A dedicated advisor focused on your success.</li>
+                <li>✓ Clear, actionable steps toward your financial objectives.</li>
               </ul>
               <div className="text-center">
                 <button onClick={handleBookingClick} className="btn btn-primary btn-submit">

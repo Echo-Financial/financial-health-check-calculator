@@ -16,7 +16,7 @@ const RetirementPlanning = () => {
         label="Total Assets *"
         id="totalAssets"
         type="number"
-        placeholder="e.g., 20000"
+        placeholder="(property, investments, savings etc.) e.g., 20000"
         value={values.totalAssets}
         onChange={handleChange}
         onBlur={handleBlur}
@@ -28,7 +28,7 @@ const RetirementPlanning = () => {
         label="Current Retirement Savings *"
         id="currentRetirementSavings"
         type="number"
-        placeholder="e.g., 15000"
+        placeholder="(KiwiSaver etc.) e.g., 15000"
         value={values.currentRetirementSavings}
         onChange={handleChange}
         onBlur={handleBlur}
