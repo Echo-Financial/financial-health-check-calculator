@@ -27,7 +27,7 @@ const ExpensesAssets = () => {
             label="Total Debt *"
             id="totalDebt"
             type="number"
-            placeholder="e.g., 10000"
+            placeholder="(excluding mortgage), e.g., 10000"
             value={values.totalDebt}
             onChange={handleChange}
             onBlur={handleBlur}
@@ -39,7 +39,7 @@ const ExpensesAssets = () => {
             label="Savings *"
             id="savings"
             type="number"
-            placeholder="e.g., 5000"
+            placeholder="(excluding retirement savings) e.g., 5000"
             value={values.savings}
             onChange={handleChange}
             onBlur={handleBlur}
@@ -51,7 +51,7 @@ const ExpensesAssets = () => {
             label="Emergency Funds *"
             id="emergencyFunds"
             type="number"
-            placeholder="e.g., 10000"
+            placeholder="(excluding savings) e.g., 10000"
             value={values.emergencyFunds}
             onChange={handleChange}
             onBlur={handleBlur}
@@ -63,7 +63,7 @@ const ExpensesAssets = () => {
             label="Total Investments *"
              id="totalInvestments"
              type="number"
-             placeholder="e.g., 2000"
+             placeholder="(equities, bonds, property, etc.) e.g., 2000"
             value={values.totalInvestments}
              onChange={handleChange}
             onBlur={handleBlur}

@@ -39,7 +39,7 @@ const PersonalDetails = () => {
              label="Income from Interest *"
               id="incomeFromInterest"
             type="number"
-          placeholder="e.g., 1000"
+          placeholder="Income from Interest (annual): e.g., 1000"
             value={values.incomeFromInterest}
             onChange={handleChange}
              onBlur={handleBlur}
@@ -51,7 +51,7 @@ const PersonalDetails = () => {
              label="Income from Property *"
              id="incomeFromProperty"
            type="number"
-           placeholder="e.g., 5000"
+           placeholder="Income from Property (annual): e.g., 5000"
            value={values.incomeFromProperty}
             onChange={handleChange}
            onBlur={handleBlur}

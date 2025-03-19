@@ -33,10 +33,13 @@ const calculateDTIScore = (debtToIncomeRatio) => {
 };
 
 const calculateFinancialScores = (userData) => {
-  // Existing implementation remains unchanged
+  // Extract relevant user data
   const { personalDetails, expensesAssets, retirementPlanning } = userData;
-  // Extract relevant fields
-  const { age, annualIncome } = personalDetails;
+  // Destructure income-related fields, defaulting additional incomes to 0 if not provided.
+  const { age, annualIncome, incomeFromInterest = 0, incomeFromProperty = 0 } = personalDetails;
+  // Aggregate total annual income
+  const totalAnnualIncome = annualIncome + incomeFromInterest + incomeFromProperty;
+  
   const { monthlyExpenses, emergencyFunds, savings, totalDebt, totalInvestments } = expensesAssets;
   const currentRetirementSavings = retirementPlanning.currentRetirementSavings || 0;
   const { retirementAge, targetRetirementSavings, adjustForInflation } = retirementPlanning;
@@ -44,7 +47,7 @@ const calculateFinancialScores = (userData) => {
   // -------------------------------------------
   // 1. Debt-to-Income (DTI) Score
   // -------------------------------------------
-  let debtToIncomeRatio = (totalDebt / annualIncome) * 100;
+  let debtToIncomeRatio = (totalDebt / totalAnnualIncome) * 100;
   if (debtToIncomeRatio < 0) debtToIncomeRatio = 0;
   let dtiScore = 100 - (debtToIncomeRatio * 2);
   if (dtiScore < 0) dtiScore = 0;
@@ -53,7 +56,7 @@ const calculateFinancialScores = (userData) => {
   // -------------------------------------------
   // 2. Savings Rate Score (Dynamic Benchmark)
   // -------------------------------------------
-  let savingsRate = ((savings + emergencyFunds) / annualIncome) * 100;
+  let savingsRate = ((savings + emergencyFunds) / totalAnnualIncome) * 100;
   const targetSavings = targetSavingsRate(age);
   let savingsScore = savingsRate >= targetSavings ? 100 : (savingsRate / targetSavings) * 100;
   if (savingsScore < 0) savingsScore = 0;
@@ -87,7 +90,8 @@ const calculateFinancialScores = (userData) => {
     const portionOfInvestmentsAllocated = 0.7;
     const allocatedAssets = (portionOfSavingsAllocated * savings) + (portionOfInvestmentsAllocated * totalInvestments);
     const futureAllocatedAssets = allocatedAssets * Math.pow(1 + r, yearsToRetirement);
-    const annualContribution = annualIncome * 0.10;
+    // Use totalAnnualIncome for annual contribution calculation
+    const annualContribution = totalAnnualIncome * 0.10;
     const futureContributions = annualContribution * ((Math.pow(1 + r, yearsToRetirement) - 1) / r);
     estimatedRetirementAssets = futureRetirementSavings + futureAllocatedAssets + futureContributions;
   } else {
@@ -103,7 +107,7 @@ const calculateFinancialScores = (userData) => {
   // 5. Growth Opportunity Score (Dynamic Investment Multiple Approach)
   // -------------------------------------------
   const targetMultiple = targetInvestmentMultiple(age);
-  const currentMultiple = totalInvestments / annualIncome;
+  const currentMultiple = totalInvestments / totalAnnualIncome;
   let growthOpportunityScore = ((targetMultiple - currentMultiple) / targetMultiple) * 100;
   if (growthOpportunityScore < 0) growthOpportunityScore = 0;
   if (growthOpportunityScore > 100) growthOpportunityScore = 100;
@@ -146,10 +150,8 @@ const calculateFinancialScores = (userData) => {
  * Calculates the required periodic contribution to achieve a target retirement savings
  */
 function calculateRequiredContribution(PV, FV, N, r = 0.05) {
-  if (!N || N <= 0) return 0; // Handle edge case of zero or negative years
-  
+  if (!N || N <= 0) return 0;
   const compoundFactor = Math.pow(1 + r, N);
-  // If current savings already exceed or meet the target, no additional contributions are required.
   if (PV * compoundFactor >= FV) {
     return 0;
   }
@@ -162,16 +164,13 @@ function calculateRequiredContribution(PV, FV, N, r = 0.05) {
  * Calculates the future value of regular periodic investments.
  */
 function calculateFutureValueOfInvestment(PMT, N, r = 0.05, monthly = true) {
-  if (!N || N <= 0 || !PMT || PMT <= 0) return 0; // Handle edge cases
-  
-  // Convert to proper periodic rate and periods if monthly
+  if (!N || N <= 0 || !PMT || PMT <= 0) return 0;
   let periodicRate = r;
   let periods = N;
   if (monthly) {
     periodicRate = r / 12;
     periods = N * 12;
   }
-  
   return PMT * ((Math.pow(1 + periodicRate, periods) - 1) / periodicRate);
 }
 
@@ -179,17 +178,11 @@ function calculateFutureValueOfInvestment(PMT, N, r = 0.05, monthly = true) {
  * Calculates the future value of monthly investments over specific time periods
  */
 function calculateInvestmentGrowth(monthlyAmount, initialInvestment, years, annualRate = 0.05) {
-  if (!years || years <= 0) return initialInvestment; // Handle edge case
-  if (!monthlyAmount) monthlyAmount = 0; // Handle null/undefined
-  if (!initialInvestment) initialInvestment = 0; // Handle null/undefined
-  
-  // Calculate future value of initial investment
+  if (!years || years <= 0) return initialInvestment;
+  if (!monthlyAmount) monthlyAmount = 0;
+  if (!initialInvestment) initialInvestment = 0;
   const initialGrowth = initialInvestment * Math.pow(1 + annualRate, years);
-  
-  // Calculate future value of monthly contributions
   const contributionGrowth = calculateFutureValueOfInvestment(monthlyAmount, years, annualRate);
-  
-  // Combined future value
   return Math.round(initialGrowth + contributionGrowth);
 }
 
@@ -198,38 +191,30 @@ function calculateInvestmentGrowth(monthlyAmount, initialInvestment, years, annu
  * based on user's financial situation
  */
 function getInvestmentProjections(initialInvestment, annualIncome, age, currentDebt = 0, annualReturn = 0.05) {
-  // Handle missing or invalid inputs with reasonable defaults
+  // Here, annualIncome should represent the total annual income.
   initialInvestment = initialInvestment || 0;
   annualIncome = annualIncome || 50000;
   age = age || 35;
   currentDebt = currentDebt || 0;
   
-  // Calculate appropriate monthly investment amount based on income and age
   let recommendedPercentage;
-  if (age < 30) recommendedPercentage = 0.10; // 10% of income
-  else if (age < 40) recommendedPercentage = 0.12; // 12% of income
-  else if (age < 50) recommendedPercentage = 0.15; // 15% of income
-  else recommendedPercentage = 0.20; // 20% of income
+  if (age < 30) recommendedPercentage = 0.10;
+  else if (age < 40) recommendedPercentage = 0.12;
+  else if (age < 50) recommendedPercentage = 0.15;
+  else recommendedPercentage = 0.20;
   
-  // Adjust for debt level - reduce recommended percentage if debt is high
   const debtToIncomeRatio = (currentDebt / annualIncome);
   if (debtToIncomeRatio > 0.5) {
-    recommendedPercentage *= 0.7; // Reduce by 30% if debt exceeds 50% of income
+    recommendedPercentage *= 0.7;
   } else if (debtToIncomeRatio > 0.3) {
-    recommendedPercentage *= 0.85; // Reduce by 15% if debt exceeds 30% of income
+    recommendedPercentage *= 0.85;
   }
   
-  // Calculate monthly amount based on percentage of income
   let monthlyAmount = Math.round((annualIncome * recommendedPercentage) / 12);
-  
-  // Set reasonable minimum and maximum bounds
-  monthlyAmount = Math.max(monthlyAmount, 100); // Minimum $100/month
-  monthlyAmount = Math.min(monthlyAmount, 2000); // Maximum $2000/month
-  
-  // Round to nearest $50 for cleaner numbers
+  monthlyAmount = Math.max(monthlyAmount, 100);
+  monthlyAmount = Math.min(monthlyAmount, 2000);
   monthlyAmount = Math.round(monthlyAmount / 50) * 50;
   
-  // Calculate growth for different time periods
   const fiveYearGrowth = calculateInvestmentGrowth(monthlyAmount, initialInvestment, 5, annualReturn);
   const tenYearGrowth = calculateInvestmentGrowth(monthlyAmount, initialInvestment, 10, annualReturn);
   const twentyYearGrowth = calculateInvestmentGrowth(monthlyAmount, initialInvestment, 20, annualReturn);
@@ -249,22 +234,17 @@ function getInvestmentProjections(initialInvestment, annualIncome, age, currentD
  * Generates formatted statements for retirement planning with dynamic contributions
  */
 function getRetirementProjections(currentSavings, targetSavings, yearsToRetirement, annualIncome = 50000, age = 35, annualReturn = 0.05) {
-  // Handle missing or invalid inputs with reasonable defaults
   currentSavings = currentSavings || 0;
   
-  // If target savings is missing, estimate based on income
   if (!targetSavings || targetSavings <= 0) {
-    // Aim for replacement of about 80% of annual income for 25 years in retirement
     targetSavings = annualIncome * 0.8 * 25;
   }
   
-  // If years to retirement is missing, estimate based on retirement age 65
   if (!yearsToRetirement || yearsToRetirement <= 0) {
     const estimatedRetirementAge = 65;
     yearsToRetirement = Math.max(1, estimatedRetirementAge - age);
   }
   
-  // Calculate required monthly contribution
   const annualContribution = calculateRequiredContribution(
     currentSavings, 
     targetSavings, 
@@ -273,30 +253,23 @@ function getRetirementProjections(currentSavings, targetSavings, yearsToRetireme
   );
   const monthlyContribution = annualContribution / 12;
   
-  // Make sure monthly contribution doesn't exceed reasonable limits (% of income)
-  const maxMonthlyContribution = (annualIncome * 0.25) / 12; // Max 25% of monthly income
+  const maxMonthlyContribution = (annualIncome * 0.25) / 12;
   const cappedMonthlyContribution = Math.min(monthlyContribution, maxMonthlyContribution);
   
-  // Round to nearest $5 for cleaner numbers
   const roundedMonthlyContribution = Math.round(cappedMonthlyContribution / 5) * 5;
   
-  // Calculate future value of current savings without additional contributions
   const futureValueWithoutContributions = currentSavings * Math.pow(1 + annualReturn, yearsToRetirement);
   
-  // Calculate shortfall without additional contributions
   const shortfall = targetSavings - futureValueWithoutContributions;
   
-  // Calculate effect of recommended monthly contributions
   const contributionEffect = calculateFutureValueOfInvestment(
     roundedMonthlyContribution, 
     yearsToRetirement, 
     annualReturn
   );
   
-  // Calculate what can be achieved with the capped contribution
   const achievableAmount = futureValueWithoutContributions + contributionEffect;
   
-  // Calculate percentage of target that can be achieved
   const achievablePercent = Math.min(100, Math.round((achievableAmount / targetSavings) * 100));
   
   return {
@@ -322,51 +295,44 @@ function getRetirementProjections(currentSavings, targetSavings, yearsToRetireme
  * @returns {Object} - A complete package of scores, recommendations, and projections
  */
 function calculateCompleteFinancialProfile(userData) {
-  // Extract relevant user data
   const { personalDetails, expensesAssets, retirementPlanning } = userData;
-  const { age, annualIncome } = personalDetails;
+  const { age, annualIncome, incomeFromInterest = 0, incomeFromProperty = 0 } = personalDetails;
+  // Aggregate total annual income including additional income sources.
+  const totalAnnualIncome = annualIncome + incomeFromInterest + incomeFromProperty;
+  
   const { totalInvestments, totalDebt, emergencyFunds } = expensesAssets;
   const { currentRetirementSavings, targetRetirementSavings, retirementAge } = retirementPlanning;
   const yearsToRetirement = retirementAge - age;
   
-  // Calculate all financial scores
   const scores = calculateFinancialScores(userData);
-  
-  // Calculate investment projections
   const investmentProj = getInvestmentProjections(
     totalInvestments, 
-    annualIncome, 
+    totalAnnualIncome, 
     age, 
     totalDebt
   );
   
-  // Calculate retirement projections
   const retirementProj = getRetirementProjections(
     currentRetirementSavings, 
     targetRetirementSavings, 
     yearsToRetirement, 
-    annualIncome, 
+    totalAnnualIncome, 
     age
   );
   
-  // Create recommended monthly debt payment (if applicable)
   let recommendedDebtPayment = 0;
   if (totalDebt > 0) {
-    // Simple recommendation: pay off within 3 years if possible
-    recommendedDebtPayment = Math.min(Math.ceil(totalDebt / 36), annualIncome * 0.15 / 12);
-    // Round to nearest $25
+    recommendedDebtPayment = Math.min(Math.ceil(totalDebt / 36), totalAnnualIncome * 0.15 / 12);
     recommendedDebtPayment = Math.round(recommendedDebtPayment / 25) * 25;
   }
   
-  // Calculate recommended emergency fund contribution (if needed)
   const monthlyExpenses = expensesAssets.monthlyExpenses;
-  const targetEmergencyFund = monthlyExpenses * 6; // Six months of expenses
+  const targetEmergencyFund = monthlyExpenses * 6;
   const emergencyFundGap = Math.max(0, targetEmergencyFund - emergencyFunds);
   const recommendedEmergencyContribution = emergencyFundGap > 0 
-    ? Math.min(Math.ceil(emergencyFundGap / 12), annualIncome * 0.1 / 12) 
+    ? Math.min(Math.ceil(emergencyFundGap / 12), totalAnnualIncome * 0.1 / 12) 
     : 0;
   
-  // Return complete financial profile
   return {
     scores: scores,
     recommendations: {
@@ -379,7 +345,6 @@ function calculateCompleteFinancialProfile(userData) {
       investment: investmentProj,
       retirement: retirementProj
     },
-    // Add a formatted string section for easy templating
     formatted: {
       monthlyInvestment: `$${investmentProj.monthlyAmount}`,
       tenYearInvestmentGrowth: `$${investmentProj.tenYear.toLocaleString()}`,
@@ -393,10 +358,7 @@ function calculateCompleteFinancialProfile(userData) {
 // Function to calculate recommended debt payment based on debt-to-income ratio
 function calculateRecommendedDebtPayment(totalDebt, annualIncome) {
   if (!totalDebt || totalDebt <= 0) return 0;
-  
-  // Simple recommendation: pay off within 3 years if possible
   const monthlyPayment = Math.min(Math.ceil(totalDebt / 36), annualIncome * 0.15 / 12);
-  // Round to nearest $25
   return Math.round(monthlyPayment / 25) * 25;
 }
 
@@ -406,6 +368,6 @@ module.exports = {
   calculateInvestmentGrowth,
   getInvestmentProjections,
   getRetirementProjections,
-  calculateCompleteFinancialProfile, // Export the new function
+  calculateCompleteFinancialProfile,
   calculateRecommendedDebtPayment
 };

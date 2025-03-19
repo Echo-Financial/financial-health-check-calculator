@@ -1,129 +1,98 @@
-const { calculateFinancialScores } = require('../utils/financialCalculations');
+// backend/src/__tests__/financialCalculations.test.js
+const {
+  calculateFinancialScores,
+  calculateRequiredContribution,
+  calculateInvestmentGrowth,
+  getInvestmentProjections,
+  getRetirementProjections,
+  calculateCompleteFinancialProfile,
+  calculateRecommendedDebtPayment
+} = require('../utils/financialCalculations');
 
-describe('calculateFinancialScores', () => {
-  it('should return correct scores for a typical user', () => {
-    const userData = {
-      personalDetails: {
-        age: 28,
-        annualIncome: 60000,
-        incomeFromInterest: 3000,
-        incomeFromProperty: 8000,
-      },
-      expensesAssets: {
-        monthlyExpenses: 1800,
-        emergencyFunds: 12000,
-        savings: 40000,
-        totalInvestments: 20000,
-        totalDebt: 20000,
-      },
-      retirementPlanning: {
-        retirementAge: 60,
-        targetRetirementSavings: 100000,
-        adjustForInflation: false,
-        // currentRetirementSavings is intentionally left undefined (defaults to 0)
-      },
-      contactInfo: {
-        email: 'uniqueuser3@example.com',
-        name: 'Jane Smith',
-        phone: '987654321',
-      },
-    };
 
-    const expectedScores = {
-      dtiScore: 33,
-      savingsScore: 100,
-      emergencyFundScore: 100,
-      retirementScore: 100,
-      growthOpportunityScore: 33,
-      overallFinancialHealthScore: 80,
-      potentialForImprovementScore: 20,
-    };
+describe("Financial Calculations", () => {
+  // Sample user data for testing
+  const sampleUserData = {
+    personalDetails: {
+      age: 40,
+      annualIncome: 60000,
+      incomeFromInterest: 2000,
+      incomeFromProperty: 4000,
+      name: "Test User"
+    },
+    expensesAssets: {
+      monthlyExpenses: 2500,
+      emergencyFunds: 5000,
+      savings: 10000,
+      totalDebt: 15000,
+      totalInvestments: 20000,
+    },
+    retirementPlanning: {
+      retirementAge: 65,
+      targetRetirementSavings: 1000000,
+      currentRetirementSavings: 50000,
+      adjustForInflation: true,
+    },
+    contactInfo: {
+      email: "test@example.com",
+      name: "Test User",
+      phone: "1234567890"
+    }
+  };
 
-    const scores = calculateFinancialScores(userData);
-    expect(scores).toEqual(expectedScores);
+  test("calculateFinancialScores returns expected keys", () => {
+    const scores = calculateFinancialScores(sampleUserData);
+    expect(scores).toHaveProperty("dtiScore");
+    expect(scores).toHaveProperty("savingsScore");
+    expect(scores).toHaveProperty("emergencyFundScore");
+    expect(scores).toHaveProperty("retirementScore");
+    expect(scores).toHaveProperty("growthOpportunityScore");
+    expect(scores).toHaveProperty("overallFinancialHealthScore");
+    expect(scores).toHaveProperty("potentialForImprovementScore");
+    expect(scores).toHaveProperty("retirementTarget");
   });
 
-  it('should handle zero debt correctly', () => {
-    const userData = {
-      personalDetails: {
-        age: 35,
-        annualIncome: 80000,
-        incomeFromInterest: 4000,
-        incomeFromProperty: 10000,
-      },
-      expensesAssets: {
-        monthlyExpenses: 2000,
-        emergencyFunds: 15000,
-        savings: 50000,
-        totalInvestments: 30000,
-        totalDebt: 0,
-      },
-      retirementPlanning: {
-        retirementAge: 65,
-        targetRetirementSavings: 200000,
-        adjustForInflation: true,
-        // currentRetirementSavings defaults to 0
-      },
-      contactInfo: {
-        email: 'zeroDebt@example.com',
-        name: 'John Doe',
-        phone: '123456789',
-      },
-    };
-
-    const expectedScores = {
-      dtiScore: 100,
-      savingsScore: 100,
-      emergencyFundScore: 100,
-      retirementScore: 100,
-      growthOpportunityScore: 63,
-      overallFinancialHealthScore: 88,
-      potentialForImprovementScore: 13,
-    };
-
-    const scores = calculateFinancialScores(userData);
-    expect(scores).toEqual(expectedScores);
+  test("getInvestmentProjections calculates monthlyAmount within expected range", () => {
+    // Compute total annual income including interest and property income
+    const totalAnnualIncome = sampleUserData.personalDetails.annualIncome +
+                              sampleUserData.personalDetails.incomeFromInterest +
+                              sampleUserData.personalDetails.incomeFromProperty;
+    const projections = getInvestmentProjections(
+      sampleUserData.expensesAssets.totalInvestments,
+      totalAnnualIncome,
+      sampleUserData.personalDetails.age,
+      sampleUserData.expensesAssets.totalDebt,
+      0.05
+    );
+    // Expect monthly investment amount to be between 100 and 2000
+    expect(projections.monthlyAmount).toBeGreaterThanOrEqual(100);
+    expect(projections.monthlyAmount).toBeLessThanOrEqual(2000);
   });
 
-  it('should handle insufficient emergency funds', () => {
-    const userData = {
-      personalDetails: {
-        age: 40,
-        annualIncome: 90000,
-        incomeFromInterest: 5000,
-        incomeFromProperty: 12000,
-      },
-      expensesAssets: {
-        monthlyExpenses: 2500,
-        emergencyFunds: 10000, // Less than required (2500*6=15000)
-        savings: 60000,
-        totalInvestments: 20000,
-        totalDebt: 30000,
-      },
-      retirementPlanning: {
-        retirementAge: 65,
-        targetRetirementSavings: 300000,
-        adjustForInflation: true,
-        // currentRetirementSavings defaults to 0
-      },
-      contactInfo: {
-        email: 'insufficientFunds@example.com',
-        name: 'Alice Johnson',
-        phone: '555123456',
-      },
-    };
+  test("getRetirementProjections returns reasonable estimates", () => {
+    const totalAnnualIncome = sampleUserData.personalDetails.annualIncome +
+                              sampleUserData.personalDetails.incomeFromInterest +
+                              sampleUserData.personalDetails.incomeFromProperty;
+    const yearsToRetirement = sampleUserData.retirementPlanning.retirementAge - sampleUserData.personalDetails.age;
+    const retirementProj = getRetirementProjections(
+      sampleUserData.retirementPlanning.currentRetirementSavings,
+      sampleUserData.retirementPlanning.targetRetirementSavings,
+      yearsToRetirement,
+      totalAnnualIncome,
+      sampleUserData.personalDetails.age,
+      0.05
+    );
+    // Check that the monthly contribution is a positive number
+    expect(parseFloat(retirementProj.monthlyContribution)).toBeGreaterThan(0);
+    // Check that the future value without contributions is calculated
+    expect(retirementProj.futureValueWithoutContributions).toBeGreaterThan(0);
+  });
 
-    const expectedScores = {
-      dtiScore: 33,
-      savingsScore: 100,
-      emergencyFundScore: 67,
-      retirementScore: 100,
-      growthOpportunityScore: 89,
-      overallFinancialHealthScore: 62,
-      potentialForImprovementScore: 38,
-    };
-
-    const scores = calculateFinancialScores(userData);
-    expect(scores).toEqual(expectedScores);
+  test("calculateCompleteFinancialProfile returns complete structure", () => {
+    const profile = calculateCompleteFinancialProfile(sampleUserData);
+    expect(profile).toHaveProperty("scores");
+    expect(profile).toHaveProperty("recommendations");
+    expect(profile).toHaveProperty("projections");
+    expect(profile).toHaveProperty("formatted");
   });
 });

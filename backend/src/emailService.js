@@ -1,4 +1,5 @@
 const sgMail = require('@sendgrid/mail');
+const { marked } = require('marked');  // Updated import using destructuring
 const logger = require('./logger');
 
 // Set your SendGrid API key from environment variables.
@@ -9,7 +10,7 @@ sgMail.setApiKey(process.env.SENDGRID_API_KEY);
  * @param {Object} emailData - Contains campaign details.
  * @param {string} emailData.to - Recipient's email address.
  * @param {string} emailData.subject - The email subject line.
- * @param {string} emailData.body - The email body content (HTML).
+ * @param {string} emailData.body - The email body content in Markdown.
  * @param {string} [emailData.fromemail] - The sender’s email address.
  * @param {string} [emailData.from_name] - The sender’s name.
  * @param {string} [emailData.reply_to] - The reply-to email address.
@@ -20,10 +21,10 @@ async function sendMarketingEmail(emailData) {
     throw new Error("Recipient email (to) is missing.");
   }
   
-  // Create a plain text version by stripping out HTML tags (optional).
-  const plainText = emailData.body.replace(/<[^>]+>/g, ' ').trim();
+  // Convert Markdown email body to HTML
+  const htmlContent = marked(emailData.body);
   
-  // Build the message object with both text and html fields.
+  // Build the message object with both text and HTML fields.
   const msg = {
     to: emailData.to,
     from: {
@@ -31,8 +32,8 @@ async function sendMarketingEmail(emailData) {
       name: emailData.from_name || "Kevin Morgan",
     },
     subject: emailData.subject,
-    text: plainText,  // Fallback plain text version.
-    html: emailData.body,  // This should render the HTML correctly.
+    text: emailData.body,   // Fallback plain text version.
+    html: htmlContent,      // HTML formatted version.
     replyTo: emailData.reply_to || "kevin.morgan@echo-financial-advisors.co.nz",
   };
 
