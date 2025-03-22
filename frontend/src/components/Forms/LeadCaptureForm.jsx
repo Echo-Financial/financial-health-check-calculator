@@ -1,4 +1,3 @@
-// frontend/src/components/Forms/LeadCaptureForm.jsx
 import React, { useState } from 'react';
 import axios from 'axios';
 import { Formik, Form } from 'formik';
@@ -68,7 +67,7 @@ const LeadCaptureForm = () => {
   const [scores, setScores] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   
-  // New state for marketing consent outside of Formik
+  // State for marketing consent outside of Formik
   const [marketingConsent, setMarketingConsent] = useState(false);
   const [showConsentError, setShowConsentError] = useState(false);
 
@@ -80,7 +79,7 @@ const LeadCaptureForm = () => {
       return;
     }
     
-    // Reset error state
+    // Reset error state and set loading flag
     setShowConsentError(false);
     setIsLoading(true);
     
@@ -140,7 +139,7 @@ const LeadCaptureForm = () => {
       console.log("Response from /api/submit:", submitResponse.data);
       console.log("Response from /api/financial-analysis:", analysisResponse.data);
 
-      // If the user agreed to marketing, trigger marketing email
+      // If marketingConsent is true, trigger marketing email via sendMarketingEmail from services/api.js
       if (marketingConsent) {
         try {
           const campaignResponse = await sendMarketingEmail({
@@ -148,7 +147,7 @@ const LeadCaptureForm = () => {
             name: transformedValues.name,
             analysisText, // dynamic analysis text from backend
             personalDetails: originalData.personalDetails,  // client's personal details
-            contactInfo: originalData.contactInfo,          // include contactInfo containing the name
+            contactInfo: originalData.contactInfo,          // include contact info with the name
             calculatedMetrics: scores, // scores used as calculatedMetrics
           });
           console.log("SendGrid campaign generated: ", campaignResponse.data);
@@ -157,7 +156,7 @@ const LeadCaptureForm = () => {
         }
       }
 
-      // Navigate with contactInfo included:
+      // Navigate to Report page with contactInfo included:
       navigate('/report', {
         state: {
           scores,
@@ -223,7 +222,7 @@ const LeadCaptureForm = () => {
       case 4:
         return ['creditScore'];
       case 5:
-        return ['email', 'name', 'phone']; // agreeMarketing removed from Formik validation
+        return ['email', 'name', 'phone'];
       default:
         return [];
     }
@@ -309,7 +308,6 @@ const LeadCaptureForm = () => {
           email: '',
           name: '',
           phone: '',
-          // agreeMarketing removed from Formik (we use our own state now)
         }}
         initialTouched={{
           age: false,
@@ -358,7 +356,7 @@ const LeadCaptureForm = () => {
                 </Button>
               ) : (
                 <Button type="submit" variant="success" disabled={formik.isSubmitting || isLoading}>
-                  {isLoading ? 'Submitting...' : formik.isSubmitting ? 'Submitting...' : 'Submit'}
+                  {isLoading ? 'Submitting...' : 'Submit'}
                 </Button>
               )}
             </div>
