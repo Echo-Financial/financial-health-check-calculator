@@ -15,8 +15,8 @@ const Report = () => {
   const { scores, analysis, contactInfo } = location.state || {};
   const [insights, setInsights] = useState('');
   const [loading, setLoading] = useState(false);
-  const [emailSending, setEmailSending] = useState(false);
-  const [emailResponse, setEmailResponse] = useState('');
+  //const [emailSending, setEmailSending] = useState(false);
+  //const [emailResponse, setEmailResponse] = useState('');
 
   // Scroll to top when the component mounts
   useEffect(() => {
@@ -79,27 +79,7 @@ const Report = () => {
 
   const overallScore = scores.overallFinancialHealthScore || 0;
 
-  const handleSendMarketingEmail = async () => {
-    if (!contactInfo || !contactInfo.email) {
-      setEmailResponse('No contact information available.');
-      return;
-    }
-    setEmailSending(true);
-    try {
-      const payload = {
-        email: contactInfo.email,
-        name: contactInfo.name,
-      };
-      const response = await sendMarketingEmail(payload);
-      setEmailResponse('Marketing email sent successfully.');
-      console.log('Marketing email response:', response.data);
-    } catch (error) {
-      console.error('Error sending marketing email:', error);
-      setEmailResponse('Failed to send marketing email. Please try again.');
-    } finally {
-      setEmailSending(false);
-    }
-  };
+
 
   return (
     <div className="report-container">

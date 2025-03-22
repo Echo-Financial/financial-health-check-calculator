@@ -1,7 +1,7 @@
 // frontend/src/components/Forms/LeadCaptureForm.jsx
 import React, { useState } from 'react';
 import axios from 'axios';
-import { Formik, Form, Field, ErrorMessage } from 'formik';
+import { Formik, Form } from 'formik';
 import * as Yup from 'yup';
 import { useNavigate } from 'react-router-dom';
 import { Button, ProgressBar } from 'react-bootstrap';
