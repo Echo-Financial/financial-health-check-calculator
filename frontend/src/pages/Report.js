@@ -1,4 +1,3 @@
-// frontend/src/pages/Report.js
 import React, { useState, useEffect, useCallback } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import Charts from '../components/Visualisations/Charts.js';
@@ -6,17 +5,14 @@ import Gauge from '../components/Visualisations/Gauge.js';
 import axios from 'axios';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import { sendMarketingEmail } from '../services/api.js';
 import './../styles/Report.scss';
 
 const Report = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { scores, analysis, contactInfo } = location.state || {};
+  const { scores, analysis } = location.state || {};
   const [insights, setInsights] = useState('');
   const [loading, setLoading] = useState(false);
-  //const [emailSending, setEmailSending] = useState(false);
-  //const [emailResponse, setEmailResponse] = useState('');
 
   // Scroll to top when the component mounts
   useEffect(() => {
@@ -79,8 +75,6 @@ const Report = () => {
 
   const overallScore = scores.overallFinancialHealthScore || 0;
 
-
-
   return (
     <div className="report-container">
       <main className="report-content">
@@ -135,9 +129,9 @@ const Report = () => {
           <div className="container">
             <h3>Next Steps</h3>
             <div className="cta-content">
-              <h4>Ready to Transform Your Financial Future? Let’s Get Started today.</h4>
+              <h4>Ready to Transform Your Financial Future? Let's Shape Your Future today.</h4>
               <p>
-              I'm Kevin from Echo Financial Advisors. At Echo, we reject cookie-cutter solutions. Instead, we craft financial strategies tailored to your unique circumstances—ensuring every piece of advice is as individual as you are.
+                I'm Kevin from Echo Financial Advisors. At Echo, we reject cookie-cutter solutions. Instead, we craft financial strategies tailored to your unique circumstances—ensuring every piece of advice is as individual as you are.
               </p>
               <h5>What This Means for You:</h5>
               <ul>
@@ -147,7 +141,7 @@ const Report = () => {
               </ul>
               <div className="text-center">
                 <button onClick={handleBookingClick} className="btn btn-primary btn-submit">
-                  Let’s Shape Your Future
+                  Let's Shape Your Future
                 </button>
               </div>
               <div style={{ marginTop: '60px' }}>
