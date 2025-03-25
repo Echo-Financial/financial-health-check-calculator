@@ -15,11 +15,11 @@ const errorHandler = require('./middleware/errorHandler');
 
 const app = express();
 
-// Define the allowed origins (make sure they exactly match the incoming request origin)
+// Define the allowed origins
 const allowedOrigins = [
   'http://localhost:3000',  // For local development
   'https://67de4f50c5b0810008c0f0ed--echo-financial.netlify.app',
-  'https://your-custom-domain.com' // Replace with your actual custom domain if applicable
+  'https://financialhealthcheck.ai' // Your production domain
 ];
 
 // Helper function to normalize the origin (remove trailing slash)
@@ -32,7 +32,6 @@ app.use(cors({
   origin: function (origin, callback) {
     // Allow requests with no origin (e.g., mobile apps, curl requests)
     if (!origin) return callback(null, true);
-
     const normalizedOrigin = normalizeOrigin(origin);
     if (allowedOrigins.indexOf(normalizedOrigin) === -1) {
       const msg = 'The CORS policy for this site does not allow access from the specified Origin.';
