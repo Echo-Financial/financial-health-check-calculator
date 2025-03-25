@@ -15,25 +15,32 @@ const errorHandler = require('./middleware/errorHandler');
 
 const app = express();
 
-// Define the allowed origins
+// Define the allowed origins (make sure they exactly match the incoming request origin)
 const allowedOrigins = [
+  'http://localhost:3000',  // For local development
   'https://67de4f50c5b0810008c0f0ed--echo-financial.netlify.app',
-  'https://your-custom-domain.com' // Add any other allowed domain here
+  'https://your-custom-domain.com' // Replace with your actual custom domain if applicable
 ];
+
+// Helper function to normalize the origin (remove trailing slash)
+function normalizeOrigin(origin) {
+  return origin ? origin.replace(/\/$/, "") : origin;
+}
 
 // Use CORS middleware with a custom configuration
 app.use(cors({
   origin: function (origin, callback) {
-    // Allow requests with no origin (like mobile apps or curl requests)
+    // Allow requests with no origin (e.g., mobile apps, curl requests)
     if (!origin) return callback(null, true);
-    if (allowedOrigins.indexOf(origin) === -1) {
-      // If the origin is not in the allowed list, return an error
-      return callback(new Error('The CORS policy for this site does not allow access from the specified Origin.'), false);
+
+    const normalizedOrigin = normalizeOrigin(origin);
+    if (allowedOrigins.indexOf(normalizedOrigin) === -1) {
+      const msg = 'The CORS policy for this site does not allow access from the specified Origin.';
+      return callback(new Error(msg), false);
     }
     return callback(null, true);
   },
-  // Optionally, set additional options like credentials if needed:
-  // credentials: true,
+  // credentials: true, // Uncomment if your requests require credentials
 }));
 
 app.use(express.json());

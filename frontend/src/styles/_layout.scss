@@ -1,4 +1,3 @@
-// _layout.scss
 @use './brand' as brand;
 
 /* Container & Utility Classes */
@@ -31,9 +30,11 @@
 /* Responsive Container */
 @media (max-width: 768px) {
   .container {
-    padding: brand.$spacing-base;
+    max-width: 100%;
+    padding: 0 10px;
+    text-align: center;
   }
-}
+}  // <-- Added closing brace here
 
 /* Section Base Styles */
 .section {
