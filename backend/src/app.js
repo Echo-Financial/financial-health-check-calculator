@@ -2,6 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const morgan = require('morgan');
+const rateLimit = require('express-rate-limit');
 
 const submitRoute = require('./routes/submit');
 const authRoute = require('./routes/auth');
@@ -15,35 +16,43 @@ const errorHandler = require('./middleware/errorHandler');
 
 const app = express();
 
-// Define the allowed origins
-const allowedOrigins = [
-  'http://localhost:3000',  // For local development
-  'https://67de4f50c5b0810008c0f0ed--echo-financial.netlify.app',
-  'https://financialhealthcheck.ai' // Your production domain
-];
+// Trust proxy to capture correct client IPs behind proxies/load balancers
+app.set('trust proxy', 1);
 
-// Helper function to normalize the origin (remove trailing slash)
-function normalizeOrigin(origin) {
-  return origin ? origin.replace(/\/$/, "") : origin;
-}
+// CORS from environment
+const ALLOWED = (process.env.CORS_ORIGINS || 'http://localhost:3000')
+  .split(',')
+  .map((s) => s.trim());
 
-// Use CORS middleware with a custom configuration
-app.use(cors({
-  origin: function (origin, callback) {
-    // Allow requests with no origin (e.g., mobile apps, curl requests)
-    if (!origin) return callback(null, true);
-    const normalizedOrigin = normalizeOrigin(origin);
-    if (allowedOrigins.indexOf(normalizedOrigin) === -1) {
-      const msg = 'The CORS policy for this site does not allow access from the specified Origin.';
-      return callback(new Error(msg), false);
-    }
-    return callback(null, true);
-  },
-  // credentials: true, // Uncomment if your requests require credentials
-}));
+app.use(
+  cors({
+    origin: function (origin, cb) {
+      if (!origin || ALLOWED.includes(origin)) return cb(null, true);
+      return cb(new Error('Not allowed by CORS'), false);
+    },
+    credentials: true,
+  })
+);
 
 app.use(express.json());
 app.use(morgan('dev'));
+
+// Rate limiters (minimal scope)
+const submitLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 60,
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+const gptLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 30,
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+app.use('/api/submit', submitLimiter);
+app.use('/api/gpt', gptLimiter);
 
 app.use('/api/submit', submitRoute);
 app.use('/api/auth', authRoute);

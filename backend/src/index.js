@@ -1,43 +1,19 @@
 // backend/src/index.js
+require('dotenv').config();
 
-require('dotenv').config({ path: './.env' });
-const mongoose = require('mongoose');
 const app = require('./app');
+const { connectDB } = require('./config/db');
 
-// Pull environment variables
 const PORT = process.env.PORT || 5000;
-const MONGO_URI = process.env.MONGO_URI;
 
-if (!MONGO_URI) {
-  console.error('Error: MONGO_URI is not defined. Check your .env file.');
-  process.exit(1);
-}
-
-// Connect to MongoDB
-mongoose
-  .connect(MONGO_URI)
+// Connect to Mongo first, then start the server
+connectDB()
   .then(() => {
-    console.log('Connected to MongoDB Atlas');
-
-    // Start the server only after successful DB connection
     app.listen(PORT, () => {
-      console.log(`Server is running on port ${PORT}`);
+      console.log(`✅ Server listening on port ${PORT}`);
     });
   })
-  .catch((error) => {
-    console.error('MongoDB connection error:', error);
+  .catch((err) => {
+    console.error('❌ Failed to start server:', err);
     process.exit(1);
   });
-
-// Optional: Monitor Mongoose connection events
-mongoose.connection.on('connected', () => {
-  console.log('Mongoose connected to DB');
-});
-
-mongoose.connection.on('error', (err) => {
-  console.log('Mongoose connection error:', err);
-});
-
-mongoose.connection.on('disconnected', () => {
-  console.log('Mongoose disconnected');
-});

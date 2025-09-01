@@ -1,54 +1,35 @@
+// backend/src/emailService.js
 const sgMail = require('@sendgrid/mail');
-const { marked } = require('marked');  // Updated import using destructuring
-const logger = require('./logger');
 
-// Set your SendGrid API key from environment variables.
-sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+const API_KEY = (process.env.SENDGRID_API_KEY || '').trim();
+const SENDGRID_ENABLED = API_KEY.startsWith('SG.');
 
-/**
- * Sends a personalized marketing email via SendGrid.
- * @param {Object} emailData - Contains campaign details.
- * @param {string} emailData.to - Recipient's email address.
- * @param {string} emailData.subject - The email subject line.
- * @param {string} emailData.body - The email body content in Markdown.
- * @param {string} [emailData.fromemail] - The sender’s email address.
- * @param {string} [emailData.from_name] - The sender’s name.
- * @param {string} [emailData.reply_to] - The reply-to email address.
- * @returns {Promise<Object>} - The response from SendGrid.
- */
-async function sendMarketingEmail(emailData) {
-  if (!emailData.to) {
-    throw new Error("Recipient email (to) is missing.");
-  }
-  
-  // Convert Markdown email body to HTML
-  const htmlContent = marked(emailData.body);
-  
-  // Build the message object with both text and HTML fields.
-  const msg = {
-    to: emailData.to,
-    from: {
-      email: emailData.fromemail || "kevin.morgan@echo-financial-advisors.co.nz",
-      name: emailData.from_name || "Kevin Morgan",
-    },
-    subject: emailData.subject,
-    text: emailData.body,   // Fallback plain text version.
-    html: htmlContent,      // HTML formatted version.
-    replyTo: emailData.reply_to || "kevin.morgan@echo-financial-advisors.co.nz",
-  };
-
-  try {
-    const response = await sgMail.send(msg);
-    logger.info("SendGrid API Response:", response);
-    return response;
-  } catch (error) {
-    if (error.response) {
-      logger.error("Detailed Error from SendGrid API:", error.response.body);
-    } else {
-      logger.error("Error sending email:", error.message);
-    }
-    throw new Error("Failed to send marketing email via SendGrid.");
-  }
+if (SENDGRID_ENABLED) {
+  sgMail.setApiKey(API_KEY);
+  console.log('[emailService] SendGrid enabled');
+} else {
+  console.warn('[emailService] SendGrid disabled: set SENDGRID_API_KEY (starts with "SG.") to enable sending.');
 }
 
-module.exports = { sendMarketingEmail };
+/**
+ * Send a marketing email. In dev (no key), this is a no-op so the app can run.
+ * @param {{ to: string, subject: string, text?: string, html?: string, from?: string }} opts
+ */
+async function sendMarketingEmail({ to, subject, text, html, from }) {
+  if (!SENDGRID_ENABLED) {
+    console.warn('[emailService] Skipping email send (SendGrid disabled).');
+    return { skipped: true };
+  }
+
+  const msg = {
+    to,
+    from: from || process.env.EMAIL_FROM || 'no-reply@localhost',
+    subject,
+    text,
+    html,
+  };
+
+  return sgMail.send(msg);
+}
+
+module.exports = { sendMarketingEmail, SENDGRID_ENABLED };
