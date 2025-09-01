@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import axios from 'axios';
 import { Formik, Form } from 'formik';
 import * as Yup from 'yup';
 import { useNavigate } from 'react-router-dom';
-import { Button, ProgressBar } from 'react-bootstrap';
+import { Button, ProgressBar, Spinner } from 'react-bootstrap';
 import { sendMarketingEmail } from '../../services/api.js';
+import { getUtmParams } from '../../utils/utm';
 import PersonalDetails from '../InputSections/PersonalDetails.js';
 import ExpensesAssets from '../InputSections/ExpensesAssets.jsx';
 import RetirementPlanning from '../InputSections/RetirementPlanning.jsx';
@@ -66,22 +67,29 @@ const LeadCaptureForm = () => {
   const [showModal, setShowModal] = useState(false);
   const [scores, setScores] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const utm = useMemo(() => getUtmParams(), []);
+  const pageMeta = useMemo(() => ({
+    referrer: document.referrer || null,
+    landingPage: window.location.pathname + (window.location.search || ''),
+  }), []);
   
   // State for marketing consent outside of Formik
   const [marketingConsent, setMarketingConsent] = useState(false);
   const [showConsentError, setShowConsentError] = useState(false);
 
-  const handleSubmit = async (values, { setSubmitting }) => {
+  const handleSubmit = async (values, formikHelpers) => {
     // Check marketing consent separately from Formik
     if (!marketingConsent) {
       setShowConsentError(true);
-      setSubmitting(false);
+      formikHelpers.setSubmitting(false);
       return;
     }
     
     // Reset error state and set loading flag
     setShowConsentError(false);
     setIsLoading(true);
+    setSubmitting(true);
     
     try {
       // Add marketing consent to the values object manually
@@ -122,7 +130,19 @@ const LeadCaptureForm = () => {
       };
 
       // FIRST API CALL: /api/submit (for scores and instant feedback)
-      const submitResponse = await axios.post(`${API_URL}/api/submit`, originalData);
+      // Include UTM/source data in the query string to avoid changing validated payload shape
+      const qs = new URLSearchParams();
+      Object.entries(utm).forEach(([k, v]) => {
+        if (!v) return;
+        if (k === 'landingPage' || k === 'referrer') return; // avoid duplicates; added separately below
+        qs.append(k, v);
+      });
+      // Include page metadata and consent in query string to avoid altering validated body shape
+      if (pageMeta.referrer) qs.append('referrer', pageMeta.referrer);
+      if (pageMeta.landingPage) qs.append('landingPage', pageMeta.landingPage);
+      qs.append('consent', marketingConsent ? 'true' : 'false');
+      const submitUrl = `${API_URL}/api/submit${qs.toString() ? `?${qs.toString()}` : ''}`;
+      const submitResponse = await axios.post(submitUrl, originalData);
       const scores = submitResponse.data.scores;
       setScores(scores);
 
@@ -130,6 +150,9 @@ const LeadCaptureForm = () => {
       const analysisPayload = {
         originalData,
         calculatedMetrics: scores,
+        utm, // safe to include; endpoint does not validate with Joi
+        ...pageMeta,
+        consent: marketingConsent === true,
       };
 
       // SECOND API CALL: /api/financial-analysis (for detailed report)
@@ -171,9 +194,10 @@ const LeadCaptureForm = () => {
         message = err.response.data.message;
       }
       setError(message);
-      setSubmitting(false);
+      formikHelpers.setSubmitting(false);
     } finally {
       setIsLoading(false);
+      setSubmitting(false);
     }
   };
 
@@ -333,35 +357,44 @@ const LeadCaptureForm = () => {
         onSubmit={handleSubmit}
         validateOnMount={false}
       >
-        {(formik) => (
-          <Form>
-            <ProgressBar
-              now={((step - 1) / (totalSteps - 1)) * 100}
-              label={`${Math.round(((step - 1) / (totalSteps - 1)) * 100)}%`}
-            />
-            {renderStepFields(formik)}
-            <div className="d-flex justify-content-between mt-4">
-              {step > 1 && (
-                <Button variant="secondary" onClick={handlePrevious}>
-                  Previous
-                </Button>
-              )}
-              {step < totalSteps ? (
-                <Button
-                  variant="primary"
-                  onClick={() => handleNext(formik)}
-                  disabled={formik.isSubmitting}
-                >
-                  Next
-                </Button>
-              ) : (
-                <Button type="submit" variant="success" disabled={formik.isSubmitting || isLoading}>
-                  {isLoading ? 'Submitting...' : 'Submit'}
-                </Button>
-              )}
-            </div>
-          </Form>
-        )}
+        {(formik) => {
+          const pending = formik?.isSubmitting || submitting || isLoading;
+          return (
+            <Form>
+              <fieldset disabled={pending}>
+                <ProgressBar
+                  now={((step - 1) / (totalSteps - 1)) * 100}
+                  label={`${Math.round(((step - 1) / (totalSteps - 1)) * 100)}%`}
+                />
+                {renderStepFields(formik)}
+                <div className="d-flex justify-content-between mt-4">
+                  {step > 1 && (
+                    <Button variant="secondary" onClick={handlePrevious}>
+                      Previous
+                    </Button>
+                  )}
+                  {step < totalSteps ? (
+                    <Button
+                      variant="primary"
+                      onClick={() => handleNext(formik)}
+                      disabled={pending}
+                    >
+                      Next
+                    </Button>
+                  ) : (
+                    <Button type="submit" variant="success" disabled={pending}>
+                      {pending && <Spinner animation="border" size="sm" className="me-2" />}
+                      {pending ? 'Submitting' : 'Submit'}
+                    </Button>
+                  )}
+                </div>
+                <div className="visually-hidden" aria-live="polite">
+                  {pending ? 'Submitting, please wait' : ''}
+                </div>
+              </fieldset>
+            </Form>
+          );
+        }}
       </Formik>
       {showModal && scores && (
         <div className="modal-container">

@@ -1,22 +1,24 @@
+// backend/src/config/db.js
 const mongoose = require('mongoose');
-const dotenv = require('dotenv');
 
-dotenv.config();
+const MONGO_URI = process.env.MONGO_URI || process.env.MONGODB_URI;
 
-const connectDB = async () => {
-    try {
-         // Clear the model cache
-        delete mongoose.connection.models['User'];
+if (!MONGO_URI) {
+  throw new Error(
+    'Missing database connection string. Set MONGO_URI in backend/.env (or MONGODB_URI as a temporary fallback).'
+  );
+}
 
-        await mongoose.connect(process.env.MONGODB_URI, {
-            useNewUrlParser: true,
-            useUnifiedTopology: true,
-        });
-        console.log('Connected to MongoDB Atlas');
-    } catch (error) {
-        console.error('MongoDB connection error:', error);
-        process.exit(1);
-    }
-};
+async function connectDB() {
+  try {
+    await mongoose.connect(MONGO_URI, {
+      // You can add options here if needed (keep defaults for Mongoose v6+)
+    });
+    console.log('✅ MongoDB connected');
+  } catch (err) {
+    console.error('❌ MongoDB connection error:', err.message);
+    process.exit(1);
+  }
+}
 
-module.exports = connectDB;
+module.exports = { connectDB };

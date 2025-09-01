@@ -5,6 +5,8 @@ import Gauge from '../components/Visualisations/Gauge.js';
 import axios from 'axios';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import { Button } from 'react-bootstrap';
+import { getUtmParams } from '../utils/utm.js';
 import './../styles/Report.scss';
 
 const Report = () => {
@@ -13,6 +15,11 @@ const Report = () => {
   const { scores, analysis } = location.state || {};
   const [insights, setInsights] = useState('');
   const [loading, setLoading] = useState(false);
+  const utm = getUtmParams();
+  const name = location.state?.contactInfo?.name || '';
+  const email = location.state?.contactInfo?.email || '';
+  const base = 'https://outlook.office.com/book/EchoFinancialAdvisorsLtd1@echo-financial-advisors.co.nz/';
+  const ctaUrl = base; // no query params (prevents Bookings redirect loop)
 
   // Scroll to top when the component mounts
   useEffect(() => {
@@ -123,6 +130,20 @@ const Report = () => {
             ) : (
               <p>Loading analysis...</p>
             )}
+            <div className="mt-4">
+              <h5>Next step</h5>
+              <p>Turn your insights into an action plan with a free 15-minute consultation.</p>
+              <Button
+                as="a"
+                href={ctaUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                variant="primary"
+                onClick={() => console.log('cta_book_clicked', { name, email, ...utm })}
+              >
+                Book your free consultation
+              </Button>
+            </div>
           </div>
         </section>
         <section className="cta-section section">
