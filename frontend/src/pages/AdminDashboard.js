@@ -1,6 +1,7 @@
 // frontend/src/pages/AdminDashboard.js
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import { authHeaders } from '../services/api.js';
 import { useNavigate } from 'react-router-dom';
 import { Button, Modal, Box, Typography } from '@mui/material';
 import ReactMarkdown from 'react-markdown';
@@ -32,13 +33,20 @@ const AdminDashboard = () => {
   useEffect(() => {
     const fetchReviews = async () => {
       try {
-        const token = localStorage.getItem('adminToken');
         const response = await axios.get(
           `${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/reviews`,
-          { headers: { Authorization: `Bearer ${token}` } }
+          { headers: authHeaders() }
         );
         setReviews(response.data.reviews);
       } catch (err) {
+        if (err?.response?.status === 401) {
+          try {
+            localStorage.removeItem('token');
+            localStorage.removeItem('adminToken');
+          } catch (_) {}
+          navigate('/admin/login');
+          return;
+        }
         setError(err.response?.data?.message || 'Failed to load reviews.');
       } finally {
         setLoading(false);
@@ -64,11 +72,10 @@ const AdminDashboard = () => {
 
   const handleAction = async (reviewId, action, notes = '') => {
     try {
-      const token = localStorage.getItem('adminToken');
       const response = await axios.post(
         `${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/reviews/${reviewId}/status`,
         { status: action, notes },
-        { headers: { Authorization: `Bearer ${token}` } }
+        { headers: authHeaders() }
       );
       setReviews((prev) =>
         prev.map((r) => (r._id === reviewId ? response.data.review : r))
@@ -76,6 +83,14 @@ const AdminDashboard = () => {
       handleCloseDetails();
     } catch (err) {
       console.error('Error updating review:', err);
+      if (err?.response?.status === 401) {
+        try {
+          localStorage.removeItem('token');
+          localStorage.removeItem('adminToken');
+        } catch (_) {}
+        navigate('/admin/login');
+        return;
+      }
       setActionError(err.response?.data?.message || 'Failed to update review.');
     }
   };

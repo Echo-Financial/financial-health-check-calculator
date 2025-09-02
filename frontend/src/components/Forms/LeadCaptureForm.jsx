@@ -287,7 +287,15 @@ const LeadCaptureForm = () => {
                   style={{ marginRight: '10px' }}
                 />
                 <span style={{ marginLeft: '0px' }}>
-                  I agree to receive marketing materials and personalised offers.
+                  I agree to the{' '}
+                  <a
+                    href={process.env.REACT_APP_PRIVACY_URL || '/privacy'}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    Privacy Policy
+                  </a>{' '}
+                  and consent to be contacted about my financial report and related services.
                 </span>
               </label>
               {/* Show error only when appropriate */}

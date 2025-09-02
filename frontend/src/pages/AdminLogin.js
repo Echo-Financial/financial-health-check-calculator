@@ -13,8 +13,9 @@ const AdminLogin = () => {
     e.preventDefault();
     try {
       const response = await axios.post(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/auth/login`, { email, password });
-      // Save token to localStorage
+      // Save token to localStorage (both keys for compatibility)
       localStorage.setItem('adminToken', response.data.token);
+      localStorage.setItem('token', response.data.token);
       navigate('/admin/dashboard');
     } catch (err) {
       setError(err.response?.data?.message || 'Login failed.');

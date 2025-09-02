@@ -5,6 +5,7 @@ import theme from './theme.js';
 import { AuthProvider } from './context/AuthContext.js';
 import AdminLogin from './pages/AdminLogin.js';
 import AdminDashboard from './pages/AdminDashboard.js';
+import ProtectedRoute from './components/ProtectedRoute.js';
 
 import Header from './components/Layout/Header.js';
 import Footer from './components/Layout/Footer.js';
@@ -30,7 +31,14 @@ function App() {
                 <Route path="/report" element={<Report />} />
                 {/* Admin Routes */}
                 <Route path="/admin/login" element={<AdminLogin />} />
-                <Route path="/admin/dashboard" element={<AdminDashboard />} />
+                <Route
+                  path="/admin/dashboard"
+                  element={
+                    <ProtectedRoute>
+                      <AdminDashboard />
+                    </ProtectedRoute>
+                  }
+                />
               </Routes>
             </main>
             <Footer />
