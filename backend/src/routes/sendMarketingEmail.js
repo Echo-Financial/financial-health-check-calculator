@@ -2,8 +2,19 @@ const express = require('express');
 const { sendMarketingEmail } = require('../emailService');
 const { prepareMarketingPrompt, callOpenAIForMarketing } = require('../utils/gptUtils');
 const logger = require('../logger');
+const rateLimit = require('express-rate-limit');
 
 const router = express.Router();
+
+// Lightweight limiter: 10 requests / 15 minutes per IP
+const marketingLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+router.use(marketingLimiter);
 
 router.post('/', async (req, res) => {
   try {
@@ -44,7 +55,7 @@ router.post('/', async (req, res) => {
       // Use GPT-generated subject.
         emailData.subject = marketingContent.subject;
 
-        // Process the GPT-generated body:
+    // Process the GPT-generated body:
         // Remove any unwanted placeholder text such as "[Your Name]".
         let rawBody = marketingContent.body.replace(/\[Your Name\]/g, "").trim();
 
@@ -57,8 +68,9 @@ router.post('/', async (req, res) => {
         // Wrap each paragraph in <p> tags with extra margin for spacing.
         const spacedBody = paragraphs.map(p => `<p style="margin-bottom:20px;">${p.trim()}</p>`).join('');
 
-        // Define a hard-coded styled link (displayed as a button) and signature block.
-        const hardCodedLink = "<p style='margin-bottom:20px;'><a href='https://echofinancialadvisors.trafft.com/' style='display: inline-block; background-color: #007BFF; color: white; padding: 10px 20px; text-align: center; text-decoration: none; border-radius: 5px;'>Book Your Free Consultation</a></p>";
+        // Define a configurable styled link (displayed as a button) and signature block.
+        const BOOKING_URL = process.env.BOOKING_URL || 'https://outlook.office.com/book/EchoFinancialAdvisorsLtd1@echo-financial-advisors.co.nz/';
+        const hardCodedLink = `<p style='margin-bottom:20px;'><a href='${BOOKING_URL}' style='display: inline-block; background-color: #007BFF; color: white; padding: 10px 20px; text-align: center; text-decoration: none; border-radius: 5px;'>Book Your Free Consultation</a></p>`;
         const hardCodedSignature = "<p style='margin-bottom:20px;'>Best regards,<br>Kevin Morgan<br>Founder & Managing Director, Echo Financial Advisors<br>Email: kevin.morgan@echo-financial-advisors.co.nz<br>Phone: +6421667511</p>";
 
         // Combine the spaced GPT-generated body, GPT-generated CTA text (wrapped in its own paragraph), hard-coded link, and signature.
@@ -86,11 +98,11 @@ router.post('/', async (req, res) => {
     console.log("Received payload:", req.body);
     
     // Call the email service to send the marketing email via SendGrid.
-    const result = await sendMarketingEmail(emailData);
-    res.json(result);
+    await sendMarketingEmail(emailData);
+    return res.status(200).json({ success: true });
   } catch (error) {
-    logger.error("Error in /api/send-marketing-email endpoint:", error);
-    res.status(500).json({ error: "Failed to send marketing email." });
+    logger.error("Error in /api/send-marketing-email endpoint:", error?.message || error);
+    return res.status(500).json({ success: false, message: 'Email send failed' });
   }
 });
 
