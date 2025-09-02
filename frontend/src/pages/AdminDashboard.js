@@ -54,7 +54,7 @@ const AdminDashboard = () => {
     };
 
     fetchReviews();
-  }, []);
+  }, [navigate]);
 
   const handleLogout = () => {
     localStorage.removeItem('adminToken');
