@@ -13,6 +13,7 @@ const generateMarketingRouter = require('./routes/generate-marketing');
 const sendMarketingEmailRouter = require('./routes/sendMarketingEmail');
 const reviewRouter = require('./routes/review');
 const errorHandler = require('./middleware/errorHandler');
+const requireAdmin = require('./middleware/requireAdmin');
 
 const app = express();
 
@@ -59,9 +60,9 @@ app.use('/api/auth', authRoute);
 app.use('/api/health', healthRoute);
 app.use('/api', gptRoute);
 app.use('/api/financial-analysis', financialAnalysisRoute);
-app.use('/api/generate-marketing', generateMarketingRouter);
-app.use('/api/send-marketing-email', sendMarketingEmailRouter);
-app.use('/api/reviews', reviewRouter);
+app.use('/api/generate-marketing', requireAdmin, generateMarketingRouter);
+app.use('/api/send-marketing-email', requireAdmin, sendMarketingEmailRouter);
+app.use('/api/reviews', requireAdmin, reviewRouter);
 app.use(errorHandler);
 
 module.exports = app;
