@@ -61,7 +61,7 @@ app.use('/api/health', healthRoute);
 app.use('/api', gptRoute);
 app.use('/api/financial-analysis', financialAnalysisRoute);
 app.use('/api/generate-marketing', requireAdmin, generateMarketingRouter);
-app.use('/api/send-marketing-email', requireAdmin, sendMarketingEmailRouter);
+app.use('/api/send-marketing-email', sendMarketingEmailRouter);
 app.use('/api/reviews', requireAdmin, reviewRouter);
 app.use(errorHandler);
 
