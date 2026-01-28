@@ -59,6 +59,8 @@ const transformValues = (values) => {
   return transformed;
 };
 
+const REQUEST_TIMEOUT_MS = 60000;
+
 const LeadCaptureForm = () => {
   const [step, setStep] = useState(1);
   const totalSteps = 5;
@@ -142,7 +144,7 @@ const LeadCaptureForm = () => {
       if (pageMeta.landingPage) qs.append('landingPage', pageMeta.landingPage);
       qs.append('consent', marketingConsent ? 'true' : 'false');
       const submitUrl = `${API_URL}/api/submit${qs.toString() ? `?${qs.toString()}` : ''}`;
-      const submitResponse = await axios.post(submitUrl, originalData);
+      const submitResponse = await axios.post(submitUrl, originalData, { timeout: REQUEST_TIMEOUT_MS });
       const scores = submitResponse.data.scores;
       setScores(scores);
 
@@ -156,48 +158,63 @@ const LeadCaptureForm = () => {
       };
 
       // SECOND API CALL: /api/financial-analysis (for detailed report)
-      const analysisResponse = await axios.post(`${API_URL}/api/financial-analysis`, analysisPayload);
-      const analysisText = analysisResponse.data.analysis;
+      const analysisResponse = await axios.post(`${API_URL}/api/financial-analysis`, analysisPayload, { timeout: REQUEST_TIMEOUT_MS });
+      const analysisPayloadOut = analysisResponse?.data?.data ?? analysisResponse?.data;
+      const analysisText = analysisPayloadOut?.analysis || '';
 
       console.log("Response from /api/submit:", submitResponse.data);
       console.log("Response from /api/financial-analysis:", analysisResponse.data);
 
-      // If marketingConsent is true, trigger marketing email via sendMarketingEmail from services/api.js
+      // If marketingConsent is true, trigger marketing email asynchronously
       if (marketingConsent) {
         try {
-          const campaignResponse = await sendMarketingEmail({
-            to: transformedValues.email,
-            name: transformedValues.name,
-            analysisText, // dynamic analysis text from backend
-            personalDetails: originalData.personalDetails,  // client's personal details
-            contactInfo: originalData.contactInfo,          // include contact info with the name
-            calculatedMetrics: scores, // scores used as calculatedMetrics
-          });
-          console.log("SendGrid campaign generated: ", campaignResponse.data);
+          const token = localStorage.getItem('token');
+          if (token) {
+            sendMarketingEmail({
+              to: transformedValues.email,
+              name: transformedValues.name,
+              analysisText, // dynamic analysis text from backend
+              personalDetails: originalData.personalDetails,  // client's personal details
+              contactInfo: originalData.contactInfo,          // include contact info with the name
+              calculatedMetrics: scores, // scores used as calculatedMetrics
+              // headers will be attached by axios defaults if needed; this call is optional
+            })
+              .then((campaignResponse) => {
+                console.log("SendGrid campaign generated: ", campaignResponse.data);
+              })
+              .catch((campaignError) => {
+                console.error("Failed to generate SendGrid campaign", campaignError);
+              });
+          }
         } catch (campaignError) {
           console.error("Failed to generate SendGrid campaign", campaignError);
         }
       }
 
-      // Navigate to Report page with contactInfo included:
+      // Navigate to Report page with full context (envelope-aware):
       navigate('/report', {
         state: {
           scores,
           analysis: analysisText,
+          analysisText, // some render paths look for this name
+          financialProfile: analysisPayloadOut?.financialProfile || null,
+          originalData, // provide raw input for any follow-up routes
           contactInfo: originalData.contactInfo,
         },
       });
       setShowModal(false);
     } catch (err) {
       let message = 'Submission failed. Please try again.';
-      if (err.response?.data?.message) {
+      if (err.code === 'ECONNABORTED') {
+        message = 'This is taking longer than expected. Please try again.';
+      } else if (err.response?.data?.message) {
         message = err.response.data.message;
       }
       setError(message);
-      formikHelpers.setSubmitting(false);
     } finally {
       setIsLoading(false);
       setSubmitting(false);
+      formikHelpers.setSubmitting(false);
     }
   };
 
@@ -274,30 +291,33 @@ const LeadCaptureForm = () => {
         return (
           <>
             <ContactDetails />
-            {/* Custom checkbox implementation outside of Formik */}
+            {/* Consent checkbox (outside Formik) */}
             <div className="form-group mt-3">
-              <label style={{ display: 'flex', alignItems: 'center' }}>
-                <input 
-                  type="checkbox" 
+              <div className="form-check">
+                <input
+                  id="consent"
+                  name="consentGiven"
+                  type="checkbox"
+                  className="form-check-input"
+                  required
                   checked={marketingConsent}
                   onChange={(e) => {
                     setMarketingConsent(e.target.checked);
                     if (e.target.checked) setShowConsentError(false);
                   }}
-                  style={{ marginRight: '10px' }}
                 />
-                <span style={{ marginLeft: '0px' }}>
-                  I agree to the{' '}
+                <label htmlFor="consent" className="form-check-label">
+                  I agree to the processing of my information as described in the&nbsp;
                   <a
-                    href={process.env.REACT_APP_PRIVACY_URL || '/privacy'}
+                    href="https://financialhealthcheck.ai/privacy"
                     target="_blank"
                     rel="noopener noreferrer"
+                    className="privacy-link"
                   >
                     Privacy Policy
-                  </a>{' '}
-                  and consent to be contacted about my financial report and related services.
-                </span>
-              </label>
+                  </a>.
+                </label>
+              </div>
               {/* Show error only when appropriate */}
               {showConsentError && (
                 <div className="text-danger">
