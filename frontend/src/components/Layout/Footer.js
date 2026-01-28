@@ -29,6 +29,13 @@ const Footer = () => (
           rel="noopener noreferrer"
         />
         <StyledFooterLink
+          label="Disclosure Statement"
+          href="https://www.echo-financial-advisors.co.nz/disclosure-echo-financial-advisors"
+          component="a"
+          target="_blank"
+          rel="noopener noreferrer"
+        />
+        <StyledFooterLink
           label="Terms of Service"
           href="https://www.echo-financial-advisors.co.nz/echo-financial-advisors-terms-conditions"
           component="a"

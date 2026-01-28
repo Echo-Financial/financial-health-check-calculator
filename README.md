@@ -61,8 +61,8 @@ Below is an updated version of my **README.md** file that incorporates our lates
 - **Runtime:** Node.js with Express
 - **Database:** MongoDB Atlas, using Mongoose for data modeling
 - **AI Integration:** OpenAI API for generating personalized financial analysis and marketing content
-- **Email Service:** SendGrid (with Markdown-to-HTML conversion for email formatting)
-- **Logging:** Winston
+- **Email Service:** Microsoft Graph (client credentials) with optional SendGrid fallback
+- **Logging:** Pino
 - **Authentication:** JWT-based authentication
 
 ### **DevOps & Testing**
@@ -84,11 +84,11 @@ financial-health-check-calculator/
 │   │   ├── models/              # Mongoose models (Admin.js, Review.js, User.js)
 │   │   ├── routes/              # API routes (auth.js, financialAnalysis.js, gpt.js, generate-marketing.js, review.js, etc.)
 │   │   ├── utils/               # Utility functions (financialCalculations.js, gptUtils.js, openaiClient.js, complianceUtils.js)
-│   │   ├── emailService.js      # Email sending via SendGrid (with Markdown-to-HTML conversion)
-│   │   ├── logger.js            # Logging configuration (Winston)
+│   │   ├── emailService.js      # Email sending via Microsoft Graph (optional SendGrid fallback)
+│   │   ├── logger.js            # Logging configuration (Pino)
 │   │   └── index.js             # Entry point for the backend server
 │   ├── package.json             # Backend dependencies and scripts
-│   └── .env                   # Environment variables (MongoDB URI, JWT secret, SendGrid API key, etc.)
+│   └── .env                   # Environment variables (MongoDB URI, JWT secret, Graph credentials, etc.)
 ├── frontend/
 │   ├── public/                  # Static assets
 │   ├── src/
@@ -156,13 +156,14 @@ financial-health-check-calculator/
    JWT_SECRET=<Your JWT Secret>
    JWT_EXPIRES_IN=3600
    OPENAI_API_KEY=<Your OpenAI API Key>
-   SENDGRID_API_KEY=<Your SendGrid API Key>
-   EMAIL_HOST=smtp.gmail.com
-   EMAIL_PORT=587
-   EMAIL_SECURE=false
-   EMAIL_USER=<Your Email Username>
-   EMAIL_PASSWORD=<Your Email Password or App Password>
-   EMAIL_FROM=<Your From Email Address>
+  EMAIL_PROVIDER=graph
+  MS_TENANT_ID=<Your Azure Tenant ID>
+  MS_CLIENT_ID=<Your Azure Client ID>
+  MS_CLIENT_SECRET=<Your Azure Client Secret>
+  MS_SENDER=<Sender mailbox for Graph>  # or set EMAIL_FROM
+  EMAIL_FROM=<Your From Email Address>
+  EMAIL_FROM_NAME=<Your From Name>
+  BOOKING_URL=<Your booking link>
    ```
 4. **Start the Backend Server:**
    ```bash
@@ -199,7 +200,7 @@ financial-health-check-calculator/
    After submission, the application generates a personalized financial report with visual charts and a detailed analysis, which is displayed on the Report page.
 
 3. **Lead Capture and Follow-Up:**  
-   Your contact details are captured, and marketing emails are sent using the integrated SendGrid service. All interactions are logged for compliance.
+  Your contact details are captured, and marketing emails are sent using Microsoft Graph (or SendGrid if configured). All interactions are logged for compliance.
 
 4. **Admin Dashboard:**  
    Authorized users can log in to the admin dashboard to review compliance records, manage flagged advice, and view lead analytics.

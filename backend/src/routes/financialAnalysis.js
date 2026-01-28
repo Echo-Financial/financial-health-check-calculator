@@ -1,126 +1,142 @@
 // backend/src/routes/financialAnalysis.js
 const express = require('express');
 const router = express.Router();
+
 const { callOpenAIForAnalysis } = require('../utils/gptUtils');
 const { calculateCompleteFinancialProfile } = require('../utils/financialCalculations');
 const { logAdviceGeneration, requiresManualReview } = require('../utils/complianceUtils');
 const logger = require('../logger');
+const { ok, fail } = require('../utils/apiResponse');
 
-// Analysis prompt function remains the same
-const analysisPromptDraft9 = (financialProfile) => {
-  const { formatted, recommendations, projections } = financialProfile;
-  
+/**
+ * Single prompt that returns:
+ *  - Executive Summary (conversion-focused)
+ *  - Detailed Financial Analysis (authority + depth)
+ */
+const unifiedAnalysisPrompt = (financialProfile) => {
+  const { formatted } = financialProfile;
+
   return `
-You are an expert financial analyst working for Echo Financial Advisors, a solo financial advisory business in New Zealand that SPECIALISES IN INVESTMENT STRATEGIES AND RETIREMENT PLANNING. Your task is to analyze the financial data provided by a user of our Financial Health Check Calculator and produce a detailed, personalised financial health report.
+You are a senior financial advisor at Echo Financial Advisors (New Zealand),
+specialising in **investment strategies and retirement planning**.
 
-**IMPORTANT DISCLOSURE:** This analysis constitutes personalized financial recommendations provided under a Class 1 Financial Advice Provider license, with assistance from AI technology. This combination offers you the benefit of sophisticated analysis with professional oversight.
+IMPORTANT:
+- This is a SINGLE financial report rendered on a webpage.
+- Tone must convey authority, clarity, and trust.
+- No hype. No fluff. No sales clichés.
 
-**GROWTH PROJECTIONS TO INCLUDE IN YOUR ANALYSIS:**
+===== REQUIRED OUTPUT FORMAT =====
+Return VALID JSON only, with the following structure:
 
-INVESTMENT GROWTH (Investing ${formatted.monthlyInvestment}/month with ${formatted.annualReturnPercent} annual return):
-- Starting with $${projections.investment.initialInvestment.toLocaleString()}
-- Could grow to approximately $${projections.investment.fiveYear.toLocaleString()} in 5 years
-- Could grow to approximately $${formatted.tenYearInvestmentGrowth} in 10 years
-- Could grow to approximately $${projections.investment.twentyYear.toLocaleString()} in 20 years
+{
+  "summary": "250–300 words. Executive-level summary designed to build confidence and naturally lead to a consultation.",
+  "analysis": "400–500 words. Deeper analysis explaining the scores, trade-offs, risks, and long-term implications."
+}
 
-RETIREMENT PROJECTION:
-- Current retirement savings: $${projections.retirement.currentSavings.toLocaleString()}
-- Target retirement amount: ${formatted.retirementTarget}
-- Years until retirement: ${projections.retirement.yearsToRetirement}
-- Without additional contributions, current savings would grow to: $${projections.retirement.futureValueWithoutContributions.toLocaleString()}
-- Shortfall without contributions: $${projections.retirement.shortfall.toLocaleString()} (${projections.retirement.shortfallPercent}% of target)
-- Recommended monthly contribution: ${formatted.monthlyRetirementContribution}
-- With recommended contributions, projected to reach: $${projections.retirement.totalWithContributions.toLocaleString()}
+===== CONTEXT =====
 
-**Constraints and Guidelines:**
+Use the financial profile scores provided by the system. Do NOT include numerical projections or promises of future performance.
 
-- **New Zealand Context:** Frame your analysis within the New Zealand financial landscape, using UK English spelling and terminology.
-- **Solo Advisor Perspective:** Use singular references (e.g., "I" or "your solo advisor") rather than plural forms.
-- **Professional Tone:** Provide authoritative, clear, and data-driven analysis.
-- **Data-driven Analysis:** Focus on using the RAW FINANCIAL DATA (actual amounts, ages, etc.) rather than just the computed scores.
-- **Urgency Elements:** Where appropriate, highlight the cost of delay or inaction (e.g., "Each month of delay potentially reduces your retirement savings by thousands of dollars due to lost compound growth").
-- **Next Steps Focus:** Frame recommendations to naturally lead toward a consultation as the logical next step.
-- **Score Interpretation:** Pay careful attention to how scores are interpreted:
-  - For most metrics (Retirement, Emergency Fund, etc.): HIGHER scores (closer to 100) are BETTER.
-  - For Growth Opportunity and Potential for Improvement: HIGHER scores are WORSE (indicate MORE room for improvement).
-  - The Debt-to-Income (DTI) Score: This is a SCORE, not a percentage. A high score is GOOD and indicates a healthy debt level.
+If you must include any illustrative figures, they MUST be clearly labelled as hypothetical examples only and MUST include the assumptions used (return, contributions, fees, tax, inflation) plus a clear statement that actual results will vary and are not guaranteed.
 
-**Additional Calculation Context:**
+===== GUIDELINES =====
 
-Based on the user's retirement data:
-- Current Retirement Savings (PV), Target Retirement Savings (FV), and Years Until Retirement (N) are used with an annual growth rate (r) of 5%.
-- The required periodic contribution is computed using the formula:  
-  PMT = ((FV - PV × (1 + 0.05)^N) × 0.05) / ((1 + 0.05)^N - 1)  
-  The result is the annual contribution, which when divided by 12 gives a monthly contribution.
-- For this user, the required monthly contribution is approximately ${formatted.monthlyRetirementContribution}.
+1. SUMMARY SECTION
+- Written for a smart but non-financial reader
+- Emphasise:
+  - What is working
+  - Where risk or opportunity exists
+  - Why inaction has a cost
+- Include this IMPORTANT INFORMATION paragraph near the top (verbatim):
+  "Important information: This report provides general information only and does not take account of your personal circumstances. It is designed for long‑term investment horizons (7–10+ years) and markets can be volatile in the short term. You should consider seeking independent financial, tax, and legal advice before acting."
+- End with:
+  “Turning these insights into a coordinated investment and retirement strategy would be the focus of an initial consultation.”
 
-**Output Structure (Ensure the report is concise and does not exceed 400 words):**
+2. ANALYSIS SECTION
+- Explain the *why* behind the scores
+- Clarify:
+  - Growth Opportunity & Potential for Improvement → higher is worse
+  - Debt-to-Income → score, not %
+- Frame volatility and long-term investing correctly
+- Maintain NZ context and UK English spelling
 
-1. **Overall Financial Health Assessment** (2-3 sentences)
-2. **Key Strengths** (1-2 areas, PRIORITISE investment/retirement strengths if present)
-3. **Areas for Potential Improvement** (2-3 areas, PRIORITISE investment gaps and retirement planning issues)
-4. **Summary of Recommended Next Steps:**  
-   - Begin with a brief summary statement that encapsulates the overall direction.
-   - Follow with 3-4 bullet points of actionable recommendations, each including specific dollar amounts.
-   - When discussing investment recommendation, include this EXACT statement: "With monthly contributions of ${formatted.monthlyInvestment} and an annual return of ${formatted.annualReturnPercent}, your investments could grow to approximately ${formatted.tenYearInvestmentGrowth} in 10 years."
-   - When discussing retirement recommendation, include this EXACT statement: "By contributing ${formatted.monthlyRetirementContribution} monthly with a ${projections.retirement.annualReturnPercent}% annual return, you could reach your retirement target of ${formatted.retirementTarget} in ${projections.retirement.yearsToRetirement} years."
-   - End with a transition sentence such as: "Implementing these recommendations effectively would be the focus of an initial consultation."
+Required clauses to include once in the analysis:
+- General information only (not personal advice)
+- Long-term horizon and normal short-term volatility
+- Encourage independent financial/tax/legal advice
+
+Do NOT:
+- Include greetings
+- Include signatures
+- Mention AI
+- Mention compliance explicitly
 `;
 };
 
 router.post('/', async (req, res) => {
-  // Basic validation: ensure required keys exist
-  if (!req.body || !req.body.originalData) {
-    logger.error('Invalid request payload for financial analysis');
-    return res.status(400).json({ error: 'Invalid request payload. Missing required data.' });
-  }
-
   try {
-    logger.info('Received POST /api/financial-analysis request');
-    
-    const financialData = req.body;
-    const userData = financialData.originalData;
-    
-    // Use the centralized calculation function to ensure consistency
-    const financialProfile = calculateCompleteFinancialProfile(userData);
-    
-    // Build the prompt with the comprehensive financial profile
-    const updatedPrompt = analysisPromptDraft9(financialProfile);
+    logger.info('POST /api/financial-analysis');
 
-    // Generate the analysis text from OpenAI
-    const analysisText = await callOpenAIForAnalysis(financialData, updatedPrompt);
-    
-    // Extract key recommendations for compliance logging
-    const recommendations = {
-      monthlyContribution: financialProfile.recommendations.monthlyRetirementContribution,
-      monthlyInvestment: financialProfile.recommendations.monthlyInvestment,
-      adviceType: 'detailed-analysis'
-    };
-    
-    // Log for compliance purposes with advice content
-    await logAdviceGeneration('analysis', financialData, recommendations, analysisText);
-    
-    // Check if this needs review based on recommendation thresholds
-    const needsReview = await requiresManualReview(
-      financialData, 
-      recommendations,
-      analysisText,
-      'detailed-analysis'
+    if (!req.body?.originalData) {
+      return fail(res, 400, 'VALIDATION_ERROR', 'originalData is required');
+    }
+
+    // Centralised calculation
+    const financialProfile = calculateCompleteFinancialProfile(req.body.originalData);
+
+    // Build prompt
+    const prompt = unifiedAnalysisPrompt(financialProfile);
+
+    // SINGLE GPT-5 CALL
+    const rawResponse = await callOpenAIForAnalysis(req.body, prompt);
+
+    // Parse JSON safely
+    let parsed;
+    try {
+      parsed = JSON.parse(rawResponse);
+    } catch (err) {
+      logger.error('Failed to parse GPT response JSON', err);
+      return fail(res, 500, 'OPENAI_ERROR', 'Invalid response format from analysis engine');
+    }
+
+    const { summary, analysis } = parsed;
+
+    if (!summary || !analysis) {
+      return fail(res, 500, 'OPENAI_ERROR', 'Incomplete analysis response');
+    }
+
+    // Compliance logging
+    await logAdviceGeneration(
+      'financial-health-check',
+      req.body,
+      {
+        monthlyInvestment: financialProfile.recommendations.monthlyInvestment,
+        monthlyRetirementContribution: financialProfile.recommendations.monthlyRetirementContribution,
+        adviceType: 'combined-report',
+      },
+      `${summary}\n\n${analysis}`
     );
-    
-    // Return the analysis, financial profile, and compliance metadata
-    res.json({
-      analysis: analysisText,
-      financialProfile: financialProfile,
-      _compliance: { 
-        needsReview,
+
+    const needsReview = await requiresManualReview(
+      req.body,
+      financialProfile.recommendations,
+      `${summary}\n\n${analysis}`,
+      'combined-report'
+    );
+
+    return ok(res, {
+      summary,
+      analysis,
+      financialProfile,
+      _compliance: {
         adviceLogged: true,
-        adviceType: 'detailed-analysis'
-      }
+        needsReview,
+        adviceType: 'combined-report',
+      },
     });
   } catch (error) {
-    logger.error('Error during report generation:', error);
-    res.status(500).json({ error: 'Failed to generate financial analysis report.' });
+    logger.error('Financial analysis error', error);
+    return fail(res, 500, 'INTERNAL_ERROR', 'Failed to generate financial report');
   }
 });
 

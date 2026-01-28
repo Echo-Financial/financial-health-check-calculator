@@ -1,5 +1,6 @@
 // backend/src/emailService.js
 const sgMail = require('@sendgrid/mail');
+const logger = require('./logger');
 
 const API_KEY = (process.env.SENDGRID_API_KEY || '').trim();
 const SENDGRID_ENABLED = API_KEY.startsWith('SG.');
@@ -8,22 +9,22 @@ const PROVIDER_PREF = (process.env.EMAIL_PROVIDER || '').toLowerCase();
 if (SENDGRID_ENABLED) {
   try {
     sgMail.setApiKey(API_KEY);
-    console.log('[emailService] SendGrid initialized');
+    logger.info('[emailService] SendGrid initialized');
   } catch (e) {
-    console.warn('[emailService] SendGrid init failed:', e?.message);
+    logger.warn('[emailService] SendGrid init failed:', e?.message);
   }
 } else {
-  console.warn('[emailService] SendGrid disabled: set SENDGRID_API_KEY (starts with "SG.") to enable sending.');
+  logger.warn('[emailService] SendGrid disabled: set SENDGRID_API_KEY (starts with "SG.") to enable sending.');
 }
 
-console.log(`[emailService] Provider preference: ${PROVIDER_PREF || 'auto'}`);
+logger.info(`[emailService] Provider preference: ${PROVIDER_PREF || 'auto'}`);
 
 function canUseGraph() {
   return (
     !!process.env.MS_TENANT_ID &&
     !!process.env.MS_CLIENT_ID &&
     !!process.env.MS_CLIENT_SECRET &&
-    !!process.env.MS_SENDER
+    !!(process.env.MS_SENDER || process.env.EMAIL_FROM)
   );
 }
 
@@ -32,7 +33,7 @@ function ensureGraphEnv() {
   if (!process.env.MS_TENANT_ID) missing.push('MS_TENANT_ID');
   if (!process.env.MS_CLIENT_ID) missing.push('MS_CLIENT_ID');
   if (!process.env.MS_CLIENT_SECRET) missing.push('MS_CLIENT_SECRET');
-  if (!process.env.MS_SENDER) missing.push('MS_SENDER');
+  if (!process.env.MS_SENDER && !process.env.EMAIL_FROM) missing.push('MS_SENDER or EMAIL_FROM');
   if (missing.length) {
     throw new Error(`[emailService] Missing Graph env: ${missing.join(', ')}`);
   }
@@ -54,7 +55,7 @@ async function getGraphToken() {
   });
   if (!resp.ok) {
     const text = await resp.text();
-    console.error('[emailService] Graph token error', resp.status, text.slice(0, 200));
+    logger.error('[emailService] Graph token error', resp.status, text.slice(0, 200));
     throw new Error(`Graph token error: ${resp.status}`);
   }
   const data = await resp.json();
@@ -63,7 +64,7 @@ async function getGraphToken() {
 
 async function sendViaGraph({ to, subject, html, replyTo }) {
   const token = await getGraphToken();
-  const sender = process.env.MS_SENDER;
+  const sender = process.env.MS_SENDER || process.env.EMAIL_FROM;
   const url = `https://graph.microsoft.com/v1.0/users/${encodeURIComponent(sender)}/sendMail`;
   const body = {
     message: {
@@ -84,10 +85,10 @@ async function sendViaGraph({ to, subject, html, replyTo }) {
   });
   if (!resp.ok) {
     const txt = await resp.text();
-    console.error('[emailService] Graph sendMail error', resp.status, txt.slice(0, 200));
+    logger.error('[emailService] Graph sendMail error', resp.status, txt.slice(0, 200));
     throw new Error(`Graph sendMail ${resp.status}`);
   }
-  console.log('[emailService] Graph sendMail 202 Accepted');
+  logger.info('[emailService] Graph sendMail 202 Accepted');
   return { provider: 'graph', status: 'sent' };
 }
 
@@ -130,7 +131,7 @@ async function sendMarketingEmail(payload) {
   if (SENDGRID_ENABLED) {
     return sendViaSendGrid({ to, subject, text, html, from, replyTo });
   }
-  console.warn('[emailService] Email disabled: configure SendGrid or Microsoft Graph');
+  logger.warn('[emailService] Email disabled: configure SendGrid or Microsoft Graph');
   return { provider: 'disabled', status: 'skipped' };
 }
 

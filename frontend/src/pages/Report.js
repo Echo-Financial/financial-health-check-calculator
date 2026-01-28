@@ -31,6 +31,9 @@ const Report = () => {
   const email = location.state?.contactInfo?.email || '';
   const bookingUrl =
     'https://outlook.office.com/book/EchoFinancialAdvisorsLtd1@echo-financial-advisors.co.nz/';
+  const disclosureUrl =
+    'https://www.echo-financial-advisors.co.nz/disclosure-echo-financial-advisors';
+  const privacyUrl = process.env.REACT_APP_PRIVACY_URL || 'https://financialhealthcheck.ai/privacy';
 
   // Scroll to top when the component mounts
   useEffect(() => {
@@ -180,6 +183,22 @@ const Report = () => {
           <div className="container">
             <h3>Your Personalised Financial Report</h3>
 
+            <div className="alert alert-warning" role="note" style={{ marginTop: '12px' }}>
+              <strong>Important information:</strong> This report provides general information only and does not take
+              account of your personal circumstances. It is designed for long‑term investment horizons
+              (7–10+ years) and markets can be volatile in the short term. You should consider seeking
+              independent financial, tax, and legal advice before acting.
+              <div style={{ marginTop: '8px' }}>
+                <a href={disclosureUrl} target="_blank" rel="noopener noreferrer">
+                  Disclosure Statement
+                </a>
+                {' '}|{' '}
+                <a href={privacyUrl} target="_blank" rel="noopener noreferrer">
+                  Privacy Policy
+                </a>
+              </div>
+            </div>
+
             {loadingReport ? (
               <p>Generating your personalised report…</p>
             ) : (
@@ -190,7 +209,11 @@ const Report = () => {
 
             <div className="mt-5">
               <h5>Next step</h5>
-              <p>Turn these insights into an action plan with a free 15-minute consultation.</p>
+              <p>
+                Turn these insights into an action plan with a free 15-minute consultation. This consultation is to
+                provide regulated advice tailored to your circumstances. Please don’t act solely on this automated
+                report.
+              </p>
               <Button
                 as="a"
                 href={bookingUrl}
