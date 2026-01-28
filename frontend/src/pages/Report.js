@@ -1,90 +1,133 @@
-import React, { useState, useEffect, useCallback } from 'react';
+// frontend/src/pages/Report.js
+import React, { useEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import Charts from '../components/Visualisations/Charts.js';
-import Gauge from '../components/Visualisations/Gauge.js';
 import axios from 'axios';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { Button } from 'react-bootstrap';
+
+import Charts from '../components/Visualisations/Charts.js';
+import Gauge from '../components/Visualisations/Gauge.js';
 import { getUtmParams } from '../utils/utm.js';
 import './../styles/Report.scss';
 
 const Report = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { scores, analysis } = location.state || {};
-  const [insights, setInsights] = useState('');
-  const [loading, setLoading] = useState(false);
+
+  const { scores, originalData, financialProfile: navProfile } = location.state || {};
+  const initialAnalysis = location.state?.analysis || location.state?.analysisText || '';
+
+  const [reportText, setReportText] = useState(initialAnalysis);
+  const [financialProfile, setFinancialProfile] = useState(navProfile || null);
+  const [loadingReport, setLoadingReport] = useState(!initialAnalysis);
+
+  const didInit = useRef(false);
+
   const utm = getUtmParams();
   const name = location.state?.contactInfo?.name || '';
   const email = location.state?.contactInfo?.email || '';
-  const base = 'https://outlook.office.com/book/EchoFinancialAdvisorsLtd1@echo-financial-advisors.co.nz/';
-  const ctaUrl = base; // no query params (prevents Bookings redirect loop)
+  const bookingUrl =
+    'https://outlook.office.com/book/EchoFinancialAdvisorsLtd1@echo-financial-advisors.co.nz/';
 
   // Scroll to top when the component mounts
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
 
-  const fetchInsights = useCallback(async () => {
-    setLoading(true);
-    try {
-      const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
-      const response = await axios.post(`${API_URL}/api/gpt`, {
-        dti: scores.dtiScore,
-        savingsRate: scores.savingsScore,
-        emergencyFund: scores.emergencyFundScore,
-        retirement: scores.retirementScore,
-        growthOpportunity: scores.growthOpportunityScore,
-        potentialForImprovement: scores.potentialForImprovementScore,
-        overallFinancialHealth: scores.overallFinancialHealthScore,
-      });
-      setInsights(response.data.response);
-    } catch (error) {
-      console.error('Error fetching insights:', error);
-      let errorMessage = 'Failed to fetch insights, please try again.';
-      if (error.response && error.response.data && error.response.data.error) {
-        errorMessage = error.response.data.error;
-      }
-      setInsights(errorMessage);
-    } finally {
-      setLoading(false);
-    }
-  }, [scores]);
-
   useEffect(() => {
-    if (scores) {
-      fetchInsights();
+    if (didInit.current) return;
+    didInit.current = true;
+
+    if (!scores && !originalData) {
+      navigate('/');
+      return;
     }
-  }, [scores, fetchInsights]);
+
+    if (initialAnalysis && !originalData) {
+      setLoadingReport(false);
+      return;
+    }
+
+    let alive = true;
+    const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+
+    const fetchUnifiedReport = async () => {
+      try {
+        setLoadingReport(true);
+
+        const body = {
+          originalData: originalData || undefined,
+          calculatedMetrics: scores || financialProfile?.scores || undefined,
+          consent: false,
+        };
+
+        console.debug('[Report] POST /api/financial-analysis (unified) body keys:', {
+          hasOriginalData: !!originalData,
+          hasScores: !!scores,
+        });
+
+        const resp = await axios.post(`${API_URL}/api/financial-analysis`, body, {
+          timeout: 60000,
+        });
+
+        const payload = resp?.data?.data ?? resp?.data ?? null;
+        if (!alive) return;
+
+        const text = payload?.analysis || '';
+        const profile = payload?.financialProfile || null;
+
+        if (!text) {
+          throw new Error('No analysis returned from /api/financial-analysis');
+        }
+
+        setReportText(text);
+        setFinancialProfile(profile);
+      } catch (err) {
+        console.error('[Report] unified financial-analysis failed:', err);
+        if (alive) {
+          setReportText(
+            "We were unable to generate your financial report at this time. Please try again shortly."
+          );
+        }
+      } finally {
+        if (alive) setLoadingReport(false);
+      }
+    };
+
+    fetchUnifiedReport();
+
+    return () => {
+      alive = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   if (!scores) {
-    navigate('/'); // Redirect if no scores
+    navigate('/');
     return null;
   }
 
-  const handleBookingClick = () => {
-    window.open('https://echofinancialadvisors.trafft.com/', '_blank');
-  };
-
   const formatScoreLabel = (label) => {
-    const customLabels = {
+    const map = {
       dtiScore: 'Debt to Income Score',
       savingsScore: 'Savings Score',
       emergencyFundScore: 'Emergency Fund Score',
       retirementScore: 'Retirement Score',
       growthOpportunityScore: 'Growth Opportunity Score',
-      overallFinancialHealthScore: 'Overall Financial Health Score',
       potentialForImprovementScore: 'Potential for Improvement Score',
+      overallFinancialHealthScore: 'Overall Financial Health Score',
     };
-    return customLabels[label] || label.replace(/([A-Z])/g, ' $1').replace(/^./, (str) => str.toUpperCase());
+    return map[label] || label.replace(/([A-Z])/g, ' $1').replace(/^./, (s) => s.toUpperCase());
   };
 
-  const overallScore = scores.overallFinancialHealthScore || 0;
+  const overallScore =
+    scores.overallFinancialHealthScore || financialProfile?.scores?.overallFinancialHealthScore || 0;
 
   return (
     <div className="report-container">
       <main className="report-content">
+        {/* Scores */}
         <section className="score-summary section">
           <div className="container">
             <h3>Financial Health Scores</h3>
@@ -97,6 +140,8 @@ const Report = () => {
             </ul>
           </div>
         </section>
+
+        {/* Visual Overview */}
         <section className="visual-overview section">
           <div className="container">
             <h3 className="text-center">Overall Financial Health</h3>
@@ -107,35 +152,26 @@ const Report = () => {
             <Charts scores={scores} />
           </div>
         </section>
-        <section className="insights-section section">
-          <div className="container">
-            <h3>Financial Assessment Summary</h3>
-            {loading && <p>Loading insights…</p>}
-            {insights && (
-              <div className="insight-container">
-                <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                  {insights}
-                </ReactMarkdown>
-              </div>
-            )}
-          </div>
-        </section>
+
+        {/* Unified Report */}
         <section className="analysis-section section">
           <div className="container">
-            <h3>Detailed Financial Analysis:</h3>
-            {analysis ? (
-              <div className="analysis-text">
-                <ReactMarkdown remarkPlugins={[remarkGfm]}>{analysis}</ReactMarkdown>
-              </div>
+            <h3>Your Personalised Financial Report</h3>
+
+            {loadingReport ? (
+              <p>Generating your personalised report…</p>
             ) : (
-              <p>Loading analysis...</p>
+              <div className="analysis-text">
+                <ReactMarkdown remarkPlugins={[remarkGfm]}>{reportText}</ReactMarkdown>
+              </div>
             )}
-            <div className="mt-4">
+
+            <div className="mt-5">
               <h5>Next step</h5>
-              <p>Turn your insights into an action plan with a free 15-minute consultation.</p>
+              <p>Turn these insights into an action plan with a free 15-minute consultation.</p>
               <Button
                 as="a"
-                href={ctaUrl}
+                href={bookingUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 variant="primary"
@@ -143,33 +179,6 @@ const Report = () => {
               >
                 Book your free consultation
               </Button>
-            </div>
-          </div>
-        </section>
-        <section className="cta-section section">
-          <div className="container">
-            <h3>Next Steps</h3>
-            <div className="cta-content">
-              <h4>Ready to Transform Your Financial Future? Let's Shape Your Future today.</h4>
-              <p>
-                I'm Kevin from Echo Financial Advisors. At Echo, we reject cookie-cutter solutions. Instead, we craft financial strategies tailored to your unique circumstances—ensuring every piece of advice is as individual as you are.
-              </p>
-              <h5>What This Means for You:</h5>
-              <ul>
-                <li>✓ Advanced AI Analysis: Leverage cutting-edge technology combined with expert human insight to cut through financial complexity.</li>
-                <li>✓ A dedicated advisor focused on your success.</li>
-                <li>✓ Clear, actionable steps toward your financial objectives.</li>
-              </ul>
-              <div className="text-center">
-                <button onClick={handleBookingClick} className="btn btn-primary btn-submit">
-                  Let's Shape Your Future
-                </button>
-              </div>
-              <div style={{ marginTop: '60px' }}>
-                <p>
-                  <em>P.S. Spots fill up quickly, so don't wait too long to secure yours!</em>
-                </p>
-              </div>
             </div>
           </div>
         </section>

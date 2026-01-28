@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import axios from 'axios';
 import { Formik, Form } from 'formik';
 import * as Yup from 'yup';
@@ -75,6 +75,11 @@ const LeadCaptureForm = () => {
     referrer: document.referrer || null,
     landingPage: window.location.pathname + (window.location.search || ''),
   }), []);
+
+  useEffect(() => {
+    const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+    axios.get(`${API_URL}/api/health`, { timeout: 10000 }).catch(() => {});
+  }, []);
   
   // State for marketing consent outside of Formik
   const [marketingConsent, setMarketingConsent] = useState(false);
@@ -148,22 +153,7 @@ const LeadCaptureForm = () => {
       const scores = submitResponse.data.scores;
       setScores(scores);
 
-      // Construct payload for /api/financial-analysis
-      const analysisPayload = {
-        originalData,
-        calculatedMetrics: scores,
-        utm, // safe to include; endpoint does not validate with Joi
-        ...pageMeta,
-        consent: marketingConsent === true,
-      };
-
-      // SECOND API CALL: /api/financial-analysis (for detailed report)
-      const analysisResponse = await axios.post(`${API_URL}/api/financial-analysis`, analysisPayload, { timeout: REQUEST_TIMEOUT_MS });
-      const analysisPayloadOut = analysisResponse?.data?.data ?? analysisResponse?.data;
-      const analysisText = analysisPayloadOut?.analysis || '';
-
       console.log("Response from /api/submit:", submitResponse.data);
-      console.log("Response from /api/financial-analysis:", analysisResponse.data);
 
       // If marketingConsent is true, trigger marketing email asynchronously
       if (marketingConsent) {
@@ -173,7 +163,7 @@ const LeadCaptureForm = () => {
             sendMarketingEmail({
               to: transformedValues.email,
               name: transformedValues.name,
-              analysisText, // dynamic analysis text from backend
+              analysisText: '', // analysis generated on report page
               personalDetails: originalData.personalDetails,  // client's personal details
               contactInfo: originalData.contactInfo,          // include contact info with the name
               calculatedMetrics: scores, // scores used as calculatedMetrics
@@ -191,13 +181,10 @@ const LeadCaptureForm = () => {
         }
       }
 
-      // Navigate to Report page with full context (envelope-aware):
+      // Navigate to Report page with full context (analysis generated there):
       navigate('/report', {
         state: {
           scores,
-          analysis: analysisText,
-          analysisText, // some render paths look for this name
-          financialProfile: analysisPayloadOut?.financialProfile || null,
           originalData, // provide raw input for any follow-up routes
           contactInfo: originalData.contactInfo,
         },
