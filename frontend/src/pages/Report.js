@@ -9,13 +9,14 @@ import { Button } from 'react-bootstrap';
 import Charts from '../components/Visualisations/Charts.js';
 import Gauge from '../components/Visualisations/Gauge.js';
 import { getUtmParams } from '../utils/utm.js';
+import { sendMarketingEmail } from '../services/api.js';
 import './../styles/Report.scss';
 
 const Report = () => {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const { scores, originalData, financialProfile: navProfile } = location.state || {};
+  const { scores, originalData, financialProfile: navProfile, marketingConsent } = location.state || {};
   const initialAnalysis = location.state?.analysis || location.state?.analysisText || '';
 
   const [reportText, setReportText] = useState(initialAnalysis);
@@ -23,6 +24,7 @@ const Report = () => {
   const [loadingReport, setLoadingReport] = useState(!initialAnalysis);
 
   const didInit = useRef(false);
+  const didSendEmail = useRef(false);
 
   const utm = getUtmParams();
   const name = location.state?.contactInfo?.name || '';
@@ -83,6 +85,26 @@ const Report = () => {
 
         setReportText(text);
         setFinancialProfile(profile);
+
+        // Send marketing email asynchronously if admin token is present
+        if (!didSendEmail.current && marketingConsent) {
+          const token = localStorage.getItem('token');
+          if (token) {
+            didSendEmail.current = true;
+            sendMarketingEmail({
+              analysisText: text,
+              personalDetails: originalData?.personalDetails || {},
+              calculatedMetrics: scores || profile?.scores || {},
+              contactInfo: location.state?.contactInfo || {},
+            })
+              .then((campaignResponse) => {
+                console.log('[Report] marketing email sent', campaignResponse.data);
+              })
+              .catch((campaignError) => {
+                console.error('[Report] marketing email failed', campaignError);
+              });
+          }
+        }
       } catch (err) {
         console.error('[Report] unified financial-analysis failed:', err);
         if (alive) {

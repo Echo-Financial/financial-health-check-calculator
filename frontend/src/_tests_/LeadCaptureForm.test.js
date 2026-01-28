@@ -72,11 +72,10 @@ describe('LeadCaptureForm Component', () => {
   });
 
   test('handles submission with valid data', async () => {
-    // Expect two API calls:
-    // 1. /api/submit, 2. /api/send-marketing-email (since marketing consent is checked)
+    // Expect one API call:
+    // 1. /api/submit
     axios.post
-      .mockResolvedValueOnce({ data: { scores: { financialHealthScore: 75, retirementScore: 80 } } }) // /api/submit
-      .mockResolvedValueOnce({ data: { result: 'Email sent' } }); // /api/send-marketing-email
+      .mockResolvedValueOnce({ data: { scores: { financialHealthScore: 75, retirementScore: 80 } } }); // /api/submit
     
     localStorage.setItem('token', 'test-token');
     renderWithRouter(<LeadCaptureForm />);
@@ -139,14 +138,10 @@ describe('LeadCaptureForm Component', () => {
       await userEvent.click(screen.getByRole('button', { name: /Submit/i }));
     });
 
-    // Verify that two API calls were made.
-    await waitFor(() => expect(axios.post).toHaveBeenCalledTimes(2));
+    // Verify that one API call was made.
+    await waitFor(() => expect(axios.post).toHaveBeenCalledTimes(1));
     expect(axios.post).toHaveBeenCalledWith(
       expect.stringContaining('/api/submit'),
-      expect.any(Object)
-    );
-    expect(axios.post).toHaveBeenCalledWith(
-      expect.stringContaining('/api/send-marketing-email'),
       expect.any(Object)
     );
   });

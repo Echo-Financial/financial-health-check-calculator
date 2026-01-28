@@ -4,7 +4,6 @@ import { Formik, Form } from 'formik';
 import * as Yup from 'yup';
 import { useNavigate } from 'react-router-dom';
 import { Button, ProgressBar, Spinner } from 'react-bootstrap';
-import { sendMarketingEmail } from '../../services/api.js';
 import { getUtmParams } from '../../utils/utm';
 import PersonalDetails from '../InputSections/PersonalDetails.js';
 import ExpensesAssets from '../InputSections/ExpensesAssets.jsx';
@@ -155,38 +154,13 @@ const LeadCaptureForm = () => {
 
       console.log("Response from /api/submit:", submitResponse.data);
 
-      // If marketingConsent is true, trigger marketing email asynchronously
-      if (marketingConsent) {
-        try {
-          const token = localStorage.getItem('token');
-          if (token) {
-            sendMarketingEmail({
-              to: transformedValues.email,
-              name: transformedValues.name,
-              analysisText: '', // analysis generated on report page
-              personalDetails: originalData.personalDetails,  // client's personal details
-              contactInfo: originalData.contactInfo,          // include contact info with the name
-              calculatedMetrics: scores, // scores used as calculatedMetrics
-              // headers will be attached by axios defaults if needed; this call is optional
-            })
-              .then((campaignResponse) => {
-                console.log("SendGrid campaign generated: ", campaignResponse.data);
-              })
-              .catch((campaignError) => {
-                console.error("Failed to generate SendGrid campaign", campaignError);
-              });
-          }
-        } catch (campaignError) {
-          console.error("Failed to generate SendGrid campaign", campaignError);
-        }
-      }
-
       // Navigate to Report page with full context (analysis generated there):
       navigate('/report', {
         state: {
           scores,
           originalData, // provide raw input for any follow-up routes
           contactInfo: originalData.contactInfo,
+          marketingConsent,
         },
       });
       setShowModal(false);
