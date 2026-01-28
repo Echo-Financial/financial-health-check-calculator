@@ -100,6 +100,7 @@ MS\_CLIENT\_ID=<GUID>
 
 MS\_CLIENT\_SECRET=<secret>
 
+MS\_SENDER=no-reply@echo-financial-advisors.co.nz  # or set EMAIL_FROM instead
 EMAIL\_FROM=no-reply@echo-financial-advisors.co.nz
 
 EMAIL\_FROM\_NAME=Echo Financial Advisors

@@ -5,7 +5,7 @@ This file covers project overview, architecture, setup, installation, testing, d
 ```markdown
 # Financial Health Check Calculator
 
-A powerful, AI-driven financial health check tool that provides users with personalised financial insights and dynamic marketing emails. This tool calculates key financial scores, generates detailed analysis reports using the OpenAI API, and sends tailored marketing emails via SendGrid.
+A powerful, AI-driven financial health check tool that provides users with personalised financial insights and dynamic marketing emails. This tool calculates key financial scores, generates detailed analysis reports using the OpenAI API, and sends tailored marketing emails via Microsoft Graph (with optional SendGrid fallback).
 
 ---
 
@@ -29,7 +29,7 @@ A powerful, AI-driven financial health check tool that provides users with perso
 
 ## Overview
 
-The **Financial Health Check Calculator** is designed to help users understand and improve their financial wellbeing. It collects user financial data through a multi-step form, calculates financial scores, and generates personalised analysis and marketing content using GPT (via the OpenAI API). Personalised marketing emails are then sent via SendGrid, providing high‑conversion insights for potential financial advisory clients.
+The **Financial Health Check Calculator** is designed to help users understand and improve their financial wellbeing. It collects user financial data through a multi-step form, calculates financial scores, and generates personalised analysis and marketing content using GPT (via the OpenAI API). Personalised marketing emails are then sent via Microsoft Graph, providing high‑conversion insights for potential financial advisory clients.
 
 ---
 
@@ -49,19 +49,19 @@ The **Financial Health Check Calculator** is designed to help users understand a
   - **Core Services:**
     - **Financial Calculations:** Compute key financial scores from user input.
     - **GPT Integration:** Uses OpenAI API to generate analysis reports and personalised marketing content.
-    - **Email Service:** Sends marketing emails via SendGrid.
+    - **Email Service:** Sends marketing emails via Microsoft Graph (with optional SendGrid fallback).
   - **Testing:** Jest for unit and integration tests
   - **Deployment:** Hosted on Render
 
 - **External Integrations:**
   - **OpenAI API:** For dynamic analysis and content generation.
-  - **SendGrid:** For sending personalized marketing emails.
+  - **Microsoft Graph:** For sending personalized marketing emails.
   - **MongoDB Atlas:** For data storage (if applicable).
 
 ### Visual Diagrams
 
 - **Data Flow Diagram:**  
-  Illustrates how user input flows from the frontend to the backend, gets processed (calculations and GPT analysis), and finally results in an email sent via SendGrid.
+  Illustrates how user input flows from the frontend to the backend, gets processed (calculations and GPT analysis), and finally results in an email sent via Microsoft Graph.
 - **Component Interaction Diagram:**  
   A UML diagram or flowchart detailing interactions between frontend components, backend routes, utility modules (e.g., GPT utilities), and external services.
 
@@ -85,7 +85,14 @@ Sensitive keys are stored in `.env` files. Create these files in your respective
 PORT=5000
 MONGO_URI=your_mongodb_connection_string
 OPENAI_API_KEY=your_openai_api_key
-SENDGRID_API_KEY=your_sendgrid_api_key
+EMAIL_PROVIDER=graph
+MS_TENANT_ID=your_tenant_id
+MS_CLIENT_ID=your_client_id
+MS_CLIENT_SECRET=your_client_secret
+MS_SENDER=sender_mailbox_or_use_EMAIL_FROM
+EMAIL_FROM=your_from_email
+EMAIL_FROM_NAME=your_from_name
+BOOKING_URL=your_booking_link
 JWT_SECRET=your_jwt_secret
 NODE_ENV=development
 ```
@@ -260,7 +267,7 @@ REACT_APP_API_URL=http://localhost:5000
 
 #### 4. POST /api/send-marketing-email
 
-- **Description:** Sends a personalized marketing email via SendGrid.
+- **Description:** Sends a personalized marketing email via Microsoft Graph (or SendGrid if configured).
 - **Request Body:** Contains marketing email details including recipient, subject, and body.
 - **Response Example:**
 
@@ -388,7 +395,7 @@ REACT_APP_API_URL=http://localhost:5000
 ### API & Data Security
 
 - **Environment Variables:**  
-  Store sensitive keys (OPENAI_API_KEY, SENDGRID_API_KEY, JWT_SECRET) in environment variables.
+  Store sensitive keys (OPENAI_API_KEY, MS_CLIENT_SECRET, JWT_SECRET) in environment variables.
 - **Input Validation:**  
   Ensure all API endpoints validate and sanitize input.
 - **Authentication:**  

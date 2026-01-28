@@ -132,7 +132,7 @@ MS\_TENANT\_ID / MS\_CLIENT\_ID / MS\_CLIENT\_SECRET
 
 
 
-EMAIL\_FROM (e.g., no-reply@echo-financial-advisors.co.nz)
+MS\_SENDER (preferred sender mailbox for Graph) or EMAIL\_FROM (e.g., no-reply@echo-financial-advisors.co.nz)
 
 
 
