@@ -3,3 +3,21 @@
 @use './base';
 @use './layout';
 @use './components';
+
+/* Force privacy policy link to use Echo gold */
+form a,
+.form-check-label a {
+  color: #c79835 !important;   // Echo gold (readable against white)
+  text-decoration: underline;
+}
+
+.privacy-link {
+  color: #a06b00 !important;
+  font-weight: 600;
+  text-decoration: underline;
+}
+
+form a:hover,
+.form-check-label a:hover {
+  color: #ffd700 !important;   // Bright gold on hover
+}

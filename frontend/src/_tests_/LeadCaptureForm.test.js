@@ -24,6 +24,7 @@ const renderWithRouter = (component) => {
 describe('LeadCaptureForm Component', () => {
   beforeEach(() => {
     axios.post.mockClear();
+    localStorage.clear();
   });
 
   test('renders without crashing and displays the first step', async () => {
@@ -71,13 +72,12 @@ describe('LeadCaptureForm Component', () => {
   });
 
   test('handles submission with valid data', async () => {
-    // Expect three API calls:
-    // 1. /api/submit, 2. /api/financial-analysis, 3. /api/send-marketing-email (since marketing consent is checked)
+    // Expect one API call:
+    // 1. /api/submit
     axios.post
-      .mockResolvedValueOnce({ data: { scores: { financialHealthScore: 75, retirementScore: 80 } } }) // /api/submit
-      .mockResolvedValueOnce({ data: { analysis: 'Test analysis response' } }) // /api/financial-analysis
-      .mockResolvedValueOnce({ data: { result: 'Email sent' } }); // /api/send-marketing-email
+      .mockResolvedValueOnce({ data: { scores: { financialHealthScore: 75, retirementScore: 80 } } }); // /api/submit
     
+    localStorage.setItem('token', 'test-token');
     renderWithRouter(<LeadCaptureForm />);
 
     // Step 1: PersonalDetails (rendered by default).
@@ -128,7 +128,9 @@ describe('LeadCaptureForm Component', () => {
     
     // Check the marketing consent checkbox.
     await act(async () => {
-      await userEvent.click(screen.getByRole('checkbox', { name: /I agree to receive marketing materials/i }));
+      await userEvent.click(
+        screen.getByRole('checkbox', { name: /processing of my information/i })
+      );
     });
 
     // Submit the form.
@@ -136,18 +138,10 @@ describe('LeadCaptureForm Component', () => {
       await userEvent.click(screen.getByRole('button', { name: /Submit/i }));
     });
 
-    // Verify that three API calls were made.
-    await waitFor(() => expect(axios.post).toHaveBeenCalledTimes(3));
+    // Verify that one API call was made.
+    await waitFor(() => expect(axios.post).toHaveBeenCalledTimes(1));
     expect(axios.post).toHaveBeenCalledWith(
       expect.stringContaining('/api/submit'),
-      expect.any(Object)
-    );
-    expect(axios.post).toHaveBeenCalledWith(
-      expect.stringContaining('/api/financial-analysis'),
-      expect.any(Object)
-    );
-    expect(axios.post).toHaveBeenCalledWith(
-      expect.stringContaining('/api/send-marketing-email'),
       expect.any(Object)
     );
   });

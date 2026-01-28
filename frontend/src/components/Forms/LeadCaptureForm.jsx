@@ -1,10 +1,9 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import axios from 'axios';
 import { Formik, Form } from 'formik';
 import * as Yup from 'yup';
 import { useNavigate } from 'react-router-dom';
 import { Button, ProgressBar, Spinner } from 'react-bootstrap';
-import { sendMarketingEmail } from '../../services/api.js';
 import { getUtmParams } from '../../utils/utm';
 import PersonalDetails from '../InputSections/PersonalDetails.js';
 import ExpensesAssets from '../InputSections/ExpensesAssets.jsx';
@@ -59,6 +58,8 @@ const transformValues = (values) => {
   return transformed;
 };
 
+const REQUEST_TIMEOUT_MS = 60000;
+
 const LeadCaptureForm = () => {
   const [step, setStep] = useState(1);
   const totalSteps = 5;
@@ -73,6 +74,11 @@ const LeadCaptureForm = () => {
     referrer: document.referrer || null,
     landingPage: window.location.pathname + (window.location.search || ''),
   }), []);
+
+  useEffect(() => {
+    const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+    axios.get(`${API_URL}/api/health`, { timeout: 10000 }).catch(() => {});
+  }, []);
   
   // State for marketing consent outside of Formik
   const [marketingConsent, setMarketingConsent] = useState(false);
@@ -142,62 +148,34 @@ const LeadCaptureForm = () => {
       if (pageMeta.landingPage) qs.append('landingPage', pageMeta.landingPage);
       qs.append('consent', marketingConsent ? 'true' : 'false');
       const submitUrl = `${API_URL}/api/submit${qs.toString() ? `?${qs.toString()}` : ''}`;
-      const submitResponse = await axios.post(submitUrl, originalData);
+      const submitResponse = await axios.post(submitUrl, originalData, { timeout: REQUEST_TIMEOUT_MS });
       const scores = submitResponse.data.scores;
       setScores(scores);
 
-      // Construct payload for /api/financial-analysis
-      const analysisPayload = {
-        originalData,
-        calculatedMetrics: scores,
-        utm, // safe to include; endpoint does not validate with Joi
-        ...pageMeta,
-        consent: marketingConsent === true,
-      };
-
-      // SECOND API CALL: /api/financial-analysis (for detailed report)
-      const analysisResponse = await axios.post(`${API_URL}/api/financial-analysis`, analysisPayload);
-      const analysisText = analysisResponse.data.analysis;
-
       console.log("Response from /api/submit:", submitResponse.data);
-      console.log("Response from /api/financial-analysis:", analysisResponse.data);
 
-      // If marketingConsent is true, trigger marketing email via sendMarketingEmail from services/api.js
-      if (marketingConsent) {
-        try {
-          const campaignResponse = await sendMarketingEmail({
-            to: transformedValues.email,
-            name: transformedValues.name,
-            analysisText, // dynamic analysis text from backend
-            personalDetails: originalData.personalDetails,  // client's personal details
-            contactInfo: originalData.contactInfo,          // include contact info with the name
-            calculatedMetrics: scores, // scores used as calculatedMetrics
-          });
-          console.log("SendGrid campaign generated: ", campaignResponse.data);
-        } catch (campaignError) {
-          console.error("Failed to generate SendGrid campaign", campaignError);
-        }
-      }
-
-      // Navigate to Report page with contactInfo included:
+      // Navigate to Report page with full context (analysis generated there):
       navigate('/report', {
         state: {
           scores,
-          analysis: analysisText,
+          originalData, // provide raw input for any follow-up routes
           contactInfo: originalData.contactInfo,
+          marketingConsent,
         },
       });
       setShowModal(false);
     } catch (err) {
       let message = 'Submission failed. Please try again.';
-      if (err.response?.data?.message) {
+      if (err.code === 'ECONNABORTED') {
+        message = 'This is taking longer than expected. Please try again.';
+      } else if (err.response?.data?.message) {
         message = err.response.data.message;
       }
       setError(message);
-      formikHelpers.setSubmitting(false);
     } finally {
       setIsLoading(false);
       setSubmitting(false);
+      formikHelpers.setSubmitting(false);
     }
   };
 
@@ -274,30 +252,33 @@ const LeadCaptureForm = () => {
         return (
           <>
             <ContactDetails />
-            {/* Custom checkbox implementation outside of Formik */}
+            {/* Consent checkbox (outside Formik) */}
             <div className="form-group mt-3">
-              <label style={{ display: 'flex', alignItems: 'center' }}>
-                <input 
-                  type="checkbox" 
+              <div className="form-check">
+                <input
+                  id="consent"
+                  name="consentGiven"
+                  type="checkbox"
+                  className="form-check-input"
+                  required
                   checked={marketingConsent}
                   onChange={(e) => {
                     setMarketingConsent(e.target.checked);
                     if (e.target.checked) setShowConsentError(false);
                   }}
-                  style={{ marginRight: '10px' }}
                 />
-                <span style={{ marginLeft: '0px' }}>
-                  I agree to the{' '}
+                <label htmlFor="consent" className="form-check-label">
+                  I agree to the processing of my information as described in the&nbsp;
                   <a
-                    href={process.env.REACT_APP_PRIVACY_URL || '/privacy'}
+                    href="https://financialhealthcheck.ai/privacy"
                     target="_blank"
                     rel="noopener noreferrer"
+                    className="privacy-link"
                   >
                     Privacy Policy
-                  </a>{' '}
-                  and consent to be contacted about my financial report and related services.
-                </span>
-              </label>
+                  </a>.
+                </label>
+              </div>
               {/* Show error only when appropriate */}
               {showConsentError && (
                 <div className="text-danger">
