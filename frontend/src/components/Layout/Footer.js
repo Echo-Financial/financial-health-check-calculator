@@ -44,7 +44,7 @@ const Footer = () => (
         />
         <StyledFooterLink
           label="About Us"
-          href="https://www.echo-financial-advisors.co.nz/why-choose-echo-financial-advisors"
+          href="https://www.echo-financial-advisors.co.nz/about-us"
           component="a"
           target="_blank"
           rel="noopener noreferrer"
