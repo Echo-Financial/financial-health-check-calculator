@@ -112,7 +112,7 @@ const Report = () => {
         console.error('[Report] unified financial-analysis failed:', err);
         if (alive) {
           setReportText(
-            "We were unable to generate your financial report at this time. Please try again shortly."
+            "Your report is taking longer than expected. Please refresh the page or try again in a few minutes."
           );
         }
       } finally {

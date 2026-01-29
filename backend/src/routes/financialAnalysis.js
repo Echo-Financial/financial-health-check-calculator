@@ -8,6 +8,54 @@ const { logAdviceGeneration, requiresManualReview } = require('../utils/complian
 const logger = require('../logger');
 const { ok, fail } = require('../utils/apiResponse');
 
+const safeNumber = (value, fallback = 0) => {
+  const n = Number(value);
+  return Number.isFinite(n) ? n : fallback;
+};
+
+const scoreBand = (score) => {
+  if (score >= 80) return 'strong';
+  if (score >= 60) return 'stable';
+  if (score >= 40) return 'needs attention';
+  return 'critical';
+};
+
+const tryParseJson = (rawResponse) => {
+  try {
+    return JSON.parse(rawResponse);
+  } catch (err) {
+    const first = rawResponse?.indexOf('{');
+    const last = rawResponse?.lastIndexOf('}');
+    if (first === -1 || last === -1 || last <= first) return null;
+    const slice = rawResponse.slice(first, last + 1);
+    try {
+      return JSON.parse(slice);
+    } catch (innerErr) {
+      return null;
+    }
+  }
+};
+
+const buildFallbackReport = (financialProfile) => {
+  const scores = financialProfile?.scores || {};
+  const overall = Math.round(safeNumber(scores.overallFinancialHealthScore));
+  const dti = Math.round(safeNumber(scores.dtiScore));
+  const savings = Math.round(safeNumber(scores.savingsScore));
+  const emergency = Math.round(safeNumber(scores.emergencyFundScore));
+  const retirement = Math.round(safeNumber(scores.retirementScore));
+  const growth = Math.round(safeNumber(scores.growthOpportunityScore));
+
+  const summary = `Your overall financial health score is ${overall}. Your debt‑to‑income score is ${dti} (this is a score, not a percentage), savings score is ${savings}, emergency fund score is ${emergency}, retirement score is ${retirement}, and growth opportunity score is ${growth}. Based on these results, your overall position is ${scoreBand(overall)}, with the most immediate attention typically placed on the lowest scoring area. A higher growth opportunity score indicates more room to improve investment strategy and long‑term planning.`;
+
+  const analysis = `Your scores provide a balanced view of current stability versus long‑term readiness. Debt‑to‑income, savings, and emergency fund scores help indicate short‑term resilience, while retirement and growth opportunity scores reflect long‑term positioning. Where a score is lower, it points to the area that will create the most leverage if improved. Growth opportunity and potential for improvement are scored such that higher values indicate more room to improve, and debt‑to‑income is a score rather than a percentage.
+
+Important information: This report provides general information only and does not take account of your personal circumstances. It is designed for long‑term investment horizons (7–10+ years) and markets can be volatile in the short term. You should consider seeking independent financial, tax, and legal advice before acting.
+
+Turning these insights into a coordinated investment and retirement strategy would be the focus of an initial consultation.`;
+
+  return { summary, analysis };
+};
+
 /**
  * Single prompt that returns:
  *  - Executive Summary (conversion-focused)
@@ -87,22 +135,29 @@ router.post('/', async (req, res) => {
     // Build prompt
     const prompt = unifiedAnalysisPrompt(financialProfile);
 
-    // SINGLE GPT-5 CALL
-    const rawResponse = await callOpenAIForAnalysis(req.body, prompt);
+    let summary;
+    let analysis;
+    let usedFallback = false;
 
-    // Parse JSON safely
-    let parsed;
     try {
-      parsed = JSON.parse(rawResponse);
+      // SINGLE GPT-5 CALL
+      const rawResponse = await callOpenAIForAnalysis(req.body, prompt);
+
+      // Parse JSON safely
+      const parsed = tryParseJson(rawResponse);
+
+      if (!parsed?.summary || !parsed?.analysis) {
+        throw new Error('Incomplete or invalid analysis response');
+      }
+
+      summary = parsed.summary;
+      analysis = parsed.analysis;
     } catch (err) {
-      logger.error('Failed to parse GPT response JSON', err);
-      return fail(res, 500, 'OPENAI_ERROR', 'Invalid response format from analysis engine');
-    }
-
-    const { summary, analysis } = parsed;
-
-    if (!summary || !analysis) {
-      return fail(res, 500, 'OPENAI_ERROR', 'Incomplete analysis response');
+      logger.error('Analysis generation failed, using fallback report', err);
+      const fallback = buildFallbackReport(financialProfile);
+      summary = fallback.summary;
+      analysis = fallback.analysis;
+      usedFallback = true;
     }
 
     // Compliance logging
@@ -128,6 +183,7 @@ router.post('/', async (req, res) => {
       summary,
       analysis,
       financialProfile,
+      _fallback: usedFallback,
       _compliance: {
         adviceLogged: true,
         needsReview,
